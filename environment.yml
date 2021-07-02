@@ -1,0 +1,14 @@
+name: DiffCombPostProcess
+channels:
+  - conda-forge
+dependencies:
+  - jupyterlab>=2.0.0
+  - numpy>=1.18.1
+  - notebook
+  - ipywidgets>=7.5
+  - root
+  - uproot
+  - aghast
+  - boost-histogram
+  - mplhep
+  - coffea
