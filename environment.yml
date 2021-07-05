@@ -12,3 +12,6 @@ dependencies:
   - boost-histogram
   - mplhep
   - coffea
+  - hist
+  - rich
+  - pyyaml
