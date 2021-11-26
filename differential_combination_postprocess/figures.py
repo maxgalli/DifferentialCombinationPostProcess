@@ -8,6 +8,9 @@ from .cosmetics import black_to_grey, rainbow
 import warnings
 warnings.filterwarnings("ignore", module="matplotlib")
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class Figure:
     def __init__(self):
@@ -42,6 +45,7 @@ class XSNLLsPerPOI(Figure):
         
         # Draw all the NLLs on the ax
         color_index = 0
+        logger.debug(differential_spectrum.scans)
         for poi, scan in differential_spectrum.scans.items():
             self.ax = scan.plot(self.ax, rainbow[color_index])
             color_index += 1
@@ -49,3 +53,26 @@ class XSNLLsPerPOI(Figure):
         # Legend
         self.ax.legend()
         hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.ax)
+
+
+class DiffXSsPerObservable(Figure):
+    """
+    """
+    def __init__(self, observable_shapes):
+        self.output_name = "prova"
+        # Set up figure and axes
+        self.fig, (self.main_ax, self.ratio_ax) = plt.subplots(
+            nrows=2,
+            ncols=1,
+            gridspec_kw={"height_ratios": (3, 1)},
+            sharex=True
+            )
+
+        for shape in observable_shapes:
+            self.main_ax, self.ratio_ax = shape.plot(self.main_ax, self.ratio_ax)
+
+        self.main_ax.set_yscale("log")
+        self.ratio_ax.set_ylim(-2, 4)
+        self.main_ax.set_ylim(0, 1000)
+
+        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.main_ax)
