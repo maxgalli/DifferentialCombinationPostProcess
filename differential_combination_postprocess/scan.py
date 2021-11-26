@@ -2,6 +2,7 @@ import uproot
 import numpy as np
 from scipy import interpolate
 import matplotlib.pyplot as plt
+from warnings import warn
 
 import logging
 logger = logging.getLogger(__name__)
@@ -86,20 +87,31 @@ class Scan:
 
 
     def compute_uncertainties(self):
+
+        def parabola(x, a, b, c):
+            return a * np.power(x, 2) + b * x + c
+        
         level = self.minimum[1] + 1.
         level_arr = np.ones(len(self.interpolated_points[1])) * level
         # Get index of the two points in poi_values where the NLL crosses the horizontal line at 1
         try:
             down_idx, up_idx = np.argwhere(np.diff(np.sign(self.interpolated_points[1] - level_arr))).flatten()
+            self.down = self.interpolated_points[:, down_idx]
+            self.up = self.interpolated_points[:, up_idx]
+            self.down_uncertainty = abs(self.minimum[0] - self.down[0])
+            self.up_uncertainty = abs(self.minimum[0] - self.up[0])
+
         except ValueError as e:
-            raise ValueError(
+            # If this is the case, set up and down to the minimum and the uncertainties to 0, so it gets plotted anyways
+            warn(
                 "The NLL curve does not seem to cross the horizontal line. Try scanning a wider range of points for {}!\n\
                 Original error: {}".format(self.poi, e)
                 )
-        self.down = self.interpolated_points[:, down_idx]
-        self.up = self.interpolated_points[:, up_idx]
-        self.down_uncertainty = abs(self.minimum[0] - self.down[0])
-        self.up_uncertainty = abs(self.minimum[0] - self.up[0])
+            logger.info("Setting up and down to minimum and uncertainties to 0.")
+            self.down = self.minimum
+            self.up = self.minimum
+            self.down_uncertainty = 0.
+            self.up_uncertainty = 0.
 
 
     def plot(self, ax, color=None):
