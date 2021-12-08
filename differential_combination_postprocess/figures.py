@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import mplhep as hep
 hep.set_style("CMS")
 
-from .cosmetics import black_to_grey, rainbow
+from .cosmetics import rainbow_iter
 
 # Silence matplotlib warnings for Christ sake
 import warnings
@@ -44,14 +44,13 @@ class XSNLLsPerPOI(Figure):
         self.ax.axhline(1., color="k", linestyle="--")
         
         # Draw all the NLLs on the ax
-        color_index = 0
         logger.debug(differential_spectrum.scans)
-        for poi, scan in differential_spectrum.scans.items():
-            self.ax = scan.plot(self.ax, rainbow[color_index])
-            color_index += 1
+        for poi_scan, color in zip(differential_spectrum.scans.items(), rainbow_iter):
+            poi, scan = poi_scan
+            self.ax = scan.plot(self.ax, color)
 
         # Legend
-        self.ax.legend()
+        self.ax.legend(loc='upper center', prop={'size': 10}, ncol=4)
         hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.ax)
 
 

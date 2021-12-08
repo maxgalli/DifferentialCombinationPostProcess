@@ -41,6 +41,7 @@ class Scan:
         logger.info("Looking for files that look like {} inside {}".format(
             self.file_name_tmpl, input_dirs)
             )
+        # If a file is corrupted, uproot will raise an error; it will have to be manually removed
         branches = uproot.concatenate(
             ["{}/{}:{}".format(input_dir, self.file_name_tmpl, self.tree_name) for input_dir in input_dirs],
             expressions=[self.poi, "deltaNLL"],
@@ -87,10 +88,6 @@ class Scan:
 
 
     def compute_uncertainties(self):
-
-        def parabola(x, a, b, c):
-            return a * np.power(x, 2) + b * x + c
-        
         level = self.minimum[1] + 1.
         level_arr = np.ones(len(self.interpolated_points[1])) * level
         # Get index of the two points in poi_values where the NLL crosses the horizontal line at 1
