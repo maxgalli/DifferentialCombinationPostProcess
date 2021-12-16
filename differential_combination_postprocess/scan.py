@@ -111,8 +111,9 @@ class Scan:
             self.up_uncertainty = 0.
 
 
-    def plot(self, ax, color=None):
-        logger.info("Plotting scan for {}".format(self.poi))
+    def plot(self, ax, color=None, label=None):
+        if label is None:
+            label = self.poi
         # Restrict the plotted values to a dnll less than 3.5
         x = self.interpolated_points[0][self.interpolated_points[1] < 3.5]
         y = self.interpolated_points[1][self.interpolated_points[1] < 3.5]
@@ -122,7 +123,7 @@ class Scan:
             [self.minimum[0], self.minimum[0]], [self.minimum[1], self.up[1]], 
             color=color,
             linestyle="--",
-            label=self.poi
+            label=label
         )
         # Points where NLL crosses 1
         ax.plot(

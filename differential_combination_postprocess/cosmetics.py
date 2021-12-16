@@ -1,3 +1,7 @@
+import itertools
+
+markers = itertools.cycle(("v", "^", ">", "<", "s", "p", "*"))
+
 class ListIterator:
     def __init__(self, ls):
         self.ls = ls
