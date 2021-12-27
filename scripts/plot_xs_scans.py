@@ -6,6 +6,7 @@ import argparse
 import os
 import re
 import numpy as np
+from copy import deepcopy
 
 # Needed to fix the fucking 
 # _tkinter.TclError: couldn't connect to display "localhost:12.0"
@@ -15,7 +16,7 @@ matplotlib.use("AGG")
 from differential_combination_postprocess.utils import setup_logging, extract_from_yaml_file
 from differential_combination_postprocess.scan import Scan, DifferentialSpectrum
 from differential_combination_postprocess.figures import XSNLLsPerCategory, XSNLLsPerPOI, DiffXSsPerObservable
-from differential_combination_postprocess.shapes import ObservableShapeFitted
+from differential_combination_postprocess.shapes import ObservableShapeFitted, sm_shapes
 from differential_combination_postprocess.physics import analyses_edges
 
 
@@ -66,6 +67,14 @@ def parse_arguments():
         help="Categories for which NLL plots are dumped, along with the superimposed final ones"
     )
 
+    parser.add_argument(
+        "--exclude-dirs",
+        nargs="+",
+        type=str,
+        default=[],
+        help="Directory to exclude from the list of input directories"
+    )
+
     return parser.parse_args()
 
 
@@ -80,6 +89,7 @@ def main(args):
     metadata_dir = args.metadata_dir
     output_dir = args.output_dir
     categories = args.categories
+    exclude_dirs = args.exclude_dirs
     logger.info(f"Plotting session for variable {variable}")
 
     # First produce NLL plots, one for each category
@@ -108,6 +118,8 @@ def main(args):
             logger.info(f"Working on sub-category {sub_cat}")
             regex = re.compile(f"{sub_cat}(-[0-9])?$")
             categories_numbers = [directory for directory in os.listdir(input_dir) if regex.match(directory)]
+            # Give the possibility to exclude some directories like the ones for which jobs are still running
+            categories_numbers = [directory for directory in categories_numbers if directory not in exclude_dirs]
             if len(categories_numbers) == 0:
                 logger.warning(f"No directories found for category {sub_cat}")
                 continue
@@ -132,19 +144,28 @@ def main(args):
     logger.info(f"Now producing the final differential xs plot for observable {variable}")
     shapes = []
     for category, spectrum in differential_spectra.items():
+        # Remember that the results we get for mu are meant to scale the SM cross section
         logger.debug(f"Building shape for category {category}, variable {variable} and edges {analyses_edges[variable][category]}")
+        # First: copy the finest possible shape (Hgg) and rebin it with what we need
+        sm_rebinned_shape = deepcopy(sm_shapes[variable])
+        sm_rebinned_shape.rebin(analyses_edges[variable][category])
+        # Second: bin-wise multiply the new bin values by the values for mu computed in the scan
+        mus = np.array([scan.minimum[0] for scan in spectrum.scans.values()])
+        mus_up = np.array([scan.minimum[0] + scan.up_uncertainty for scan in spectrum.scans.values()])
+        mus_down = np.array([scan.minimum[0] - scan.down_uncertainty for scan in spectrum.scans.values()])
+        weighted_bins = np.multiply(np.array(sm_rebinned_shape.xs), mus)
         shapes.append(
             ObservableShapeFitted(
                 variable,
                 analyses_edges[variable][category],
-                np.array([scan.minimum[0] for scan in spectrum.scans.values()]),
-                np.array([scan.minimum[0] + scan.up_uncertainty for scan in spectrum.scans.values()]),
-                np.array([scan.minimum[0] - scan.down_uncertainty for scan in spectrum.scans.values()]),
+                weighted_bins,
+                mus_up,
+                mus_down,
             )
         )
 
-    from differential_combination_postprocess.shapes import sm_shapes 
-    final_plot = DiffXSsPerObservable(sm_shapes[variable], shapes)
+    final_plot_output_name = f"Final-{variable}-" + "_".join(categories)
+    final_plot = DiffXSsPerObservable(final_plot_output_name, sm_shapes[variable], shapes)
     final_plot.dump(output_dir)
 
 

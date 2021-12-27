@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 import mplhep as hep
 hep.set_style("CMS")
+from itertools import cycle
 
-from .cosmetics import rainbow_iter
+from .cosmetics import rainbow
 from .shapes import ObservableShapeSM
 
 # Silence matplotlib warnings for Christ sake
@@ -26,6 +27,7 @@ class Figure:
 
 class XSNLLsPerPOI:
     """
+    Remember that this breaks the convention, since one figure per POI is created
     """
     def __init__(self, subcategory_spectra):
         self.figures = []
@@ -51,8 +53,11 @@ class XSNLLsPerPOI:
             ax.axhline(1., color="k", linestyle="--")
 
             # Draw all the NLLs with different colors
-            for scan_tpl, color in zip(scans, rainbow_iter):
+            rainbow_iter = cycle(rainbow)
+            for scan_tpl in scans:
+                color = next(rainbow_iter)
                 ax = scan_tpl[1].plot(ax, color, label=scan_tpl[0])
+                ax = scan_tpl[1].plot_original_points(ax, color, label=f"{scan_tpl[0]} (original)")
 
             # Legend
             ax.legend(loc='upper center', prop={'size': 10}, ncol=4)
@@ -89,7 +94,9 @@ class XSNLLsPerCategory(Figure):
         
         # Draw all the NLLs on the ax
         logger.debug(differential_spectrum.scans)
-        for poi_scan, color in zip(differential_spectrum.scans.items(), rainbow_iter):
+        rainbow_iter = cycle(rainbow)
+        for poi_scan in differential_spectrum.scans.items():
+            color = next(rainbow_iter)
             poi, scan = poi_scan
             self.ax = scan.plot(self.ax, color)
 
@@ -101,8 +108,8 @@ class XSNLLsPerCategory(Figure):
 class DiffXSsPerObservable(Figure):
     """
     """
-    def __init__(self, sm_shape, observable_shapes):
-        self.output_name = "prova"
+    def __init__(self, output_name, sm_shape, observable_shapes):
+        self.output_name = output_name
         # Set up figure and axes
         self.fig, (self.main_ax, self.ratio_ax) = plt.subplots(
             nrows=2,
@@ -118,8 +125,10 @@ class DiffXSsPerObservable(Figure):
         self.ratio_ax.set_ylim(-2, 4)
         self.main_ax, self.ratio_ax = sm_shape.plot(self.main_ax, self.ratio_ax)
 
-        for shape, color in zip(observable_shapes, rainbow_iter):
-            shape.stretch_fake_range(sm_shape)
+        rainbow_iter = cycle(rainbow)
+        for shape in observable_shapes:
+            color = next(rainbow_iter)
+            shape.fake_rebin(sm_shape)
             self.main_ax, self.ratio_ax = shape.plot(self.main_ax, self.ratio_ax, color)
 
         hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.main_ax)

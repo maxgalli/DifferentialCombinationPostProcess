@@ -1,10 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from itertools import cycle
+from copy import deepcopy
 
 from .physics import YR4_totalXS
 from .physics import smH_PTH_Hgg_xs, analyses_edges
 from .cosmetics import markers
+from .utils import merge_bins
 
 import logging
 logger = logging.getLogger(__name__)
@@ -24,24 +27,32 @@ class ObservableShape:
         self.xs = nominal_values
         self.xs_up = up_values
         self.xs_down = down_values
-        self.inclusive_xs = np.sum(self.xs)
-        self.nbins = len(self.xs)
         self.overflow = overflow
         
-        self.xs_over_bin_width = self.xs
-        self.xs_over_bin_width_up = self.xs_up
-        self.xs_over_bin_width_down = self.xs_down
-        
-        self.xs_over_bin_width_up_fraction = self.xs_over_bin_width_up / self.xs_over_bin_width
-        self.xs_over_bin_width_down_fraction = self.xs_over_bin_width_down / self.xs_over_bin_width
-
         # Since we want every bin of the same width, we can do this for the steps
         self.fake_bin_width = 1
         self.fake_edges = np.arange(0, len(self.edges), self.fake_bin_width)
         self.fake_centers = (self.fake_edges[1:] + self.fake_edges[:-1]) / 2
 
 
-    def stretch_fake_range(self, other_shape):
+    @property
+    def nbins(self):
+        return len(self.xs)
+
+
+    @property
+    def inclusive_xs(self):
+        return np.sum(self.xs)
+
+
+    def rebin(self, new_edges):
+        self.xs = merge_bins(self.xs, self.edges, new_edges)
+        self.xs_up = merge_bins(self.xs_up, self.edges, new_edges)
+        self.xs_down = merge_bins(self.xs_down, self.edges, new_edges)
+        self.edges = new_edges
+
+
+    def fake_rebin(self, other_shape):
         logger.debug(f"Stretching fake range for {self.observable}")
         logger.debug(f"Current Fake edges: {self.fake_edges}")
         logger.debug(f"Other Fake edges: {other_shape.fake_edges}")
@@ -73,7 +84,7 @@ class ObservableShape:
 
 
     def compute_unc_xs_over_bin_width(self, unc_fraction):
-        return [xs * unc for xs, unc in zip(self.xs_over_bin_width, unc_fraction)]
+        return [xs * unc for xs, unc in zip(self.xs, unc_fraction)]
 
 
 
@@ -90,7 +101,7 @@ class ObservableShapeSM(ObservableShape):
     def plot(self, ax, rax):
         ax.stairs(
             edges=self.fake_edges, 
-            values=self.xs_over_bin_width,
+            values=self.xs,
             color="grey",
             linewidth=2
             )
@@ -98,13 +109,15 @@ class ObservableShapeSM(ObservableShape):
         rax.axhline(y=1, color="grey", linewidth=2)
         
         # Apply rectangular patches for uncertainties
+        xs_up_fraction = self.xs_up / self.xs
+        xs_down_fraction = self.xs_down / self.xs
         for x, xs, xs_up, xs_down, xs_up_frac, xs_down_frac in zip(
             self.fake_edges[:-1], 
-            self.xs_over_bin_width, 
-            self.xs_over_bin_width_up,
-            self.xs_over_bin_width_down,
-            self.xs_over_bin_width_up_fraction,
-            self.xs_over_bin_width_down_fraction
+            self.xs, 
+            self.xs_up,
+            self.xs_down,
+            xs_up_fraction,
+            xs_down_fraction
             ):
             # Main plot
             ax.add_patch(Rectangle(
@@ -132,13 +145,14 @@ class ObservableShapeSM(ObservableShape):
 
 class ObservableShapeFitted(ObservableShape):
     def plot(self, ax, rax, color="black"):
-        marker = next(markers)
+        markers_iter = cycle(markers)
+        marker = next(markers_iter)
         ax.errorbar(
             self.fake_centers,
-            self.xs_over_bin_width,
+            self.xs,
             yerr = np.array(
-                [self.xs_over_bin_width - self.xs_over_bin_width_down, 
-                self.xs_over_bin_width_up - self.xs_over_bin_width]
+                [self.xs - self.xs_down, 
+                self.xs_up - self.xs]
                 ),
             linestyle="",
             color=color,

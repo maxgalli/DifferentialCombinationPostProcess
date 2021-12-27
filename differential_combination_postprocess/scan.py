@@ -74,6 +74,13 @@ class Scan:
 
         # Find minimum and compute uncertainties
         self.find_minimum()
+        self.original_moved_points = self.original_points
+        if abs(self.minimum[1]) > 0.0001: # Manually move the minimum to 0 if it is not already there
+            logger.info("dnll of minimum was found to be at more than 0.0001 (i.e. not at 0). Will be manually set to 0")
+            offset = self.minimum[1]
+            self.original_moved_points[1] -= offset
+            self.interpolated_points[1] -= offset
+            self.find_minimum()
         logger.info("Found minimum at ({}, {})".format(self.minimum[0], self.minimum[1]))
         self.compute_uncertainties()
         logger.info("Down uncertainty: {}, up uncertainty: {}".format(
@@ -91,24 +98,31 @@ class Scan:
         level = self.minimum[1] + 1.
         level_arr = np.ones(len(self.interpolated_points[1])) * level
         # Get index of the two points in poi_values where the NLL crosses the horizontal line at 1
-        try:
-            down_idx, up_idx = np.argwhere(np.diff(np.sign(self.interpolated_points[1] - level_arr))).flatten()
-            self.down = self.interpolated_points[:, down_idx]
-            self.up = self.interpolated_points[:, up_idx]
-            self.down_uncertainty = abs(self.minimum[0] - self.down[0])
-            self.up_uncertainty = abs(self.minimum[0] - self.up[0])
-
-        except ValueError as e:
+        indices = np.argwhere(np.diff(np.sign(self.interpolated_points[1] - level_arr))).flatten()
+        points = [self.interpolated_points[:, i] for i in indices]
+        logger.debug(f"Points where NLL crosses the horizontal line at 1: {points}") 
+        if len(points) < 2:
             # If this is the case, set up and down to the minimum and the uncertainties to 0, so it gets plotted anyways
-            warn(
-                "The NLL curve does not seem to cross the horizontal line. Try scanning a wider range of points for {}!\n\
-                Original error: {}".format(self.poi, e)
-                )
+            logger.warning(f"The NLL curve does not seem to cross the horizontal line. Try scanning a wider range of points for {self.poi}!")
             logger.info("Setting up and down to minimum and uncertainties to 0.")
             self.down = self.minimum
             self.up = self.minimum
             self.down_uncertainty = 0.
             self.up_uncertainty = 0.
+        elif len(points) > 2:
+            logger.warning("More than two points where NLL crosses the horizontal line at 1. First and last will be used.")
+            down_idx = indices[0]
+            up_idx = indices[-1]
+            self.down = self.interpolated_points[:, down_idx]
+            self.up = self.interpolated_points[:, up_idx]
+            self.down_uncertainty = abs(self.minimum[0] - self.down[0])
+            self.up_uncertainty = abs(self.minimum[0] - self.up[0])
+        else:
+            down_idx, up_idx = indices
+            self.down = self.interpolated_points[:, down_idx]
+            self.up = self.interpolated_points[:, up_idx]
+            self.down_uncertainty = abs(self.minimum[0] - self.down[0])
+            self.up_uncertainty = abs(self.minimum[0] - self.up[0])
 
 
     def plot(self, ax, color=None, label=None):
@@ -133,4 +147,20 @@ class Scan:
             marker="o"
             )
         
+        return ax
+
+    def plot_original_points(self, ax, color=None, label=None):
+        if label is None:
+            label = f"{self.poi} (original)"
+        x = self.original_moved_points[0][self.original_moved_points[1] < 3.5]
+        y = self.original_moved_points[1][self.original_moved_points[1] < 3.5]
+        ax.plot(
+            x,
+            y,
+            color=color,
+            linestyle="",
+            marker="*",
+            label=label
+        )
+
         return ax
