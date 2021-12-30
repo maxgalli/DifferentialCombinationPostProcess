@@ -6,7 +6,7 @@ from copy import deepcopy
 
 from .physics import YR4_totalXS
 from .physics import smH_PTH_Hgg_xs, analyses_edges
-from .cosmetics import markers
+from .cosmetics import markers, category_specs
 from .utils import merge_bins
 
 import logging
@@ -87,6 +87,16 @@ class ObservableShape:
         return [xs * unc for xs, unc in zip(self.xs, unc_fraction)]
 
 
+    def __str__(self):
+        string = f"Observable: {self.observable}\n"
+        string += f"Edges: {self.edges}\n"
+        string += f"Nominal XS: {self.xs}\n"
+        string += f"Up XS: {self.xs_up}\n"
+        string += f"Down XS: {self.xs_down}\n"
+        
+        return string
+
+
 
 class ObservableShapeSM(ObservableShape):
     """
@@ -103,10 +113,11 @@ class ObservableShapeSM(ObservableShape):
             edges=self.fake_edges, 
             values=self.xs,
             color="grey",
-            linewidth=2
+            linewidth=1,
+            label="aMC@NLO"
             )
         
-        rax.axhline(y=1, color="grey", linewidth=2)
+        rax.axhline(y=1, color="grey", linewidth=1)
         
         # Apply rectangular patches for uncertainties
         xs_up_fraction = self.xs_up / self.xs
@@ -144,9 +155,10 @@ class ObservableShapeSM(ObservableShape):
 
 
 class ObservableShapeFitted(ObservableShape):
-    def plot(self, ax, rax, color="black"):
+    def plot(self, ax, rax, prediction_shape, color="black", dashed_horizontal_lines=False):
         markers_iter = cycle(markers)
         marker = next(markers_iter)
+        
         ax.errorbar(
             self.fake_centers,
             self.xs,
@@ -157,13 +169,36 @@ class ObservableShapeFitted(ObservableShape):
             linestyle="",
             color=color,
             marker=marker,
-            markersize=10,
+            markersize=5,
+            capsize=3,
         )
+
+        ratio_xs = self.xs / prediction_shape.xs
+        ratio_xs_up = self.xs_up / prediction_shape.xs
+        ratio_xs_down = self.xs_down / prediction_shape.xs
+        rax.errorbar(
+            self.fake_centers,
+            ratio_xs,
+            yerr = np.array(
+                [ratio_xs - ratio_xs_down,
+                ratio_xs_up - ratio_xs]
+                ),
+            linestyle="",
+            color=color,
+            marker=marker,
+            markersize=5,
+            capsize=3,
+        )
+
+        if dashed_horizontal_lines:
+            for y, left, right in zip(self.xs, self.fake_edges[:-1], self.fake_edges[1:]):
+                ax.hlines(y, left, right, linestyle="dashed", linewidth=1, color=color)
+            for y, left, right in zip(ratio_xs, self.fake_edges[:-1], self.fake_edges[1:]):
+                rax.hlines(y, left, right, linestyle="dashed", linewidth=1, color=color)
 
         return ax, rax
 
 
-logger.debug(f"smH_PTH_Hgg_xs first bin: {smH_PTH_Hgg_xs[0]}")
 smH_PTH_Hgg_obs_shape = ObservableShapeSM(
     "smH_PTH",
     analyses_edges["smH_PTH"]["Hgg"], 
@@ -172,6 +207,8 @@ smH_PTH_Hgg_obs_shape = ObservableShapeSM(
     smH_PTH_Hgg_xs["down"].to_numpy()
     )
 
+# It is assumed that the SM shapes are the ones with the finest binning, i.e. Hgg
+# if something different will come up, we'll change it
 sm_shapes = {
     "smH_PTH": smH_PTH_Hgg_obs_shape,
 }

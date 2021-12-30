@@ -48,20 +48,25 @@ analyses_edges = {
 
 # smH_PTH_xs will be an awkward array with fields 'central', 'up', and 'down'
 # Units of measure of Thomas files are fb/bin_width
+# N.B.: we normalize it here?, ask Thomas if this is correct!
+# also note how this is done for up and down
 smH_PTH_Hgg_xs_dict = {}
 with open(f"{theor_pred_base_dir}/theoryPred_Pt_18_fullPS.pkl", "rb") as f:
     pt = pkl.load(f)
     pt = get_prediction(pt, mass, weights=weights)
-    pt_norm = pt / np.sum(pt)
+    #pt_norm = pt / np.sum(pt)
+    pt_norm = pt
 smH_PTH_Hgg_xs_dict["central"] = pt_norm
 with open(f"{theor_pred_base_dir}/theoryPred_Pt_18_fullPS_theoryUnc.pkl", "rb") as f:
     pt_uncs = pkl.load(f)
-    pt_up = pt + pt_uncs[1, :]
     pt_down = pt - pt_uncs[0, :]
-    pt_up_norm = pt_up / np.sum(pt_up)
-    pt_down_norm = pt_down / np.sum(pt_down)
-smH_PTH_Hgg_xs_dict["up"] = pt_up_norm
+    pt_up = pt + pt_uncs[1, :]
+    #pt_down_norm = pt_down / np.sum(pt_down)
+    pt_down_norm = pt_down
+    #pt_up_norm = pt_up / np.sum(pt_up)
+    pt_up_norm = pt_up
 smH_PTH_Hgg_xs_dict["down"] = pt_down_norm
+smH_PTH_Hgg_xs_dict["up"] = pt_up_norm
 smH_PTH_Hgg_xs = ak.Array(smH_PTH_Hgg_xs_dict)
 for field in smH_PTH_Hgg_xs.fields:
     smH_PTH_Hgg_xs[field] = smH_PTH_Hgg_xs[field] / hgg_br

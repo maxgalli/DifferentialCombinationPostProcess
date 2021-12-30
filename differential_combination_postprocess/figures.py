@@ -1,9 +1,10 @@
 import matplotlib.pyplot as plt
 import mplhep as hep
-hep.set_style("CMS")
+hep.style.use("CMS")
 from itertools import cycle
+from copy import deepcopy
 
-from .cosmetics import rainbow
+from .cosmetics import rainbow, observable_specs
 from .shapes import ObservableShapeSM
 
 # Silence matplotlib warnings for Christ sake
@@ -119,16 +120,41 @@ class DiffXSsPerObservable(Figure):
             )
 
         # X limits depend on the SM plot (the one in the background with the predictions)
+        logger.debug(f"Using SM shape:\n{sm_shape}")
         self.main_ax.set_xlim(sm_shape.fake_edges[0], sm_shape.fake_edges[-1])
         self.ratio_ax.set_xlim(sm_shape.fake_edges[0], sm_shape.fake_edges[-1])
         self.main_ax.set_yscale("log")
-        self.ratio_ax.set_ylim(-2, 4)
+        self.ratio_ax.set_ylim(0, 2)
+        self.ratio_ax.set_yticks([0, 1, 2])
         self.main_ax, self.ratio_ax = sm_shape.plot(self.main_ax, self.ratio_ax)
+        self.ratio_ax.set_xticks(sm_shape.fake_edges)
+        tick_labels = deepcopy(sm_shape.edges)
+        if sm_shape.overflow:
+            tick_labels[-1] = r"$\infty$"
+        self.ratio_ax.set_xticklabels(tick_labels)
+        self.ratio_ax.tick_params(axis="x", which="major", labelsize=13)
+        self.main_ax.tick_params(axis="x", which="minor", bottom=False, top=False)
+        self.ratio_ax.tick_params(axis="x", which="minor", bottom=False, top=False)
+        self.ratio_ax.set_xlabel(observable_specs[sm_shape.observable]["x_plot_label"])
+        self.main_ax.set_ylabel(observable_specs[sm_shape.observable]["y_plot_label"])
+        self.ratio_ax.set_ylabel("Ratio to prediction", size=15)
+        self.ratio_ax.grid(which="both", axis="y")
+        self.main_ax.grid(which="major", axis="x", linestyle="-", alpha=0.3)
+        self.ratio_ax.grid(which="major", axis="x", linestyle="-", alpha=0.3)
+        self.main_ax.legend(loc="lower left")
 
         rainbow_iter = cycle(rainbow)
         for shape in observable_shapes:
             color = next(rainbow_iter)
             shape.fake_rebin(sm_shape)
-            self.main_ax, self.ratio_ax = shape.plot(self.main_ax, self.ratio_ax, color)
+            # Add dashed horizontal line only in cases in which shape and SM shape edges differ
+            h_lines = False
+            equal_edges = shape.edges == sm_shape.edges
+            if not equal_edges:
+                h_lines = True
+            # Prediction shape for ratio plot
+            prediction = deepcopy(sm_shape)
+            prediction.rebin(shape.edges)
+            self.main_ax, self.ratio_ax = shape.plot(self.main_ax, self.ratio_ax, prediction, color, h_lines)
 
         hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.main_ax)

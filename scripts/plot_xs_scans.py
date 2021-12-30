@@ -134,8 +134,8 @@ def main(args):
             plot_to_dump = XSNLLsPerCategory(diff_spectrum)
             plot_to_dump.dump(output_dir)
 
-        # Plot one figure per POI with nominal and statonly NLLs
-        logger.info("Now plotting one figure per POI with nominal and statonly NLLs")
+        # Plot one figure per POI with nominal, statonly, asimov and asimov_statonly NLLs
+        logger.info("Now plotting one figure per POI with nominal, statonly, asimov and asimov_statonly NLLs (if found)")
         poi_plots = XSNLLsPerPOI(sub_cat_spectra)
         poi_plots.dump(output_dir)
 
@@ -145,7 +145,7 @@ def main(args):
     shapes = []
     for category, spectrum in differential_spectra.items():
         # Remember that the results we get for mu are meant to scale the SM cross section
-        logger.debug(f"Building shape for category {category}, variable {variable} and edges {analyses_edges[variable][category]}")
+        logger.info(f"Building shape for category {category}, variable {variable} and edges {analyses_edges[variable][category]}")
         # First: copy the finest possible shape (Hgg) and rebin it with what we need
         sm_rebinned_shape = deepcopy(sm_shapes[variable])
         sm_rebinned_shape.rebin(analyses_edges[variable][category])
@@ -153,14 +153,19 @@ def main(args):
         mus = np.array([scan.minimum[0] for scan in spectrum.scans.values()])
         mus_up = np.array([scan.minimum[0] + scan.up_uncertainty for scan in spectrum.scans.values()])
         mus_down = np.array([scan.minimum[0] - scan.down_uncertainty for scan in spectrum.scans.values()])
+        logger.debug(f"Ordered mus for category {category}: {mus}")
+        logger.debug(f"SM rebinned xs: {sm_rebinned_shape.xs}")
         weighted_bins = np.multiply(np.array(sm_rebinned_shape.xs), mus)
+        logger.debug(f"Reweighted xs: {weighted_bins}")
+        weighted_bins_up = np.multiply(np.array(sm_rebinned_shape.xs), mus_up)
+        weighted_bins_down = np.multiply(np.array(sm_rebinned_shape.xs), mus_down)
         shapes.append(
             ObservableShapeFitted(
                 variable,
                 analyses_edges[variable][category],
                 weighted_bins,
-                mus_up,
-                mus_down,
+                weighted_bins_down,
+                weighted_bins_up
             )
         )
 
