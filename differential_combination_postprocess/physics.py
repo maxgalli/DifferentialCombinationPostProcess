@@ -4,29 +4,41 @@ import pickle as pkl
 import awkward as ak
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 """
 With stuff received from Thomas
 """
+
+
 def get_prediction(arr, mass, weights=None, interPRepl=None, massRepl=None):
     # Defined by Thomas in https://github.com/threiten/HiggsAnalysis-CombinedLimit/blob/d5d9ef377a7c69a8d4eaa366b47e7c81931e71d9/test/plotBinnedSigStr.py#L236
     # To be used with weights [1, 2.3, 1]
     nBins = len(arr)
-    masses = [120., 125., 130.]
+    masses = [120.0, 125.0, 130.0]
     if weights is None:
         weights = np.ones(arr.shape[1])
     splines = []
     if arr.shape[1] == 1:
         if interPRepl is None or massRepl is None:
-            raise ValueError("If only one masspoint is given, interPRepl and massRepl must be provided!")
+            raise ValueError(
+                "If only one masspoint is given, interPRepl and massRepl must be provided!"
+            )
         for i in range(nBins):
-            splines.append(itr.UnivariateSpline(masses, interPRepl[i,:], w=weights, k=2))
+            splines.append(
+                itr.UnivariateSpline(masses, interPRepl[i, :], w=weights, k=2)
+            )
 
-        return np.array([splines[i](mass)-interPRepl[i, masses.index(massRepl)]+arr[i,0] for i in range(nBins)])
+        return np.array(
+            [
+                splines[i](mass) - interPRepl[i, masses.index(massRepl)] + arr[i, 0]
+                for i in range(nBins)
+            ]
+        )
 
     for i in range(nBins):
-        splines.append(itr.UnivariateSpline(masses, arr[i,:], w=weights, k=2))
+        splines.append(itr.UnivariateSpline(masses, arr[i, :], w=weights, k=2))
 
     return np.array([splines[i](mass) for i in range(nBins)])
 
@@ -35,15 +47,57 @@ def get_prediction(arr, mass, weights=None, interPRepl=None, massRepl=None):
 
 theor_pred_base_dir = "/work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred"
 mass = 125.38
-weights = [1., 2.3, 1.]
+weights = [1.0, 2.3, 1.0]
 hgg_br = 0.0023
 
 analyses_edges = {
     "smH_PTH": {
-        "Hgg": [0, 5, 10, 15, 20, 25, 30, 35, 45, 60, 80, 100, 120, 140, 170, 200, 250, 350, 450, 1000],
+        "Hgg": [
+            0,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30,
+            35,
+            45,
+            60,
+            80,
+            100,
+            120,
+            140,
+            170,
+            200,
+            250,
+            350,
+            450,
+            1000,
+        ],
         "HZZ": [0, 15, 30, 45, 80, 120, 200, 1000],
-        "HggHZZ": [0, 5, 10, 15, 20, 25, 30, 35, 45, 60, 80, 100, 120, 140, 170, 200, 250, 350, 450, 1000],
-    },
+        "HggHZZ": [
+            0,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30,
+            35,
+            45,
+            60,
+            80,
+            100,
+            120,
+            140,
+            170,
+            200,
+            250,
+            350,
+            450,
+            1000,
+        ],
+    }
 }
 
 # smH_PTH_xs will be an awkward array with fields 'central', 'up', and 'down'
@@ -54,16 +108,16 @@ smH_PTH_Hgg_xs_dict = {}
 with open(f"{theor_pred_base_dir}/theoryPred_Pt_18_fullPS.pkl", "rb") as f:
     pt = pkl.load(f)
     pt = get_prediction(pt, mass, weights=weights)
-    #pt_norm = pt / np.sum(pt)
+    # pt_norm = pt / np.sum(pt)
     pt_norm = pt
 smH_PTH_Hgg_xs_dict["central"] = pt_norm
 with open(f"{theor_pred_base_dir}/theoryPred_Pt_18_fullPS_theoryUnc.pkl", "rb") as f:
     pt_uncs = pkl.load(f)
     pt_down = pt - pt_uncs[0, :]
     pt_up = pt + pt_uncs[1, :]
-    #pt_down_norm = pt_down / np.sum(pt_down)
+    # pt_down_norm = pt_down / np.sum(pt_down)
     pt_down_norm = pt_down
-    #pt_up_norm = pt_up / np.sum(pt_up)
+    # pt_up_norm = pt_up / np.sum(pt_up)
     pt_up_norm = pt_up
 smH_PTH_Hgg_xs_dict["down"] = pt_down_norm
 smH_PTH_Hgg_xs_dict["up"] = pt_up_norm
@@ -72,40 +126,50 @@ for field in smH_PTH_Hgg_xs.fields:
     smH_PTH_Hgg_xs[field] = smH_PTH_Hgg_xs[field] / hgg_br
 
 
-
-
 """
 TK Legacy
 """
 
+
 def unc_squared_per_mode(uncs, xs):
-    return sum([(0.01 * unc * xs)**2 for unc in uncs])
+    return sum([(0.01 * unc * xs) ** 2 for unc in uncs])
+
 
 # Uncertainties per mode, all in percentages of total XS
 # first one is scale, second PDF, third alpha_s
-uncs_VBF             = [ 0.35, 2.1, 0.05 ]
-uncs_WH              = [ 0.6, 1.7, 0.9 ]
-uncs_ZH              = [ 3.4, 1.3, 0.9 ]
-uncs_ttH             = [ 7.5, 3.0, 2.0 ]
-uncs_bbH             = [ 22.0 ]
-uncs_tH_t_ch         = [ 10.6, 3.5, 1.2 ]
-uncs_tH_s_ch         = [ 2.1, 2.2, 0.2 ]
-uncs_tH_W_associated = [ 5.8, 6.1, 1.5 ]
-uncs_ggF = [ 5.65, 3.2 ]
+uncs_VBF = [0.35, 2.1, 0.05]
+uncs_WH = [0.6, 1.7, 0.9]
+uncs_ZH = [3.4, 1.3, 0.9]
+uncs_ttH = [7.5, 3.0, 2.0]
+uncs_bbH = [22.0]
+uncs_tH_t_ch = [10.6, 3.5, 1.2]
+uncs_tH_s_ch = [2.1, 2.2, 0.2]
+uncs_tH_W_associated = [5.8, 6.1, 1.5]
+uncs_ggF = [5.65, 3.2]
 
 # These seem to be taken from here https://twiki.cern.ch/twiki/bin/view/LHCPhysics/CERNYellowReportPageAt13TeV
-YR4_ggF_n3lo        = 4.852E+01
-YR4_VBF             = 3.779E+00
-YR4_WH              = 1.369E+00
-YR4_ZH              = 8.824E-01
-YR4_ttH             = 5.065E-01
-YR4_bbH             = 4.863E-01
-YR4_tH_t_ch         = 7.426E-02
-YR4_tH_s_ch         = 2.875E-03
-YR4_tH_W_associated = 0.000E+00
+YR4_ggF_n3lo = 4.852e01
+YR4_VBF = 3.779e00
+YR4_WH = 1.369e00
+YR4_ZH = 8.824e-01
+YR4_ttH = 5.065e-01
+YR4_bbH = 4.863e-01
+YR4_tH_t_ch = 7.426e-02
+YR4_tH_s_ch = 2.875e-03
+YR4_tH_W_associated = 0.000e00
 
-YR4_totalXS         = YR4_ggF_n3lo + YR4_VBF + YR4_WH + YR4_ZH + YR4_ttH + YR4_bbH + YR4_tH_t_ch + YR4_tH_s_ch + YR4_tH_W_associated
-YR4_xH              = YR4_totalXS - YR4_ggF_n3lo
+YR4_totalXS = (
+    YR4_ggF_n3lo
+    + YR4_VBF
+    + YR4_WH
+    + YR4_ZH
+    + YR4_ttH
+    + YR4_bbH
+    + YR4_tH_t_ch
+    + YR4_tH_s_ch
+    + YR4_tH_W_associated
+)
+YR4_xH = YR4_totalXS - YR4_ggF_n3lo
 YR4_totalXS_uncertainty = 2.5
 
 tot_unc_squared = 0.0
@@ -126,24 +190,29 @@ smH_unc_inclusive_fraction = smH_unc_inclusive / YR4_totalXS
 # This are the files taken from Vittorio
 sm_uncs = {
     "njets": [
-        0.03085762816223272, 
-        0.052913496610042327, 
-        0.08409612613286231, 
-        0.1204000132383638, 
-        0.09628940577730363
-        ]
+        0.03085762816223272,
+        0.052913496610042327,
+        0.08409612613286231,
+        0.1204000132383638,
+        0.09628940577730363,
+    ]
 }
+
 
 def normalize(l, normalization=1.0):
     s = float(sum(l))
-    return [ e/s*normalization for e in l ]
+    return [e / s * normalization for e in l]
+
 
 shape_njets = normalize([78.53302819, 30.8512632, 9.1331588, 2.41446376, 1.39813801])
 
-add_quad = lambda *args: np.sqrt(sum([ x**2 for x in args ]))
+add_quad = lambda *args: np.sqrt(sum([x ** 2 for x in args]))
+
+
 def add_unc(shape_unc_perc):
     # Add in quadrature with incl xs uncertainty from YR4
     # Do this all in 'percent-space'
     return [add_quad(err, smH_unc_inclusive_fraction) for err in shape_unc_perc]
+
 
 unc_fraction_njets = add_unc(sm_uncs["njets"])
