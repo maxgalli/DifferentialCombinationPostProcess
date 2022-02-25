@@ -5,7 +5,7 @@ from itertools import cycle
 from copy import deepcopy
 
 from .physics import YR4_totalXS
-from .physics import smH_PTH_Hgg_xs, analyses_edges
+from .physics import smH_PTH_Hgg_xs, Njets_Hgg_xs, analyses_edges
 from .cosmetics import markers, category_specs
 
 import logging
@@ -230,6 +230,14 @@ smH_PTH_Hgg_obs_shape = ObservableShapeSM(
     smH_PTH_Hgg_xs["down"].to_numpy(),
 )
 
+Njets_Hgg_obs_shape = ObservableShapeSM(
+    "Njets",
+    analyses_edges["Njets"]["Hgg"],
+    Njets_Hgg_xs["central"].to_numpy(),
+    Njets_Hgg_xs["up"].to_numpy(),
+    Njets_Hgg_xs["down"].to_numpy(),
+)
+
 # It is assumed that the SM shapes are the ones with the finest binning, i.e. Hgg
 # if something different will come up, we'll change it
-sm_shapes = {"smH_PTH": smH_PTH_Hgg_obs_shape}
+sm_shapes = {"smH_PTH": smH_PTH_Hgg_obs_shape, "Njets": Njets_Hgg_obs_shape}

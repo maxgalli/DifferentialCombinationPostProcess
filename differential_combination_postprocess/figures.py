@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import mplhep as hep
+
 hep.style.use("CMS")
 from itertools import cycle
 from copy import deepcopy
@@ -9,9 +11,11 @@ from .shapes import ObservableShapeSM
 
 # Silence matplotlib warnings for Christ sake
 import warnings
+
 warnings.filterwarnings("ignore", module="matplotlib")
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,46 +26,55 @@ class Figure:
 
     def dump(self, output_dir):
         # Dump the image in multiple formats
-        self.fig.savefig("{}/{}.png".format(output_dir, self.output_name), bbox_inches="tight")
-        self.fig.savefig("{}/{}.pdf".format(output_dir, self.output_name), bbox_inches="tight")
+        self.fig.savefig(
+            "{}/{}.png".format(output_dir, self.output_name), bbox_inches="tight"
+        )
+        self.fig.savefig(
+            "{}/{}.pdf".format(output_dir, self.output_name), bbox_inches="tight"
+        )
 
 
 class XSNLLsPerPOI:
     """
     Remember that this breaks the convention, since one figure per POI is created
     """
+
     def __init__(self, subcategory_spectra):
         self.figures = []
         nominal_spectrum = list(subcategory_spectra.values())[0]
         pois = nominal_spectrum.scans.keys()
-        
+
         for poi in pois:
             scans = []
             for subcategory, spectrum in subcategory_spectra.items():
                 scans.append((subcategory, spectrum.scans[poi]))
-            
+
             fig, ax = plt.subplots()
-            output_name = f"NLLs_{nominal_spectrum.variable}_{nominal_spectrum.category}_{poi}"
+            output_name = (
+                f"NLLs_{nominal_spectrum.variable}_{nominal_spectrum.category}_{poi}"
+            )
 
             # Set labels
             ax.set_xlabel(poi)
             ax.set_ylabel("-2$\Delta$lnL")
 
             # Set limits
-            ax.set_ylim(0., 4.)
+            ax.set_ylim(0.0, 4.0)
 
             # Draw horizontal line at 1
-            ax.axhline(1., color="k", linestyle="--")
+            ax.axhline(1.0, color="k", linestyle="--")
 
             # Draw all the NLLs with different colors
             rainbow_iter = cycle(rainbow)
             for scan_tpl in scans:
                 color = next(rainbow_iter)
                 ax = scan_tpl[1].plot(ax, color, label=scan_tpl[0])
-                ax = scan_tpl[1].plot_original_points(ax, color, label=f"{scan_tpl[0]} (original)")
+                ax = scan_tpl[1].plot_original_points(
+                    ax, color, label=f"{scan_tpl[0]} (original)"
+                )
 
             # Legend
-            ax.legend(loc='upper center', prop={'size': 10}, ncol=4)
+            ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
             hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=ax)
 
             self.figures.append((fig, ax, output_name))
@@ -69,30 +82,33 @@ class XSNLLsPerPOI:
     def dump(self, output_dir):
         for fig, ax, output_name in self.figures:
             # Dump the image in multiple formats
-            fig.savefig("{}/{}.png".format(output_dir, output_name), bbox_inches="tight")
-            fig.savefig("{}/{}.pdf".format(output_dir, output_name), bbox_inches="tight")
+            fig.savefig(
+                "{}/{}.png".format(output_dir, output_name), bbox_inches="tight"
+            )
+            fig.savefig(
+                "{}/{}.pdf".format(output_dir, output_name), bbox_inches="tight"
+            )
 
 
 class XSNLLsPerCategory(Figure):
     """ Plot the NLLs for a given category, one NLL per POI
     """
+
     def __init__(self, differential_spectrum):
         self.ds = differential_spectrum
         self.fig, self.ax = plt.subplots()
-        self.output_name = "NLLs_{}_{}".format(
-            self.ds.variable, self.ds.category
-            )
+        self.output_name = "NLLs_{}_{}".format(self.ds.variable, self.ds.category)
 
         # Set labels
         self.ax.set_xlabel(self.ds.variable)
         self.ax.set_ylabel("-2$\Delta$lnL")
 
         # Set limits
-        self.ax.set_ylim(0., 4.)
+        self.ax.set_ylim(0.0, 4.0)
 
         # Draw horizontal line at 1
-        self.ax.axhline(1., color="k", linestyle="--")
-        
+        self.ax.axhline(1.0, color="k", linestyle="--")
+
         # Draw all the NLLs on the ax
         logger.debug(differential_spectrum.scans)
         rainbow_iter = cycle(rainbow)
@@ -102,22 +118,22 @@ class XSNLLsPerCategory(Figure):
             self.ax = scan.plot(self.ax, color)
 
         # Legend
-        self.ax.legend(loc='upper center', prop={'size': 10}, ncol=4)
-        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.ax)
+        self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
+        hep.cms.label(
+            loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.ax
+        )
 
 
 class DiffXSsPerObservable(Figure):
     """
     """
+
     def __init__(self, output_name, sm_shape, observable_shapes):
         self.output_name = output_name
         # Set up figure and axes
         self.fig, (self.main_ax, self.ratio_ax) = plt.subplots(
-            nrows=2,
-            ncols=1,
-            gridspec_kw={"height_ratios": (3, 1)},
-            sharex=True
-            )
+            nrows=2, ncols=1, gridspec_kw={"height_ratios": (3, 1)}, sharex=True
+        )
 
         # X limits depend on the SM plot (the one in the background with the predictions)
         logger.debug(f"Using SM shape:\n{sm_shape}")
@@ -127,11 +143,27 @@ class DiffXSsPerObservable(Figure):
         self.ratio_ax.set_ylim(0, 2)
         self.ratio_ax.set_yticks([0, 1, 2])
         self.main_ax, self.ratio_ax = sm_shape.plot(self.main_ax, self.ratio_ax)
-        self.ratio_ax.set_xticks(sm_shape.fake_edges)
-        tick_labels = deepcopy(sm_shape.edges)
-        if sm_shape.overflow:
-            tick_labels[-1] = r"$\infty$"
-        self.ratio_ax.set_xticklabels(tick_labels)
+        # in the case of Njets, labels are in the middle of the bins
+        if sm_shape.observable in ["Njets"]:
+            width = sm_shape.edges[1] - sm_shape.edges[0]
+            start = sm_shape.edges[0] + width / 2
+            logger.debug(f"Start: {start}")
+            end = sm_shape.edges[-1] + width / 2
+            logger.debug(f"End: {end}")
+            logger.debug(f"Setting x ticks to {np.arange(start, end, width)}")
+            self.ratio_ax.set_xticks(np.arange(start, end, width), minor=True)
+            logger.debug(f"Minor ticks: {self.ratio_ax.get_xticks(minor=True)}")
+            tick_labels = deepcopy(sm_shape.edges[:-1])
+            tick_labels[-1] = f"{tick_labels[-1]}+"
+            logger.debug(f"Setting x tick labels to {tick_labels}")
+            self.ratio_ax.set_xticklabels("")
+            self.ratio_ax.set_xticklabels(tick_labels, minor=True)
+        else:
+            self.ratio_ax.set_xticks(sm_shape.fake_edges)
+            tick_labels = deepcopy(sm_shape.edges)
+            if sm_shape.overflow:
+                tick_labels[-1] = r"$\infty$"
+            self.ratio_ax.set_xticklabels(tick_labels)
         self.ratio_ax.tick_params(axis="x", which="major", labelsize=13)
         self.main_ax.tick_params(axis="x", which="minor", bottom=False, top=False)
         self.ratio_ax.tick_params(axis="x", which="minor", bottom=False, top=False)
@@ -155,6 +187,11 @@ class DiffXSsPerObservable(Figure):
             # Prediction shape for ratio plot
             prediction = deepcopy(sm_shape)
             prediction.rebin(shape.edges)
-            self.main_ax, self.ratio_ax = shape.plot(self.main_ax, self.ratio_ax, prediction, color, h_lines)
+            self.main_ax, self.ratio_ax = shape.plot(
+                self.main_ax, self.ratio_ax, prediction, color, h_lines
+            )
 
-        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.main_ax)
+        hep.cms.label(
+            loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.main_ax
+        )
+

@@ -1,5 +1,6 @@
 from matplotlib import cm
 import numpy as np
+
 np.random.seed(0)
 
 markers = ("v", "^", ">", "<", "s", "p", "*")
@@ -14,13 +15,13 @@ observable_specs = {
         "x_plot_label": "$p_{T}^{H}$ [GeV]",
         "y_plot_label": "$\\Delta\\sigma\ / \Delta p_{T}^{H}$ [fb/GeV]",
     },
+    "Njets": {
+        "x_plot_label": "$N_{jets}$",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta N_{jets}$ [fb]",
+    },
 }
 
 category_specs = {
-    "Hgg": {
-        "plot_label": "H$\rightarrow\\gamma\\gamma$",
-    },
-    "HZZ": {
-        "plot_label": "H$\rightarrowZZ$",
-    }
+    "Hgg": {"plot_label": "H$\rightarrow\\gamma\\gamma$"},
+    "HZZ": {"plot_label": "H$\rightarrowZZ$"},
 }
