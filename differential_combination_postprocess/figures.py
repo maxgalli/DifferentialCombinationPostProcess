@@ -6,7 +6,7 @@ hep.style.use("CMS")
 from itertools import cycle
 from copy import deepcopy
 
-from .cosmetics import rainbow, observable_specs
+from .cosmetics import rainbow, observable_specs, category_specs
 from .shapes import ObservableShapeSM
 
 # Silence matplotlib warnings for Christ sake
@@ -128,7 +128,11 @@ class DiffXSsPerObservable(Figure):
     """
     """
 
-    def __init__(self, output_name, sm_shape, observable_shapes):
+    def __init__(
+        self, output_name, sm_shape, observable_shapes, observable_shapes_systonly=None
+    ):
+        if observable_shapes_systonly is None:
+            observable_shapes_systonly = []
         self.output_name = output_name
         # Set up figure and axes
         self.fig, (self.main_ax, self.ratio_ax) = plt.subplots(
@@ -173,12 +177,21 @@ class DiffXSsPerObservable(Figure):
         self.ratio_ax.grid(which="both", axis="y")
         self.main_ax.grid(which="major", axis="x", linestyle="-", alpha=0.3)
         self.ratio_ax.grid(which="major", axis="x", linestyle="-", alpha=0.3)
-        self.main_ax.legend(loc="lower left")
 
-        rainbow_iter = cycle(rainbow)
+        # Horrible way to somehow move the points away from each other and not have them superimposed
+        displacements = [0, 0.1, -0.1, 0.2, -0.2, 0.3, -0.3]
+        categories = list(set([shape.category for shape in observable_shapes]))
+        displacements_dict = {k: v for k, v in zip(categories, displacements)}
+        logger.debug(f"Displacements: {displacements_dict}")
+
         for shape in observable_shapes:
-            color = next(rainbow_iter)
             shape.fake_rebin(sm_shape)
+
+            displacement = displacements_dict[shape.category]
+            shape.fake_maybe_moved_centers = (
+                shape.fake_centers + np.diff(shape.fake_edges) * displacement
+            )
+
             # Add dashed horizontal line only in cases in which shape and SM shape edges differ
             h_lines = False
             equal_edges = shape.edges == sm_shape.edges
@@ -188,8 +201,25 @@ class DiffXSsPerObservable(Figure):
             prediction = deepcopy(sm_shape)
             prediction.rebin(shape.edges)
             self.main_ax, self.ratio_ax = shape.plot(
-                self.main_ax, self.ratio_ax, prediction, color, h_lines
+                self.main_ax, self.ratio_ax, prediction, h_lines
             )
+
+        # Add bands for systonly
+        for shape_systonly in observable_shapes_systonly:
+            logger.debug("Adding bands for systonly")
+            shape_systonly.fake_rebin(sm_shape)
+
+            displacement = displacements_dict[shape_systonly.category]
+            shape_systonly.fake_maybe_moved_centers = (
+                shape.fake_centers + np.diff(shape.fake_edges) * displacement
+            )
+
+            self.main_ax, self.ratio_ax = shape_systonly.plot_as_band(
+                self.main_ax, self.ratio_ax, prediction
+            )
+
+        # Miscellanea business that has to be done after
+        self.main_ax.legend(loc="lower left")
 
         hep.cms.label(
             loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.main_ax

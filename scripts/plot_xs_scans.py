@@ -27,6 +27,8 @@ from differential_combination_postprocess.figures import (
 from differential_combination_postprocess.shapes import ObservableShapeFitted, sm_shapes
 from differential_combination_postprocess.physics import analyses_edges
 
+import logging
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Produce XS plots")
@@ -70,6 +72,14 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--systematics-bands",
+        nargs="+",
+        type=str,
+        required=True,
+        help="Categories for which we want to plot the systematics bands in the final plot",
+    )
+
+    parser.add_argument(
         "--exclude-dirs",
         nargs="+",
         type=str,
@@ -77,7 +87,58 @@ def parse_arguments():
         help="Directory to exclude from the list of input directories",
     )
 
+    parser.add_argument(
+        "--no-final",
+        action="store_true",
+        default=False,
+        help="Do not produce final plots",
+    )
+
     return parser.parse_args()
+
+
+def get_shapes_from_differential_spectra(differential_spectra, observable):
+    shapes = []
+    for category, spectrum in differential_spectra.items():
+        simple_category = category.split("_")[0]
+        # Remember that the results we get for mu are meant to scale the SM cross section
+        logging.info(
+            f"Building shape for category {category}, observable {observable} and edges {analyses_edges[observable][simple_category]}"
+        )
+        # First: copy the finest possible shape (Hgg) and rebin it with what we need
+        sm_rebinned_shape = deepcopy(sm_shapes[observable])
+        sm_rebinned_shape.rebin(analyses_edges[observable][simple_category])
+        # Second: bin-wise multiply the new bin values by the values for mu computed in the scan
+        mus = np.array([scan.minimum[0] for scan in spectrum.scans.values()])
+        mus_up = np.array(
+            [scan.minimum[0] + scan.up_uncertainty for scan in spectrum.scans.values()]
+        )
+        mus_down = np.array(
+            [
+                scan.minimum[0] - scan.down_uncertainty
+                for scan in spectrum.scans.values()
+            ]
+        )
+        logging.debug(f"Ordered mus for category {category}: {mus}")
+        logging.debug(f"SM rebinned xs: {sm_rebinned_shape.xs}")
+        weighted_bins = np.multiply(np.array(sm_rebinned_shape.xs), mus)
+        logging.debug(f"Reweighted xs: {weighted_bins}")
+        weighted_bins_up = np.multiply(np.array(sm_rebinned_shape.xs), mus_up)
+        weighted_bins_down = np.multiply(np.array(sm_rebinned_shape.xs), mus_down)
+        logging.debug(f"Reweighted xs up: {weighted_bins_up}")
+        logging.debug(f"Reweighted xs down: {weighted_bins_down}")
+        shapes.append(
+            ObservableShapeFitted(
+                observable,
+                simple_category,
+                analyses_edges[observable][simple_category],
+                weighted_bins,
+                weighted_bins_down,
+                weighted_bins_up,
+            )
+        )
+
+    return shapes
 
 
 def main(args):
@@ -91,6 +152,7 @@ def main(args):
     metadata_dir = args.metadata_dir
     output_dir = args.output_dir
     categories = args.categories
+    systematic_bands = args.systematics_bands
     exclude_dirs = args.exclude_dirs
     logger.info(f"Plotting session for observable {observable}")
 
@@ -101,6 +163,7 @@ def main(args):
     logger.debug(f"YAMLs: {categories_yamls}")
 
     differential_spectra = {}
+    differential_spectra_statonly = {}
 
     for fl in categories_yamls:
         full_path_to_file = f"{metadata_dir}/{observable}/{fl}"
@@ -146,6 +209,8 @@ def main(args):
             sub_cat_spectra[sub_cat] = diff_spectrum
             if sub_cat == category:
                 differential_spectra[sub_cat] = diff_spectrum
+            if sub_cat == statonly_cat and sub_cat.split("_")[0] in systematic_bands:
+                differential_spectra_statonly[sub_cat] = diff_spectrum
 
             plot_to_dump = XSNLLsPerCategory(diff_spectrum)
             plot_to_dump.dump(output_dir)
@@ -157,51 +222,34 @@ def main(args):
         poi_plots = XSNLLsPerPOI(sub_cat_spectra)
         poi_plots.dump(output_dir)
 
+    logger.debug(f"Differential spectra: {differential_spectra}")
+
     # Produce the final differential xs plot including all the categories
     logger.info(
         f"Now producing the final differential xs plot for observable {observable}"
     )
-    shapes = []
-    for category, spectrum in differential_spectra.items():
-        # Remember that the results we get for mu are meant to scale the SM cross section
-        logger.info(
-            f"Building shape for category {category}, observable {observable} and edges {analyses_edges[observable][category]}"
-        )
-        # First: copy the finest possible shape (Hgg) and rebin it with what we need
-        sm_rebinned_shape = deepcopy(sm_shapes[observable])
-        sm_rebinned_shape.rebin(analyses_edges[observable][category])
-        # Second: bin-wise multiply the new bin values by the values for mu computed in the scan
-        mus = np.array([scan.minimum[0] for scan in spectrum.scans.values()])
-        mus_up = np.array(
-            [scan.minimum[0] + scan.up_uncertainty for scan in spectrum.scans.values()]
-        )
-        mus_down = np.array(
-            [
-                scan.minimum[0] - scan.down_uncertainty
-                for scan in spectrum.scans.values()
-            ]
-        )
-        logger.debug(f"Ordered mus for category {category}: {mus}")
-        logger.debug(f"SM rebinned xs: {sm_rebinned_shape.xs}")
-        weighted_bins = np.multiply(np.array(sm_rebinned_shape.xs), mus)
-        logger.debug(f"Reweighted xs: {weighted_bins}")
-        weighted_bins_up = np.multiply(np.array(sm_rebinned_shape.xs), mus_up)
-        weighted_bins_down = np.multiply(np.array(sm_rebinned_shape.xs), mus_down)
-        shapes.append(
-            ObservableShapeFitted(
-                observable,
-                analyses_edges[observable][category],
-                weighted_bins,
-                weighted_bins_down,
-                weighted_bins_up,
-            )
-        )
 
-    final_plot_output_name = f"Final-{observable}-" + "_".join(categories)
-    final_plot = DiffXSsPerObservable(
-        final_plot_output_name, sm_shapes[observable], shapes
+    shapes = get_shapes_from_differential_spectra(differential_spectra, observable)
+    shapes_statonly = get_shapes_from_differential_spectra(
+        differential_spectra_statonly, observable
     )
-    final_plot.dump(output_dir)
+    # horrible
+    # I should probably introduce another dict
+    shapes_systonly = []
+    for shape in shapes:
+        for shape_statonly in shapes_statonly:
+            if (
+                shape.category == shape_statonly.category
+                and shape.observable == shape_statonly.observable
+            ):
+                shapes_systonly.append(shape - shape_statonly)
+
+    if not args.no_final:
+        final_plot_output_name = f"Final-{observable}-" + "_".join(categories)
+        final_plot = DiffXSsPerObservable(
+            final_plot_output_name, sm_shapes[observable], shapes, shapes_systonly
+        )
+        final_plot.dump(output_dir)
 
 
 if __name__ == "__main__":

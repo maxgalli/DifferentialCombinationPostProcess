@@ -1,3 +1,4 @@
+from cProfile import label
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -18,10 +19,18 @@ class ObservableShape:
     """
 
     def __init__(
-        self, observable, edges, nominal_values, up_values, down_values, overflow=True
+        self,
+        observable,
+        category,
+        edges,
+        nominal_values,
+        up_values,
+        down_values,
+        overflow=True,
     ):
 
         self.observable = observable
+        self.category = category
         self.edges = edges
         self.xs = nominal_values
         self.xs_up = up_values
@@ -32,6 +41,7 @@ class ObservableShape:
         self.fake_bin_width = 1
         self.fake_edges = np.arange(0, len(self.edges), self.fake_bin_width)
         self.fake_centers = (self.fake_edges[1:] + self.fake_edges[:-1]) / 2
+        self.fake_maybe_moved_centers = self.fake_centers.copy()
 
     @property
     def nbins(self):
@@ -84,6 +94,7 @@ class ObservableShape:
             self.fake_edges.append(new_edge)
         self.fake_edges = np.array(self.fake_edges)
         self.fake_centers = (self.fake_edges[1:] + self.fake_edges[:-1]) / 2
+        self.fake_maybe_moved_centers = self.fake_centers.copy()
 
     def merge_bins(self, old_bins, old_edges, new_edges):
         if not all(edge in old_edges for edge in new_edges):
@@ -173,14 +184,12 @@ class ObservableShapeSM(ObservableShape):
 
 
 class ObservableShapeFitted(ObservableShape):
-    def plot(
-        self, ax, rax, prediction_shape, color="black", dashed_horizontal_lines=False
-    ):
-        markers_iter = cycle(markers)
-        marker = next(markers_iter)
+    def plot(self, ax, rax, prediction_shape, dashed_horizontal_lines=False):
+        color = category_specs[self.category]["color"]
+        marker = category_specs[self.category]["marker"]
 
         ax.errorbar(
-            self.fake_centers,
+            self.fake_maybe_moved_centers,
             self.xs_over_bin_width,
             yerr=np.array(
                 [
@@ -193,15 +202,27 @@ class ObservableShapeFitted(ObservableShape):
             marker=marker,
             markersize=5,
             capsize=3,
+            label=category_specs[self.category]["plot_label"],
         )
 
-        ratio_xs = self.xs / prediction_shape.xs
-        ratio_xs_up = self.xs_up / prediction_shape.xs
-        ratio_xs_down = self.xs_down / prediction_shape.xs
+        ratio_xs_over_bin_width = (
+            self.xs_over_bin_width / prediction_shape.xs_over_bin_width
+        )
+        ratio_xs_up_over_bin_width = (
+            self.xs_up_over_bin_width / prediction_shape.xs_up_over_bin_width
+        )
+        ratio_xs_down_over_bin_width = (
+            self.xs_down_over_bin_width / prediction_shape.xs_down_over_bin_width
+        )
         rax.errorbar(
-            self.fake_centers,
-            ratio_xs,
-            yerr=np.array([ratio_xs - ratio_xs_down, ratio_xs_up - ratio_xs]),
+            self.fake_maybe_moved_centers,
+            ratio_xs_over_bin_width,
+            yerr=np.array(
+                [
+                    ratio_xs_over_bin_width - ratio_xs_down_over_bin_width,
+                    ratio_xs_up_over_bin_width - ratio_xs_over_bin_width,
+                ]
+            ),
             linestyle="",
             color=color,
             marker=marker,
@@ -215,15 +236,84 @@ class ObservableShapeFitted(ObservableShape):
             ):
                 ax.hlines(y, left, right, linestyle="dashed", linewidth=1, color=color)
             for y, left, right in zip(
-                ratio_xs, self.fake_edges[:-1], self.fake_edges[1:]
+                ratio_xs_over_bin_width, self.fake_edges[:-1], self.fake_edges[1:]
             ):
                 rax.hlines(y, left, right, linestyle="dashed", linewidth=1, color=color)
 
         return ax, rax
 
+    def plot_as_band(self, ax, rax, prediction_shape):
+        color = category_specs[self.category]["color"]
+        label = category_specs[self.category]["plot_label"]
+        fake_widths = np.diff(self.fake_edges)
+        band_widths = fake_widths / 5
+
+        # Main plot
+        bottom_left_corners_x = self.fake_maybe_moved_centers - band_widths / 2
+        heights = self.xs_up_over_bin_width - self.xs_down_over_bin_width
+
+        lab = 0  # horrible, just horrible...
+        for bottom_left_corner_x, bottom_left_corner_y, width, height in zip(
+            bottom_left_corners_x, self.xs_down_over_bin_width, band_widths, heights
+        ):
+            ax.add_patch(
+                Rectangle(
+                    xy=(bottom_left_corner_x, bottom_left_corner_y),
+                    width=width,
+                    height=height,
+                    color=color,
+                    alpha=0.3,
+                    label=f"{label}, Syst. unc." if lab == 0 else None,
+                )
+            )
+            lab += 1
+
+        # Ratio plot
+        ratio_xs_over_bin_width = (
+            self.xs_over_bin_width / prediction_shape.xs_over_bin_width
+        )
+        ratio_xs_up_over_bin_width = (
+            self.xs_up_over_bin_width / prediction_shape.xs_up_over_bin_width
+        )
+        ratio_xs_down_over_bin_width = (
+            self.xs_down_over_bin_width / prediction_shape.xs_down_over_bin_width
+        )
+
+        heights = ratio_xs_up_over_bin_width - ratio_xs_down_over_bin_width
+
+        for bottom_left_corner_x, bottom_left_corner_y, width, height in zip(
+            bottom_left_corners_x, ratio_xs_down_over_bin_width, band_widths, heights
+        ):
+            rax.add_patch(
+                Rectangle(
+                    xy=(bottom_left_corner_x, bottom_left_corner_y),
+                    width=width,
+                    height=height,
+                    color=color,
+                    alpha=0.3,
+                )
+            )
+
+        return ax, rax
+
+    def __sub__(self, other):
+        if self.observable != other.observable or self.edges != other.edges:
+            raise ValueError("Shapes are not compatible")
+
+        return ObservableShapeFitted(
+            self.observable,
+            self.category,
+            self.edges,
+            self.xs,
+            self.xs + np.abs(self.xs_up - other.xs_up),
+            self.xs - np.abs(self.xs_down - other.xs_down),
+            self.overflow,
+        )
+
 
 smH_PTH_Hgg_obs_shape = ObservableShapeSM(
     "smH_PTH",
+    "Hgg",
     analyses_edges["smH_PTH"]["Hgg"],
     smH_PTH_Hgg_xs["central"].to_numpy(),
     smH_PTH_Hgg_xs["up"].to_numpy(),
@@ -232,6 +322,7 @@ smH_PTH_Hgg_obs_shape = ObservableShapeSM(
 
 Njets_Hgg_obs_shape = ObservableShapeSM(
     "Njets",
+    "Hgg",
     analyses_edges["Njets"]["Hgg"],
     Njets_Hgg_xs["central"].to_numpy(),
     Njets_Hgg_xs["up"].to_numpy(),

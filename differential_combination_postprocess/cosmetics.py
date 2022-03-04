@@ -22,6 +22,10 @@ observable_specs = {
 }
 
 category_specs = {
-    "Hgg": {"plot_label": "H$\rightarrow\\gamma\\gamma$"},
-    "HZZ": {"plot_label": "H$\rightarrowZZ$"},
+    "Hgg": {
+        "plot_label": "H $\longrightarrow\\gamma\\gamma$",
+        "color": "red",
+        "marker": "^",
+    },
+    "HZZ": {"plot_label": "H $\longrightarrow$ ZZ", "color": "blue", "marker": "v"},
 }
