@@ -72,10 +72,11 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--systematics-bands",
+        "--systematic-bands",
         nargs="+",
         type=str,
-        required=True,
+        required=False,
+        default=[],
         help="Categories for which we want to plot the systematics bands in the final plot",
     )
 
@@ -152,7 +153,7 @@ def main(args):
     metadata_dir = args.metadata_dir
     output_dir = args.output_dir
     categories = args.categories
-    systematic_bands = args.systematics_bands
+    systematic_bands = args.systematic_bands
     exclude_dirs = args.exclude_dirs
     logger.info(f"Plotting session for observable {observable}")
 
