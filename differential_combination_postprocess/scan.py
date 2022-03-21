@@ -84,13 +84,25 @@ class Scan:
         # For simplicity, make two separate arrays after sorting them
         branches_np = np.array([branches[poi], branches["deltaNLL"]])
         branches_np = branches_np[:, branches_np[0].argsort()]
+
+        # Some kinds of interpolation (like cubic) fail if there are duplicates (these may come e.g. from multiple directories containing the scans)
+        # We thus remove them
+        branches_np = np.unique(branches_np, axis=-1)
+
+        # At this point we can still have duplicates, most likely if there are same values for the POI with different deltaNLL
+        for val in np.unique(branches_np[0]):
+            wh = np.where(branches_np[0] == val)[0]
+            if len(wh) > 1:
+                branches_np = np.delete(branches_np, wh[1:], axis=1)
+
         poi_values_original = branches_np[0]
         two_dnll_original = 2 * branches_np[1]
+
         # Points will be arranged in a 2xN_Points numpy array
         self.original_points = np.array([poi_values_original, two_dnll_original])
 
         logger.debug(
-            "Original points found (after sorting and removing zeroes): {}".format(
+            "Original points found (after sorting, removing zeroes and removing duplicates): {}".format(
                 [
                     (x, y)
                     for x, y in zip(self.original_points[0], self.original_points[1])
@@ -99,7 +111,9 @@ class Scan:
         )
 
         # Interpolate and re-make arrays to have more points
-        self.dNLL_func = interpolate.interp1d(poi_values_original, two_dnll_original)
+        self.dNLL_func = interpolate.interp1d(
+            poi_values_original, two_dnll_original, kind="cubic"
+        )
         self.n_interpol = 1000000
         self.poi_boundaries = (poi_values_original[0], poi_values_original[-1])
         poi_values = np.linspace(
