@@ -74,7 +74,7 @@ analyses_edges = {
             450,
             1000,
         ],
-        "HZZ": [0, 15, 30, 45, 80, 120, 200, 1000],
+        "HZZ": [0, 15, 30, 45, 80, 120, 200, 1000],  # because we merged last three bins
         "HggHZZ": [
             0,
             5,
@@ -99,8 +99,25 @@ analyses_edges = {
         ],
     },
     "Njets": {"Hgg": [0, 1, 2, 3, 4, 5]},
-    "yH": {"Hgg": [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.20, 1.60, 2.0, 3.0]},
+    "yH": {
+        "Hgg": [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.20, 1.60, 2.0, 3.0],
+        "HZZ": [
+            0.0,
+            0.15,
+            0.30,
+            0.45,
+            0.60,
+            0.75,
+            0.90,
+            1.20,
+            1.60,
+            3.0,
+        ],  # because we merged last two bins
+        "HggHZZ": [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.20, 1.60, 2.0, 3.0],
+    },
 }
+
+overflows = ["smH_PTH"]
 
 
 def make_hgg_theory_pred_array(pickle_central, pickle_uncertainty):
@@ -133,6 +150,10 @@ smH_PTH_Hgg_xs = make_hgg_theory_pred_array(
 )
 Njets_Hgg_xs = make_hgg_theory_pred_array(
     "theoryPred_Njets2p5_18_fullPS.pkl", "theoryPred_Njets2p5_18_fullPS_theoryUnc.pkl"
+)
+yH_Hgg_xs = make_hgg_theory_pred_array(
+    "theoryPred_AbsRapidityFine_18_fullPS.pkl",
+    "theoryPred_AbsRapidityFine_18_fullPS_theoryUnc.pkl",
 )
 
 

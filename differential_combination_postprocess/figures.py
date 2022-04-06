@@ -6,7 +6,7 @@ hep.style.use("CMS")
 from itertools import cycle
 from copy import deepcopy
 
-from .cosmetics import rainbow, observable_specs, category_specs
+from .cosmetics import rainbow, observable_specs, category_specs, fit_type_colors
 from .shapes import ObservableShapeSM
 
 # Silence matplotlib warnings for Christ sake
@@ -65,9 +65,7 @@ class XSNLLsPerPOI:
             ax.axhline(1.0, color="k", linestyle="--")
 
             # Draw all the NLLs with different colors
-            rainbow_iter = cycle(rainbow)
-            for scan_tpl in scans:
-                color = next(rainbow_iter)
+            for scan_tpl, color in zip(scans, fit_type_colors):
                 ax = scan_tpl[1].plot(ax, color, label=scan_tpl[0])
                 ax = scan_tpl[1].plot_original_points(
                     ax, color, label=f"{scan_tpl[0]} (original)"
@@ -75,7 +73,7 @@ class XSNLLsPerPOI:
 
             # Legend
             ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-            hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=ax)
+            hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=ax)
 
             self.figures.append((fig, ax, output_name))
 
@@ -88,6 +86,39 @@ class XSNLLsPerPOI:
             fig.savefig(
                 "{}/{}.pdf".format(output_dir, output_name), bbox_inches="tight"
             )
+
+
+class XSNLLsPerPOI_Full(XSNLLsPerPOI):
+    def __init__(self, subcategory_spectra):
+        self.figures = []
+        nominal_spectrum = list(subcategory_spectra.values())[0]
+        pois = nominal_spectrum.scans.keys()
+
+        for poi in pois:
+            scans = []
+            for subcategory, spectrum in subcategory_spectra.items():
+                scans.append((subcategory, spectrum.scans[poi]))
+
+            fig, ax = plt.subplots()
+            output_name = f"Full_NLLs_{nominal_spectrum.variable}_{nominal_spectrum.category}_{poi}"
+
+            # Set labels
+            ax.set_xlabel(poi)
+            ax.set_ylabel("-$\Delta$lnL")
+
+            # Draw all the NLLs with different colors
+            rainbow_iter = cycle(rainbow)
+            for scan_tpl in scans:
+                color = next(rainbow_iter)
+                ax = scan_tpl[1].plot_original_points(
+                    ax, color, label=scan_tpl[0], for_single_plot=True
+                )
+
+            # Legend
+            ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
+            hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=ax)
+
+            self.figures.append((fig, ax, output_name))
 
 
 class XSNLLsPerCategory(Figure):
@@ -119,9 +150,7 @@ class XSNLLsPerCategory(Figure):
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-        hep.cms.label(
-            loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.ax
-        )
+        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.ax)
 
 
 class DiffXSsPerObservable(Figure):
@@ -179,7 +208,7 @@ class DiffXSsPerObservable(Figure):
         self.ratio_ax.grid(which="major", axis="x", linestyle="-", alpha=0.3)
 
         # Horrible way to somehow move the points away from each other and not have them superimposed
-        displacements = [0, 0.1, -0.1, 0.2, -0.2, 0.3, -0.3]
+        displacements = [0, 0.2, -0.2, 0.4, -0.4, 0.6, -0.6]
         categories = list(set([shape.category for shape in observable_shapes]))
         displacements_dict = {k: v for k, v in zip(categories, displacements)}
         logger.debug(f"Displacements: {displacements_dict}")
@@ -211,9 +240,12 @@ class DiffXSsPerObservable(Figure):
 
             displacement = displacements_dict[shape_systonly.category]
             shape_systonly.fake_maybe_moved_centers = (
-                shape.fake_centers + np.diff(shape.fake_edges) * displacement
+                shape_systonly.fake_centers
+                + np.diff(shape_systonly.fake_edges) * displacement
             )
 
+            prediction = deepcopy(sm_shape)
+            prediction.rebin(shape_systonly.edges)
             self.main_ax, self.ratio_ax = shape_systonly.plot_as_band(
                 self.main_ax, self.ratio_ax, prediction
             )
@@ -222,6 +254,6 @@ class DiffXSsPerObservable(Figure):
         self.main_ax.legend(loc="lower left")
 
         hep.cms.label(
-            loc=0, data=True, llabel="Work in Progress", lumi=35.9, ax=self.main_ax
+            loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.main_ax
         )
 

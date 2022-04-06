@@ -6,7 +6,7 @@ from itertools import cycle
 from copy import deepcopy
 
 from .physics import YR4_totalXS
-from .physics import smH_PTH_Hgg_xs, Njets_Hgg_xs, analyses_edges
+from .physics import smH_PTH_Hgg_xs, Njets_Hgg_xs, yH_Hgg_xs, analyses_edges
 from .cosmetics import markers, category_specs
 
 import logging
@@ -77,7 +77,7 @@ class ObservableShape:
         self.edges = new_edges
 
     def fake_rebin(self, other_shape):
-        logger.debug(f"Stretching fake range for {self.observable}")
+        logger.debug(f"Stretching fake range for {self.observable} {self.category}")
         logger.debug(f"Current Fake edges: {self.fake_edges}")
         logger.debug(f"Other Fake edges: {other_shape.fake_edges}")
         self.fake_edges = []
@@ -118,6 +118,9 @@ class ObservableShape:
         string += f"Nominal XS: {self.xs}\n"
         string += f"Up XS: {self.xs_up}\n"
         string += f"Down XS: {self.xs_down}\n"
+        string += f"Nominal XS / bin width: {self.xs_over_bin_width}\n"
+        string += f"Up XS / bin width: {self.xs_up_over_bin_width}\n"
+        string += f"Down XS / bin width: {self.xs_down_over_bin_width}\n"
 
         return string
 
@@ -329,6 +332,22 @@ Njets_Hgg_obs_shape = ObservableShapeSM(
     Njets_Hgg_xs["down"].to_numpy(),
 )
 
+yH_Hgg_obs_shape = ObservableShapeSM(
+    "yH",
+    "Hgg",
+    analyses_edges["yH"]["Hgg"],
+    yH_Hgg_xs["central"].to_numpy(),
+    yH_Hgg_xs["up"].to_numpy(),
+    yH_Hgg_xs["down"].to_numpy(),
+    overflow=False,
+)
+
+
 # It is assumed that the SM shapes are the ones with the finest binning, i.e. Hgg
 # if something different will come up, we'll change it
-sm_shapes = {"smH_PTH": smH_PTH_Hgg_obs_shape, "Njets": Njets_Hgg_obs_shape}
+sm_shapes = {
+    "smH_PTH": smH_PTH_Hgg_obs_shape,
+    "Njets": Njets_Hgg_obs_shape,
+    "yH": yH_Hgg_obs_shape,
+}
+

@@ -8,6 +8,8 @@ markers = ("v", "^", ">", "<", "s", "p", "*")
 rainbow = cm.rainbow(np.linspace(0, 1, 20))
 np.random.shuffle(rainbow)
 
+fit_type_colors = ["red", "green", "blue", "purple"]
+
 # All the minor decorations for the final plot which depend on the observable itself
 
 observable_specs = {
@@ -19,6 +21,10 @@ observable_specs = {
         "x_plot_label": "$N_{jets}$",
         "y_plot_label": "$\\Delta\\sigma\ / \Delta N_{jets}$ [fb]",
     },
+    "yH": {
+        "x_plot_label": "$y_{H}$",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta y_{H}$ [fb]",
+    },
 }
 
 category_specs = {
@@ -28,4 +34,5 @@ category_specs = {
         "marker": "^",
     },
     "HZZ": {"plot_label": "H $\longrightarrow$ ZZ", "color": "blue", "marker": "v"},
+    "HggHZZ": {"plot_label": "Combination", "color": "black", "marker": "o"},
 }

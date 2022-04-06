@@ -197,9 +197,9 @@ class Scan:
     def plot(self, ax, color=None, label=None):
         if label is None:
             label = self.poi
-        # Restrict the plotted values to a dnll less than 3.5
-        x = self.interpolated_points[0][self.interpolated_points[1] < 3.5]
-        y = self.interpolated_points[1][self.interpolated_points[1] < 3.5]
+        # Restrict the plotted values to a dnll less than 5.0
+        x = self.interpolated_points[0][self.interpolated_points[1] < 5.0]
+        y = self.interpolated_points[1][self.interpolated_points[1] < 5.0]
         ax.plot(x, y, color="k")
         # Vertical line passing through the minimum
         ax.plot(
@@ -220,11 +220,15 @@ class Scan:
 
         return ax
 
-    def plot_original_points(self, ax, color=None, label=None):
+    def plot_original_points(self, ax, color=None, label=None, for_single_plot=False):
         if label is None:
             label = f"{self.poi} (original)"
-        x = self.original_moved_points[0][self.original_moved_points[1] < 3.5]
-        y = self.original_moved_points[1][self.original_moved_points[1] < 3.5]
+        if for_single_plot:
+            x = self.original_moved_points[0]
+            y = self.original_moved_points[1]
+        else:
+            x = self.original_moved_points[0][self.original_moved_points[1] < 5.0]
+            y = self.original_moved_points[1][self.original_moved_points[1] < 5.0]
         ax.plot(x, y, color=color, linestyle="", marker="*", label=label)
 
         return ax

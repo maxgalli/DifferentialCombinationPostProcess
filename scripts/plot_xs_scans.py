@@ -11,6 +11,7 @@ from copy import deepcopy
 # Needed to fix the fucking
 # _tkinter.TclError: couldn't connect to display "localhost:12.0"
 import matplotlib
+import matplotlib.pyplot as plt
 
 matplotlib.use("AGG")
 
@@ -22,10 +23,11 @@ from differential_combination_postprocess.scan import Scan, DifferentialSpectrum
 from differential_combination_postprocess.figures import (
     XSNLLsPerCategory,
     XSNLLsPerPOI,
+    XSNLLsPerPOI_Full,
     DiffXSsPerObservable,
 )
 from differential_combination_postprocess.shapes import ObservableShapeFitted, sm_shapes
-from differential_combination_postprocess.physics import analyses_edges
+from differential_combination_postprocess.physics import analyses_edges, overflows
 
 import logging
 
@@ -95,6 +97,13 @@ def parse_arguments():
         help="Do not produce final plots",
     )
 
+    parser.add_argument(
+        "--no-nll",
+        action="store_true",
+        default=False,
+        help="Skip production of NLL plots",
+    )
+
     return parser.parse_args()
 
 
@@ -108,6 +117,10 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
         )
         # First: copy the finest possible shape (Hgg) and rebin it with what we need
         sm_rebinned_shape = deepcopy(sm_shapes[observable])
+        logging.debug(f"SM original xs: {sm_rebinned_shape.xs}")
+        logging.debug(
+            f"SM original xs_over_binwidth: {sm_rebinned_shape.xs_over_bin_width}"
+        )
         sm_rebinned_shape.rebin(analyses_edges[observable][simple_category])
         # Second: bin-wise multiply the new bin values by the values for mu computed in the scan
         mus = np.array([scan.minimum[0] for scan in spectrum.scans.values()])
@@ -122,6 +135,9 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
         )
         logging.debug(f"Ordered mus for category {category}: {mus}")
         logging.debug(f"SM rebinned xs: {sm_rebinned_shape.xs}")
+        logging.debug(
+            f"SM rebinned xs_over_binwidth: {sm_rebinned_shape.xs_over_bin_width}"
+        )
         weighted_bins = np.multiply(np.array(sm_rebinned_shape.xs), mus)
         logging.debug(f"Reweighted xs: {weighted_bins}")
         weighted_bins_up = np.multiply(np.array(sm_rebinned_shape.xs), mus_up)
@@ -136,8 +152,10 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
                 weighted_bins,
                 weighted_bins_down,
                 weighted_bins_up,
+                overflow=observable in overflows,
             )
         )
+        logging.debug(f"Just appended shape {shapes[-1]}")
 
     return shapes
 
@@ -178,9 +196,13 @@ def main(args):
         statonly_cat = f"{category}_statonly"
         asimov_statonly_cat = f"{category}_asimov_statonly"
 
+        sub_categories = [category, asimov_cat, statonly_cat, asimov_statonly_cat]
+        if args.no_nll:
+            sub_categories = [category, statonly_cat]
+
         # Plot scans for nominal, statonly, asimov and asimov_statonly
         sub_cat_spectra = {}
-        for sub_cat in [category, statonly_cat, asimov_cat, asimov_statonly_cat]:
+        for sub_cat in sub_categories:
             logger.info(f"Working on sub-category {sub_cat}")
             regex = re.compile(f"{sub_cat}(-[0-9])?$")
             categories_numbers = [
@@ -213,15 +235,22 @@ def main(args):
             if sub_cat == statonly_cat and sub_cat.split("_")[0] in systematic_bands:
                 differential_spectra_statonly[sub_cat] = diff_spectrum
 
-            plot_to_dump = XSNLLsPerCategory(diff_spectrum)
-            plot_to_dump.dump(output_dir)
+            if not args.no_nll:
+                plot_to_dump = XSNLLsPerCategory(diff_spectrum)
+                plot_to_dump.dump(output_dir)
+                plt.close("all")
 
         # Plot one figure per POI with nominal, statonly, asimov and asimov_statonly NLLs
-        logger.info(
-            "Now plotting one figure per POI with nominal, statonly, asimov and asimov_statonly NLLs (if found)"
-        )
-        poi_plots = XSNLLsPerPOI(sub_cat_spectra)
-        poi_plots.dump(output_dir)
+        if not args.no_nll:
+            logger.info(
+                "Now plotting one figure per POI with nominal, statonly, asimov and asimov_statonly NLLs (if found)"
+            )
+            poi_plots = XSNLLsPerPOI(sub_cat_spectra)
+            poi_plots.dump(output_dir)
+
+        if args.debug and not args.no_nll:
+            full_plot_to_dump = XSNLLsPerPOI_Full(sub_cat_spectra)
+            full_plot_to_dump.dump(output_dir)
 
     logger.debug(f"Differential spectra: {differential_spectra}")
 
