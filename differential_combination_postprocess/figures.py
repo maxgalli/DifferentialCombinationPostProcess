@@ -222,15 +222,27 @@ class DiffXSsPerObservable(Figure):
             )
 
             # Add dashed horizontal line only in cases in which shape and SM shape edges differ
-            h_lines = False
-            equal_edges = shape.edges == sm_shape.edges
-            if not equal_edges:
-                h_lines = True
+            # The line has to be added only for the bins that actually differ, not in all of them
+            # The procedure is thus a bit convoluted
+            bins_with_hline = []
+            logger.debug("Looking for bins with hline")
+            logger.debug(f"SM shape edges: {sm_shape.edges}")
+            logger.debug(f"Shape edges: {shape.edges}")
+            for i, edges_pair in enumerate(zip(shape.edges, shape.edges[1:])):
+                left_edge = edges_pair[0]
+                right_edge = edges_pair[1]
+                # get index of these edges in the SM shape
+                sm_left_edge_index = sm_shape.edges.index(left_edge)
+                sm_right_edge_index = sm_shape.edges.index(right_edge)
+                if sm_right_edge_index - sm_left_edge_index > 1:
+                    bins_with_hline.append(i)
+            logger.debug(f"Bins with hline: {bins_with_hline}")
+
             # Prediction shape for ratio plot
             prediction = deepcopy(sm_shape)
             prediction.rebin(shape.edges)
             self.main_ax, self.ratio_ax = shape.plot(
-                self.main_ax, self.ratio_ax, prediction, h_lines
+                self.main_ax, self.ratio_ax, prediction, bins_with_hline
             )
 
         # Add bands for systonly

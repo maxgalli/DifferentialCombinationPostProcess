@@ -187,7 +187,10 @@ class ObservableShapeSM(ObservableShape):
 
 
 class ObservableShapeFitted(ObservableShape):
-    def plot(self, ax, rax, prediction_shape, dashed_horizontal_lines=False):
+    def plot(self, ax, rax, prediction_shape, bins_with_hline=None):
+        if bins_with_hline is None:
+            bins_with_hline = []
+
         color = category_specs[self.category]["color"]
         marker = category_specs[self.category]["marker"]
 
@@ -233,15 +236,23 @@ class ObservableShapeFitted(ObservableShape):
             capsize=3,
         )
 
-        if dashed_horizontal_lines:
-            for y, left, right in zip(
-                self.xs_over_bin_width, self.fake_edges[:-1], self.fake_edges[1:]
-            ):
-                ax.hlines(y, left, right, linestyle="dashed", linewidth=1, color=color)
-            for y, left, right in zip(
-                ratio_xs_over_bin_width, self.fake_edges[:-1], self.fake_edges[1:]
-            ):
-                rax.hlines(y, left, right, linestyle="dashed", linewidth=1, color=color)
+        for bin_index in bins_with_hline:
+            ax.hlines(
+                self.xs_over_bin_width[bin_index],
+                self.fake_edges[bin_index],
+                self.fake_edges[bin_index + 1],
+                linestyle="dashed",
+                linewidth=1,
+                color=color,
+            )
+            rax.hlines(
+                ratio_xs_over_bin_width[bin_index],
+                self.fake_edges[bin_index],
+                self.fake_edges[bin_index + 1],
+                linestyle="dashed",
+                linewidth=1,
+                color=color,
+            )
 
         return ax, rax
 
