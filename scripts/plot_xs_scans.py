@@ -245,7 +245,7 @@ def main(args):
             logger.info(
                 "Now plotting one figure per POI with nominal, statonly, asimov and asimov_statonly NLLs (if found)"
             )
-            poi_plots = XSNLLsPerPOI(sub_cat_spectra)
+            poi_plots = XSNLLsPerPOI(sub_cat_spectra, debug=args.debug)
             poi_plots.dump(output_dir)
 
         if args.debug and not args.no_nll:

@@ -39,7 +39,7 @@ class XSNLLsPerPOI:
     Remember that this breaks the convention, since one figure per POI is created
     """
 
-    def __init__(self, subcategory_spectra):
+    def __init__(self, subcategory_spectra, debug=False):
         self.figures = []
         nominal_spectrum = list(subcategory_spectra.values())[0]
         pois = nominal_spectrum.scans.keys()
@@ -53,6 +53,8 @@ class XSNLLsPerPOI:
             output_name = (
                 f"NLLs_{nominal_spectrum.variable}_{nominal_spectrum.category}_{poi}"
             )
+            if debug:
+                output_name += "_debug"
 
             # Set labels
             ax.set_xlabel(poi)
@@ -67,9 +69,20 @@ class XSNLLsPerPOI:
             # Draw all the NLLs with different colors
             for scan_tpl, color in zip(scans, fit_type_colors):
                 ax = scan_tpl[1].plot(ax, color, label=scan_tpl[0])
-                ax = scan_tpl[1].plot_original_points(
-                    ax, color, label=f"{scan_tpl[0]} (original)"
-                )
+                if debug:
+                    ax = scan_tpl[1].plot_original_points(
+                        ax, color, label=f"{scan_tpl[0]} (original)"
+                    )
+
+            # Add note with minimum and uncertainties
+            nomstring = f"{nominal_spectrum.scans[poi].minimum[0]:.3f}"
+            upstring = f"{nominal_spectrum.scans[poi].up_uncertainty:.3f}"
+            upstring = "{+" + upstring + "}"
+            downstring = f"{nominal_spectrum.scans[poi].down_uncertainty:.3f}"
+            downstring = "{-" + downstring + "}"
+            ax.text(
+                2.0, 0.4, f"{poi} = ${nomstring}^{upstring}_{downstring}$", fontsize=12
+            )
 
             # Legend
             ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
@@ -208,9 +221,16 @@ class DiffXSsPerObservable(Figure):
         self.ratio_ax.grid(which="major", axis="x", linestyle="-", alpha=0.3)
 
         # Horrible way to somehow move the points away from each other and not have them superimposed
-        displacements = [0, 0.2, -0.2, 0.4, -0.4, 0.6, -0.6]
-        categories = list(set([shape.category for shape in observable_shapes]))
-        displacements_dict = {k: v for k, v in zip(categories, displacements)}
+        # displacements = [0, 0.2, -0.2, 0.4, -0.4, 0.6, -0.6]
+        # categories = [shape.category for shape in observable_shapes]
+        # displacements_dict = {k: v for k, v in zip(categories, displacements)}
+        displacements_dict = {
+            "HggHZZ": 0,
+            "HggHZZHWW": 0,
+            "Hgg": 0.2,
+            "HZZ": -0.2,
+            "HWW": 0,
+        }
         logger.debug(f"Displacements: {displacements_dict}")
 
         for shape in observable_shapes:
