@@ -81,7 +81,12 @@ class XSNLLsPerPOI:
             downstring = f"{nominal_spectrum.scans[poi].down_uncertainty:.3f}"
             downstring = "{-" + downstring + "}"
             ax.text(
-                2.0, 0.4, f"{poi} = ${nomstring}^{upstring}_{downstring}$", fontsize=12
+                nominal_spectrum.scans[poi].minimum[0],
+                2.5,
+                f"{poi} = ${nomstring}^{upstring}_{downstring}$",
+                fontsize=14,
+                ha="center",
+                va="center",
             )
 
             # Legend

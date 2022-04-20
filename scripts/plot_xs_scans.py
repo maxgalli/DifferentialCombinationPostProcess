@@ -252,34 +252,35 @@ def main(args):
             full_plot_to_dump = XSNLLsPerPOI_Full(sub_cat_spectra)
             full_plot_to_dump.dump(output_dir)
 
-    logger.debug(f"Differential spectra: {differential_spectra}")
+    if "inclusive" not in categories[0]:
+        logger.debug(f"Differential spectra: {differential_spectra}")
 
-    # Produce the final differential xs plot including all the categories
-    logger.info(
-        f"Now producing the final differential xs plot for observable {observable}"
-    )
-
-    shapes = get_shapes_from_differential_spectra(differential_spectra, observable)
-    shapes_statonly = get_shapes_from_differential_spectra(
-        differential_spectra_statonly, observable
-    )
-    # horrible
-    # I should probably introduce another dict
-    shapes_systonly = []
-    for shape in shapes:
-        for shape_statonly in shapes_statonly:
-            if (
-                shape.category == shape_statonly.category
-                and shape.observable == shape_statonly.observable
-            ):
-                shapes_systonly.append(shape - shape_statonly)
-
-    if not args.no_final:
-        final_plot_output_name = f"Final-{observable}-" + "_".join(categories)
-        final_plot = DiffXSsPerObservable(
-            final_plot_output_name, sm_shapes[observable], shapes, shapes_systonly
+        # Produce the final differential xs plot including all the categories
+        logger.info(
+            f"Now producing the final differential xs plot for observable {observable}"
         )
-        final_plot.dump(output_dir)
+
+        shapes = get_shapes_from_differential_spectra(differential_spectra, observable)
+        shapes_statonly = get_shapes_from_differential_spectra(
+            differential_spectra_statonly, observable
+        )
+        # horrible
+        # I should probably introduce another dict
+        shapes_systonly = []
+        for shape in shapes:
+            for shape_statonly in shapes_statonly:
+                if (
+                    shape.category == shape_statonly.category
+                    and shape.observable == shape_statonly.observable
+                ):
+                    shapes_systonly.append(shape - shape_statonly)
+
+        if not args.no_final:
+            final_plot_output_name = f"Final-{observable}-" + "_".join(categories)
+            final_plot = DiffXSsPerObservable(
+                final_plot_output_name, sm_shapes[observable], shapes, shapes_systonly
+            )
+            final_plot.dump(output_dir)
 
 
 if __name__ == "__main__":

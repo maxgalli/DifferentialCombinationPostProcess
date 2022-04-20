@@ -111,6 +111,12 @@ class Scan:
         )
 
         # Interpolate and re-make arrays to have more points
+        """ For my future self and in case of problems during the presentation of results: 
+        interp1d with cubic should perform a spline third order interpolation, exactly like the ones 
+        performed with ROOT
+        scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html#scipy.interpolate.interp1d
+        ROOT: https://root.cern.ch/doc/master/classTSpline3.html#ac94f978dc582faf55dcb574003b8fdeb
+        """
         self.dNLL_func = interpolate.interp1d(
             poi_values_original, two_dnll_original, kind="cubic"
         )
