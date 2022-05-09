@@ -61,7 +61,7 @@ class Scan:
                 for input_dir in input_dirs
             ],
             expressions=[self.poi, "deltaNLL"],
-            cut=self.default_cut,
+            # cut=self.default_cut,
         )
         logger.info("Found {} points".format(len(branches)))
 
@@ -203,9 +203,9 @@ class Scan:
     def plot(self, ax, color=None, label=None):
         if label is None:
             label = self.poi
-        # Restrict the plotted values to a dnll less than 5.0
-        x = self.interpolated_points[0][self.interpolated_points[1] < 5.0]
-        y = self.interpolated_points[1][self.interpolated_points[1] < 5.0]
+        # Restrict the plotted values to a dnll less than 8.0
+        x = self.interpolated_points[0][self.interpolated_points[1] < 8.0]
+        y = self.interpolated_points[1][self.interpolated_points[1] < 8.0]
         ax.plot(x, y, color="k")
         # Vertical line passing through the minimum
         ax.plot(
@@ -233,8 +233,8 @@ class Scan:
             x = self.original_moved_points[0]
             y = self.original_moved_points[1]
         else:
-            x = self.original_moved_points[0][self.original_moved_points[1] < 5.0]
-            y = self.original_moved_points[1][self.original_moved_points[1] < 5.0]
+            x = self.original_moved_points[0][self.original_moved_points[1] < 8.0]
+            y = self.original_moved_points[1][self.original_moved_points[1] < 8.0]
         ax.plot(x, y, color=color, linestyle="", marker="*", label=label)
 
         return ax

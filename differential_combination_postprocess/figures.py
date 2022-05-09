@@ -61,7 +61,7 @@ class XSNLLsPerPOI:
             ax.set_ylabel("-2$\Delta$lnL")
 
             # Set limits
-            ax.set_ylim(0.0, 4.0)
+            ax.set_ylim(0.0, 8.0)
 
             # Draw horizontal line at 1
             ax.axhline(1.0, color="k", linestyle="--")
@@ -153,7 +153,7 @@ class XSNLLsPerCategory(Figure):
         self.ax.set_ylabel("-2$\Delta$lnL")
 
         # Set limits
-        self.ax.set_ylim(0.0, 4.0)
+        self.ax.set_ylim(0.0, 8.0)
 
         # Draw horizontal line at 1
         self.ax.axhline(1.0, color="k", linestyle="--")
@@ -230,18 +230,16 @@ class DiffXSsPerObservable(Figure):
         # categories = [shape.category for shape in observable_shapes]
         # displacements_dict = {k: v for k, v in zip(categories, displacements)}
         displacements_dict = {
-            "HggHZZ": 0,
-            "HggHZZHWW": 0,
-            "Hgg": 0.2,
-            "HZZ": -0.2,
-            "HWW": 0,
+            "smH_PTH": {"HggHZZ": 0, "HggHZZHWW": 0, "Hgg": 0.2, "HZZ": -0.2, "HWW": 0},
+            "Njets": {"HggHWW": 0, "Hgg": 0.2, "HWW": -0.2},
+            "yH": {"HggHZZ": 0, "HggHZZHWW": 0, "Hgg": 0.2, "HZZ": -0.2, "HWW": 0},
         }
         logger.debug(f"Displacements: {displacements_dict}")
 
         for shape in observable_shapes:
             shape.fake_rebin(sm_shape)
 
-            displacement = displacements_dict[shape.category]
+            displacement = displacements_dict[sm_shape.observable][shape.category]
             shape.fake_maybe_moved_centers = (
                 shape.fake_centers + np.diff(shape.fake_edges) * displacement
             )
@@ -275,7 +273,9 @@ class DiffXSsPerObservable(Figure):
             logger.debug("Adding bands for systonly")
             shape_systonly.fake_rebin(sm_shape)
 
-            displacement = displacements_dict[shape_systonly.category]
+            displacement = displacements_dict[sm_shape.observable][
+                shape_systonly.category
+            ]
             shape_systonly.fake_maybe_moved_centers = (
                 shape_systonly.fake_centers
                 + np.diff(shape_systonly.fake_edges) * displacement
