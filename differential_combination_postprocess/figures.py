@@ -66,6 +66,9 @@ class XSNLLsPerPOI:
             # Draw horizontal line at 1
             ax.axhline(1.0, color="k", linestyle="--")
 
+            # Draw horizontal line at 4
+            ax.axhline(4.0, color="k", linestyle="--")
+
             # Draw all the NLLs with different colors
             for scan_tpl, color in zip(scans, fit_type_colors):
                 ax = scan_tpl[1].plot(ax, color, label=scan_tpl[0])
@@ -76,9 +79,9 @@ class XSNLLsPerPOI:
 
             # Add note with minimum and uncertainties
             nomstring = f"{nominal_spectrum.scans[poi].minimum[0]:.3f}"
-            upstring = f"{nominal_spectrum.scans[poi].up_uncertainty:.3f}"
+            upstring = f"{nominal_spectrum.scans[poi].up68_unc:.3f}"
             upstring = "{+" + upstring + "}"
-            downstring = f"{nominal_spectrum.scans[poi].down_uncertainty:.3f}"
+            downstring = f"{nominal_spectrum.scans[poi].down68_unc:.3f}"
             downstring = "{-" + downstring + "}"
             ax.text(
                 nominal_spectrum.scans[poi].minimum[0],

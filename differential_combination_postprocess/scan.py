@@ -151,10 +151,15 @@ class Scan:
         logger.info(
             "Found minimum at ({}, {})".format(self.minimum[0], self.minimum[1])
         )
-        self.compute_uncertainties()
+        self.down68, self.up68, self.down68_unc, self.up68_unc = self.compute_uncertainties(
+            1.0
+        )
+        self.down95, self.up95, self.down95_unc, self.up95_unc = self.compute_uncertainties(
+            4.0
+        )
         logger.info(
-            "Down uncertainty: {}, up uncertainty: {}".format(
-                self.down_uncertainty, self.up_uncertainty
+            "Down uncertainty 1sigma: {}, up uncertainty 1sigma: {}".format(
+                self.down68_unc, self.up68_unc
             )
         )
 
@@ -164,8 +169,8 @@ class Scan:
             :, np.argmin(self.interpolated_points[1])
         ]
 
-    def compute_uncertainties(self):
-        level = self.minimum[1] + 1.0
+    def compute_uncertainties(self, level=1.0):
+        level = self.minimum[1] + level
         level_arr = np.ones(len(self.interpolated_points[1])) * level
         # Get index of the two points in poi_values where the NLL crosses the horizontal line at 1
         indices = np.argwhere(
@@ -179,26 +184,28 @@ class Scan:
                 f"The NLL curve does not seem to cross the horizontal line. Try scanning a wider range of points for {self.poi}!"
             )
             logger.info("Setting up and down to minimum and uncertainties to 0.")
-            self.down = self.minimum
-            self.up = self.minimum
-            self.down_uncertainty = 0.0
-            self.up_uncertainty = 0.0
+            down = self.minimum
+            up = self.minimum
+            down_uncertainty = 0.0
+            up_uncertainty = 0.0
         elif len(points) > 2:
             logger.warning(
                 "More than two points where NLL crosses the horizontal line at 1. First and last will be used."
             )
             down_idx = indices[0]
             up_idx = indices[-1]
-            self.down = self.interpolated_points[:, down_idx]
-            self.up = self.interpolated_points[:, up_idx]
-            self.down_uncertainty = abs(self.minimum[0] - self.down[0])
-            self.up_uncertainty = abs(self.minimum[0] - self.up[0])
+            down = self.interpolated_points[:, down_idx]
+            up = self.interpolated_points[:, up_idx]
+            down_uncertainty = abs(self.minimum[0] - self.down[0])
+            up_uncertainty = abs(self.minimum[0] - self.up[0])
         else:
             down_idx, up_idx = indices
-            self.down = self.interpolated_points[:, down_idx]
-            self.up = self.interpolated_points[:, up_idx]
-            self.down_uncertainty = abs(self.minimum[0] - self.down[0])
-            self.up_uncertainty = abs(self.minimum[0] - self.up[0])
+            down = self.interpolated_points[:, down_idx]
+            up = self.interpolated_points[:, up_idx]
+            down_uncertainty = abs(self.minimum[0] - down[0])
+            up_uncertainty = abs(self.minimum[0] - up[0])
+
+        return down, up, down_uncertainty, up_uncertainty
 
     def plot(self, ax, color=None, label=None):
         if label is None:
@@ -210,15 +217,51 @@ class Scan:
         # Vertical line passing through the minimum
         ax.plot(
             [self.minimum[0], self.minimum[0]],
-            [self.minimum[1], self.up[1]],
+            [self.minimum[1], self.up68[1]],
             color=color,
             linestyle="--",
             label=label,
         )
+        # Vertical line passing through down68
+        ax.plot(
+            [self.down68[0], self.down68[0]],
+            [self.minimum[1], self.down68[1]],
+            color="k",
+            linestyle="--",
+        )
+        # Vertical line passing through up68
+        ax.plot(
+            [self.up68[0], self.up68[0]],
+            [self.minimum[1], self.up68[1]],
+            color="k",
+            linestyle="--",
+        )
+        # Vertical line passing through down95
+        ax.plot(
+            [self.down95[0], self.down95[0]],
+            [self.minimum[1], self.down95[1]],
+            color="k",
+            linestyle="--",
+        )
+        # Vertical line passing through up95
+        ax.plot(
+            [self.up95[0], self.up95[0]],
+            [self.minimum[1], self.up95[1]],
+            color="k",
+            linestyle="--",
+        )
         # Points where NLL crosses 1
         ax.plot(
-            [self.down[0], self.up[0]],
-            [self.down[1], self.up[1]],
+            [self.down68[0], self.up68[0]],
+            [self.down68[1], self.up68[1]],
+            color=color,
+            linestyle="",
+            marker="o",
+        )
+        # Points where NLL crosses 4
+        ax.plot(
+            [self.down95[0], self.up95[0]],
+            [self.down95[1], self.up95[1]],
             color=color,
             linestyle="",
             marker="o",
