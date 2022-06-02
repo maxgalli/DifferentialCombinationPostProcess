@@ -147,8 +147,8 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
                 simple_category,
                 analyses_edges[observable][simple_category],
                 weighted_bins,
-                weighted_bins_down,
                 weighted_bins_up,
+                weighted_bins_down,
                 overflow=observable in overflows,
             )
         )
@@ -271,6 +271,9 @@ def main(args):
                     and shape.observable == shape_statonly.observable
                 ):
                     shapes_systonly.append(shape - shape_statonly)
+        if args.debug:
+            for shape in shapes_systonly:
+                logger.debug(f"Systematic shape: \n{shape}")
 
         if not args.no_final:
             final_plot_output_name = f"Final-{observable}-" + "_".join(categories)
