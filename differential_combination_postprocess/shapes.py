@@ -283,15 +283,30 @@ class ObservableShapeFitted(ObservableShape):
             lab += 1
 
         # Ratio plot
+        # This needs to be understood: in the case of up and down, should I divide by the nominal prediction
+        # or by the nominal prediction + the up and down variations?
         ratio_xs_over_bin_width = (
             self.xs_over_bin_width / prediction_shape.xs_over_bin_width
         )
         ratio_xs_up_over_bin_width = (
-            self.xs_up_over_bin_width / prediction_shape.xs_up_over_bin_width
+            self.xs_up_over_bin_width / prediction_shape.xs_over_bin_width
         )
         ratio_xs_down_over_bin_width = (
-            self.xs_down_over_bin_width / prediction_shape.xs_down_over_bin_width
+            self.xs_down_over_bin_width / prediction_shape.xs_over_bin_width
         )
+
+        if any(ratio_xs_down_over_bin_width > ratio_xs_over_bin_width):
+            logger.warning("Ratio down is larger than ratio nominal!")
+            logger.warning(f"Ratio down {ratio_xs_down_over_bin_width}")
+            logger.warning(f"Ratio nominal {ratio_xs_over_bin_width}")
+        if any(ratio_xs_up_over_bin_width < ratio_xs_over_bin_width):
+            logger.warning("Ratio up is smaller than ratio nominal!")
+            logger.warning(f"Ratio up {ratio_xs_up_over_bin_width}")
+            logger.warning(f"Ratio nominal {ratio_xs_over_bin_width}")
+        if any(ratio_xs_down_over_bin_width > ratio_xs_up_over_bin_width):
+            logger.warning("Ratio down is larger than ratio up!")
+            logger.warning(f"Ratio down {ratio_xs_down_over_bin_width}")
+            logger.warning(f"Ratio up {ratio_xs_up_over_bin_width}")
 
         heights = ratio_xs_up_over_bin_width - ratio_xs_down_over_bin_width
 

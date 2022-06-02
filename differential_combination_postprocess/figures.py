@@ -196,6 +196,9 @@ class DiffXSsPerObservable(Figure):
         self.main_ax.set_yscale("log")
         self.ratio_ax.set_ylim(0, 2)
         self.ratio_ax.set_yticks([0, 1, 2])
+        if "Njets" in output_name:
+            self.ratio_ax.set_ylim(0, 4)
+            self.ratio_ax.set_yticks([0, 1, 2, 3, 4])
         self.main_ax, self.ratio_ax = sm_shape.plot(self.main_ax, self.ratio_ax)
         # in the case of Njets, labels are in the middle of the bins
         if sm_shape.observable in ["Njets"]:
