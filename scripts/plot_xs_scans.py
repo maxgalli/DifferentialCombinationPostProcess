@@ -201,11 +201,10 @@ def main(args):
         sub_cat_spectra = {}
         for sub_cat in sub_categories:
             logger.info(f"Working on sub-category {sub_cat}")
-            regex = re.compile(f"{sub_cat}(-[0-9])?$")
             categories_numbers = [
                 directory
                 for directory in os.listdir(input_dir)
-                if regex.match(directory)
+                if directory.startswith(f"{sub_cat}-")
             ]
             # Give the possibility to exclude some directories like the ones for which jobs are still running
             categories_numbers = [
