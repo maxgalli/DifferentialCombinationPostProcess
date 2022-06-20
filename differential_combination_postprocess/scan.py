@@ -207,12 +207,12 @@ class Scan:
 
         return down, up, down_uncertainty, up_uncertainty
 
-    def plot(self, ax, color=None, label=None):
+    def plot(self, ax, color=None, label=None, ylim=8.0):
         if label is None:
             label = self.poi
-        # Restrict the plotted values to a dnll less than 8.0
-        x = self.interpolated_points[0][self.interpolated_points[1] < 8.0]
-        y = self.interpolated_points[1][self.interpolated_points[1] < 8.0]
+        # Restrict the plotted values to a dnll less than ylim
+        x = self.interpolated_points[0][self.interpolated_points[1] < ylim]
+        y = self.interpolated_points[1][self.interpolated_points[1] < ylim]
         ax.plot(x, y, color="k")
         # Vertical line passing through the minimum
         ax.plot(

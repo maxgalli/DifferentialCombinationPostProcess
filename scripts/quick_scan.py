@@ -30,9 +30,9 @@ def parse_arguments():
 
 def main(args):
     logger = setup_logging(level="DEBUG")
-    ds = DifferentialSpectrum("observable", "category", [args.poi], [args.input_dir])
+    ds = DifferentialSpectrum("POI", "category", [args.poi], [args.input_dir])
 
-    fig = XSNLLsPerCategory(ds)
+    fig = XSNLLsPerCategory(ds, ylim=8, print_best=True)
     fig.output_name = f"xs_scan_{args.poi}"
     fig.dump(args.output_dir)
 

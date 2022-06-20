@@ -146,7 +146,7 @@ class XSNLLsPerCategory(Figure):
     """ Plot the NLLs for a given category, one NLL per POI
     """
 
-    def __init__(self, differential_spectrum):
+    def __init__(self, differential_spectrum, ylim=8.0, print_best=False):
         self.ds = differential_spectrum
         self.fig, self.ax = plt.subplots()
         self.output_name = "NLLs_{}_{}".format(self.ds.variable, self.ds.category)
@@ -156,10 +156,11 @@ class XSNLLsPerCategory(Figure):
         self.ax.set_ylabel("-2$\Delta$lnL")
 
         # Set limits
-        self.ax.set_ylim(0.0, 8.0)
+        self.ax.set_ylim(0.0, ylim)
 
-        # Draw horizontal line at 1
+        # Draw horizontal line at 1 and 4
         self.ax.axhline(1.0, color="k", linestyle="--")
+        self.ax.axhline(4.0, color="k", linestyle="--")
 
         # Draw all the NLLs on the ax
         logger.debug(differential_spectrum.scans)
@@ -167,7 +168,23 @@ class XSNLLsPerCategory(Figure):
         for poi_scan in differential_spectrum.scans.items():
             color = next(rainbow_iter)
             poi, scan = poi_scan
-            self.ax = scan.plot(self.ax, color)
+            self.ax = scan.plot(self.ax, color, ylim=ylim)
+
+        # Used just for the case of quick_scan
+        if print_best:
+            nomstring = f"{differential_spectrum.scans[poi].minimum[0]:.5f}"
+            upstring = f"{differential_spectrum.scans[poi].up68_unc:.5f}"
+            upstring = "{+" + upstring + "}"
+            downstring = f"{differential_spectrum.scans[poi].down68_unc:.5f}"
+            downstring = "{-" + downstring + "}"
+            self.ax.text(
+                differential_spectrum.scans[poi].minimum[0],
+                2.5,
+                f"{poi} = ${nomstring}^{upstring}_{downstring}$",
+                fontsize=14,
+                ha="center",
+                va="center",
+            )
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
