@@ -1,3 +1,4 @@
+from matplotlib import figure
 import matplotlib.pyplot as plt
 import numpy as np
 import mplhep as hep
@@ -316,4 +317,35 @@ class DiffXSsPerObservable(Figure):
         hep.cms.label(
             loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.main_ax
         )
+
+
+class TwoDScansPerModel(Figure):
+    def __init__(self, scan_dict, combination_name, output_name=None):
+        """
+        scan_dict is e.g. {"Hgg": Scan2D}
+        combination_name: which one has to be plotted as combination
+        """
+        super().__init__()
+        self.scan_dict = scan_dict
+
+        self.fig, self.ax = plt.subplots(1, 1)
+        # Plot the combination one
+        self.ax, self.colormap, self.pc = self.scan_dict[
+            combination_name
+        ].plot_as_heatmap(self.ax)
+        self.fig.colorbar(self.pc, ax=self.ax, label="-2$\Delta$lnL")
+        self.ax = self.scan_dict[combination_name].plot_as_contour(
+            self.ax, color=category_specs[combination_name]["color"]
+        )
+
+        if output_name is not None:
+            self.output_name = output_name
+
+        # Miscellanea business that has to be done after
+        self.ax.set_xlabel(scan_dict[combination_name].pois[0])
+        self.ax.set_ylabel(scan_dict[combination_name].pois[1])
+        # self.colormap.ax.set_ylabel("-2$\Delta$lnL")
+        self.ax.legend(loc="upper left")
+
+        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.ax)
 

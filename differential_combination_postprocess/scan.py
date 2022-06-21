@@ -1,7 +1,9 @@
+from cProfile import label
 import uproot
 import glob
 import numpy as np
 from scipy import interpolate
+from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 from warnings import warn
 
@@ -279,5 +281,59 @@ class Scan:
             x = self.original_moved_points[0][self.original_moved_points[1] < 8.0]
             y = self.original_moved_points[1][self.original_moved_points[1] < 8.0]
         ax.plot(x, y, color=color, linestyle="", marker="*", label=label)
+
+        return ax
+
+
+class Scan2D:
+    def __init__(self, pois, file_name_template, input_dirs):
+        if pois is None:
+            raise ValueError("pois must be a list of strings")
+        self.pois = pois
+        self.file_name_template = file_name_template
+        self.default_cut = "deltaNLL<990.0"
+        self.tree_name = "limit"
+
+        branches = uproot.concatenate(
+            [
+                "{}/{}:{}".format(input_dir, self.file_name_template, self.tree_name)
+                for input_dir in input_dirs
+            ],
+            expressions=[*pois, "deltaNLL"],
+            cut=self.default_cut,
+            library="np",
+        )
+        logger.info("Found {} points".format(len(branches)))
+
+        x = branches[pois[0]]
+        y = branches[pois[1]]
+        z = 2 * branches["deltaNLL"]
+
+        self.x_int, self.y_int = np.mgrid[
+            x.min() : x.max() : 1000j, y.min() : y.max() : 1000j
+        ]
+        self.z_int = griddata((x, y), z, (self.x_int, self.y_int), method="cubic")
+
+        self.z_int[0] -= self.z_int.min()
+        self.z_int[1] -= self.z_int.min()
+
+    def plot_as_heatmap(self, ax):
+        colormap = plt.get_cmap("Purples")
+        colormap = colormap.reversed()
+        pc = ax.pcolormesh(
+            self.x_int, self.y_int, self.z_int, cmap=colormap, shading="gouraud"
+        )
+
+        return ax, colormap, pc
+
+    def plot_as_contour(self, ax, color="k"):
+        cs = ax.contour(
+            self.x_int,
+            self.y_int,
+            self.z_int,
+            levels=[1.0],
+            colors=[color],
+            linewidths=[2.0],
+        )
 
         return ax
