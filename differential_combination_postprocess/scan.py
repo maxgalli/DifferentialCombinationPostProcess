@@ -107,7 +107,9 @@ class Scan:
             "Original points found (after sorting, removing zeroes and removing duplicates): {}".format(
                 [
                     (x, y)
-                    for x, y in zip(self.original_points[0], self.original_points[1])
+                    for x, y in zip(
+                        self.original_points[0], self.original_points[1] / 2
+                    )
                 ]
             )
         )
@@ -198,8 +200,8 @@ class Scan:
             up_idx = indices[-1]
             down = self.interpolated_points[:, down_idx]
             up = self.interpolated_points[:, up_idx]
-            down_uncertainty = abs(self.minimum[0] - self.down[0])
-            up_uncertainty = abs(self.minimum[0] - self.up[0])
+            down_uncertainty = abs(self.minimum[0] - down[0])
+            up_uncertainty = abs(self.minimum[0] - up[0])
         else:
             down_idx, up_idx = indices
             down = self.interpolated_points[:, down_idx]
@@ -303,14 +305,16 @@ class Scan2D:
             cut=self.default_cut,
             library="np",
         )
-        logger.info("Found {} points".format(len(branches)))
 
         x = branches[pois[0]]
         y = branches[pois[1]]
         z = 2 * branches["deltaNLL"]
 
-        self.x_int, self.y_int = np.mgrid[
-            x.min() : x.max() : 1000j, y.min() : y.max() : 1000j
+        self.points = np.array([x, y, z])
+        self.minimum = self.points[:, np.argmin(z)]
+
+        self.y_int, self.x_int = np.mgrid[
+            y.min() : y.max() : 1000j, x.min() : x.max() : 1000j
         ]
         self.z_int = griddata((x, y), z, (self.x_int, self.y_int), method="cubic")
 
@@ -318,7 +322,7 @@ class Scan2D:
         self.z_int[1] -= self.z_int.min()
 
     def plot_as_heatmap(self, ax):
-        colormap = plt.get_cmap("Purples")
+        colormap = plt.get_cmap("Oranges")
         colormap = colormap.reversed()
         pc = ax.pcolormesh(
             self.x_int, self.y_int, self.z_int, cmap=colormap, shading="gouraud"
@@ -334,6 +338,10 @@ class Scan2D:
             levels=[1.0],
             colors=[color],
             linewidths=[2.0],
+        )
+        # Best value as point
+        ax.plot(
+            [self.minimum[0]], [self.minimum[1]], color=color, linestyle="", marker="o"
         )
 
         return ax
