@@ -6,6 +6,7 @@ from scipy import interpolate
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 from warnings import warn
+from copy import deepcopy
 
 import logging
 
@@ -141,7 +142,7 @@ class Scan:
 
         # Find minimum and compute uncertainties
         self.find_minimum()
-        self.original_moved_points = self.original_points
+        self.original_moved_points = deepcopy(self.original_points)
         if (
             abs(self.minimum[1]) > 0.0001
         ):  # Manually move the minimum to 0 if it is not already there
