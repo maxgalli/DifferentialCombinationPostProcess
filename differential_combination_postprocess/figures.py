@@ -254,7 +254,14 @@ class DiffXSsPerObservable(Figure):
         # categories = [shape.category for shape in observable_shapes]
         # displacements_dict = {k: v for k, v in zip(categories, displacements)}
         displacements_dict = {
-            "smH_PTH": {"HggHZZ": 0, "HggHZZHWW": 0, "Hgg": 0.2, "HZZ": -0.2, "HWW": 0},
+            "smH_PTH": {
+                "HggHZZ": 0,
+                "HggHZZHWW": 0,
+                "HggHZZHWWHtt": 0,
+                "Hgg": 0.2,
+                "HZZ": -0.2,
+                "HWW": 0,
+            },
             "Njets": {"HggHWW": 0, "Hgg": 0.2, "HWW": -0.2},
             "yH": {"HggHZZ": 0, "HggHZZHWW": 0, "Hgg": 0.2, "HZZ": -0.2, "HWW": 0},
         }
@@ -328,15 +335,23 @@ class TwoDScansPerModel(Figure):
         super().__init__()
         self.scan_dict = scan_dict
 
-        self.fig, self.ax = plt.subplots(1, 1)
+        self.fig, self.ax = plt.subplots(1, 1, figsize=(18, 14))
         # Plot the combination one
         self.ax, self.colormap, self.pc = self.scan_dict[
             combination_name
         ].plot_as_heatmap(self.ax)
         self.fig.colorbar(self.pc, ax=self.ax, label="-2$\Delta$lnL")
-        self.ax = self.scan_dict[combination_name].plot_as_contour(
-            self.ax, color=category_specs[combination_name]["color"]
-        )
+
+        # Combination + others as countour
+        for category, scan in scan_dict.items():
+            try:
+                self.ax = self.scan_dict[category].plot_as_contour(
+                    self.ax, color=category_specs[category]["color"]
+                )
+            except KeyError:  # quick_scan case, in which the name is "test"
+                self.ax = self.scan_dict[category].plot_as_contour(
+                    self.ax, color="black"
+                )
 
         if output_name is not None:
             self.output_name = output_name

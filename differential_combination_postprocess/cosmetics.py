@@ -35,7 +35,9 @@ category_specs = {
     },
     "HZZ": {"plot_label": "H $\longrightarrow$ ZZ", "color": "blue", "marker": "v"},
     "HWW": {"plot_label": "H $\longrightarrow$ WW", "color": "purple", "marker": "s"},
+    "Htt": {"plot_label": "H $\longrightarrow$ tt", "color": "green", "marker": "p"},
     "HggHZZ": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
+    "HggHZZHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
 }
