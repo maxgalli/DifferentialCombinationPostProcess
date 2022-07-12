@@ -1,6 +1,7 @@
 from cProfile import label
 import uproot
 import glob
+import os
 import numpy as np
 from scipy import interpolate
 from scipy.interpolate import griddata
@@ -17,7 +18,7 @@ class DifferentialSpectrum:
     """ Basically a collection of Scan instances, one per POI, for a single category 
     """
 
-    def __init__(self, variable, category, pois, input_dirs):
+    def __init__(self, variable, category, pois, input_dirs, from_singles=False):
         logger.info(
             "Building a DifferentialSpectrum for variable {} and category {} with the following POIs {}".format(
                 variable, category, pois
@@ -26,9 +27,11 @@ class DifferentialSpectrum:
         self.variable = variable
         self.category = category
         self.scans = {}
+        self.from_singles = from_singles
         for poi in pois:
             try:
-                self.scans[poi] = Scan(poi, input_dirs)
+                which_scan = ScanSingles if from_singles else Scan
+                self.scans[poi] = which_scan(poi, input_dirs)
             # this is the case in which there are no scans for poi in input_dir, but we are looking
             # for them anyways because the list of pois is taken from the metadata
             # IOError is raised by uproot.concatenate when no files matching the regex are found
@@ -286,6 +289,25 @@ class Scan:
         ax.plot(x, y, color=color, linestyle="", marker="*", label=label)
 
         return ax
+
+
+class ScanSingles:
+    def __init__(self, poi, input_dirs):
+        self.file_name_tmpl = "higgsCombine_SINGLES_{}".format(poi)
+        self.tree_name = "limit"
+        self.poi = poi
+        file_name = [
+            f for f in os.listdir(input_dirs[0]) if f.startswith(self.file_name_tmpl)
+        ][0]
+
+        f = uproot.open(os.path.join(input_dirs[0], file_name))
+        logger.info(f"Opened file {file_name} for SINGLES scan")
+        t = f[self.tree_name]
+        arr = t.arrays()
+        logger.info("Found following array for singles: {}".format(arr[self.poi]))
+        self.mu = arr[self.poi][0] if arr[self.poi][0] > 0 else 0.0
+        self.mu_down = arr[self.poi][1] if arr[self.poi][1] > 0 else 0.0
+        self.mu_up = arr[self.poi][2] if arr[self.poi][2] > 0 else 0.0
 
 
 class Scan2D:

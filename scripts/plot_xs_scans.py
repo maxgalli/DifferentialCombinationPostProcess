@@ -69,8 +69,18 @@ def parse_arguments():
         "--categories",
         nargs="+",
         type=str,
-        required=True,
+        required=False,
+        default=[],
         help="Categories for which NLL plots are dumped, along with the superimposed final ones",
+    )
+
+    parser.add_argument(
+        "--singles",
+        nargs="+",
+        type=str,
+        required=False,
+        default=[],
+        help="Categories for which fits were performed with Combines' singles",
     )
 
     parser.add_argument(
@@ -123,13 +133,18 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
         )
         sm_rebinned_shape.rebin(analyses_edges[observable][simple_category])
         # Second: bin-wise multiply the new bin values by the values for mu computed in the scan
-        mus = np.array([scan.minimum[0] for scan in spectrum.scans.values()])
-        mus_up = np.array(
-            [scan.minimum[0] + scan.up68_unc for scan in spectrum.scans.values()]
-        )
-        mus_down = np.array(
-            [scan.minimum[0] - scan.down68_unc for scan in spectrum.scans.values()]
-        )
+        if spectrum.from_singles:
+            mus = np.array([scan.mu for scan in spectrum.scans.values()])
+            mus_up = np.array([scan.mu_up for scan in spectrum.scans.values()])
+            mus_down = np.array([scan.mu_down for scan in spectrum.scans.values()])
+        else:
+            mus = np.array([scan.minimum[0] for scan in spectrum.scans.values()])
+            mus_up = np.array(
+                [scan.minimum[0] + scan.up68_unc for scan in spectrum.scans.values()]
+            )
+            mus_down = np.array(
+                [scan.minimum[0] - scan.down68_unc for scan in spectrum.scans.values()]
+            )
         logging.debug(f"Ordered mus for category {category}: {mus}")
         logging.debug(f"SM rebinned xs: {sm_rebinned_shape.xs}")
         logging.debug(
@@ -168,6 +183,9 @@ def main(args):
     metadata_dir = args.metadata_dir
     output_dir = args.output_dir
     categories = args.categories
+    singles = args.singles
+    if len(categories + singles) == 0:
+        raise ValueError("Please specify at least one category or singles")
     systematic_bands = args.systematic_bands
     exclude_dirs = args.exclude_dirs
     logger.info(f"Plotting session for observable {observable}")
@@ -175,7 +193,7 @@ def main(args):
     # First produce NLL plots, one for each category
     # Each containing the NLL curves for each POI
     logger.info(f"Working with the following categories: {categories}")
-    categories_yamls = ["{}.yml".format(category) for category in categories]
+    categories_yamls = ["{}.yml".format(category) for category in categories + singles]
     logger.debug(f"YAMLs: {categories_yamls}")
 
     differential_spectra = {}
@@ -223,7 +241,11 @@ def main(args):
             ]
 
             diff_spectrum = DifferentialSpectrum(
-                observable, sub_cat, pois, category_input_dirs
+                observable,
+                sub_cat,
+                pois,
+                category_input_dirs,
+                from_singles=category in singles,
             )
             sub_cat_spectra[sub_cat] = diff_spectrum
             if sub_cat == category:
@@ -231,24 +253,24 @@ def main(args):
             if sub_cat == statonly_cat and sub_cat.split("_")[0] in systematic_bands:
                 differential_spectra_statonly[sub_cat] = diff_spectrum
 
-            if not args.no_nll:
+            if not args.no_nll and not diff_spectrum.from_singles:
                 plot_to_dump = XSNLLsPerCategory(diff_spectrum)
                 plot_to_dump.dump(output_dir)
                 plt.close("all")
 
         # Plot one figure per POI with nominal, statonly, asimov and asimov_statonly NLLs
-        if not args.no_nll:
+        if not args.no_nll and not diff_spectrum.from_singles:
             logger.info(
                 "Now plotting one figure per POI with nominal, statonly, asimov and asimov_statonly NLLs (if found)"
             )
             poi_plots = XSNLLsPerPOI(sub_cat_spectra, debug=args.debug)
             poi_plots.dump(output_dir)
 
-        if args.debug and not args.no_nll:
+        if args.debug and not args.no_nll and not diff_spectrum.from_singles:
             full_plot_to_dump = XSNLLsPerPOI_Full(sub_cat_spectra)
             full_plot_to_dump.dump(output_dir)
 
-    if "inclusive" not in categories[0]:
+    if "inclusive" not in (categories + singles)[0]:
         logger.debug(f"Differential spectra: {differential_spectra}")
 
         # Produce the final differential xs plot including all the categories
@@ -275,7 +297,9 @@ def main(args):
                 logger.debug(f"Systematic shape: \n{shape}")
 
         if not args.no_final:
-            final_plot_output_name = f"Final-{observable}-" + "_".join(categories)
+            final_plot_output_name = f"Final-{observable}-" + "_".join(
+                categories + singles
+            )
             final_plot = DiffXSsPerObservable(
                 final_plot_output_name, sm_shapes[observable], shapes, shapes_systonly
             )

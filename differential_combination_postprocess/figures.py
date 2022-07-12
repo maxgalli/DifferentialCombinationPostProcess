@@ -261,6 +261,7 @@ class DiffXSsPerObservable(Figure):
                 "Hgg": 0.2,
                 "HZZ": -0.2,
                 "HWW": 0,
+                "Htt": -0.4,
             },
             "Njets": {"HggHWW": 0, "Hgg": 0.2, "HWW": -0.2},
             "yH": {"HggHZZ": 0, "HggHZZHWW": 0, "Hgg": 0.2, "HZZ": -0.2, "HWW": 0},
