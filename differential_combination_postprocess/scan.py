@@ -1,5 +1,6 @@
 from cProfile import label
 import uproot
+import awkward as ak
 import glob
 import os
 import numpy as np
@@ -18,7 +19,16 @@ class DifferentialSpectrum:
     """ Basically a collection of Scan instances, one per POI, for a single category 
     """
 
-    def __init__(self, variable, category, pois, input_dirs, from_singles=False):
+    def __init__(
+        self,
+        variable,
+        category,
+        pois,
+        input_dirs,
+        from_singles=False,
+        skip_best=False,
+        file_name_tmpl=None,
+    ):
         logger.info(
             "Building a DifferentialSpectrum for variable {} and category {} with the following POIs {}".format(
                 variable, category, pois
@@ -31,7 +41,9 @@ class DifferentialSpectrum:
         for poi in pois:
             try:
                 which_scan = ScanSingles if from_singles else Scan
-                self.scans[poi] = which_scan(poi, input_dirs)
+                self.scans[poi] = which_scan(
+                    poi, input_dirs, skip_best=skip_best, file_name_tmpl=file_name_tmpl
+                )
             # this is the case in which there are no scans for poi in input_dir, but we are looking
             # for them anyways because the list of pois is taken from the metadata
             # IOError is raised by uproot.concatenate when no files matching the regex are found
@@ -48,9 +60,12 @@ class Scan:
     """
     """
 
-    def __init__(self, poi, input_dirs):
+    def __init__(self, poi, input_dirs, skip_best=False, file_name_tmpl=None):
         self.default_cut = "deltaNLL<990.0"
-        self.file_name_tmpl = "higgsCombine_SCAN_{}*.root".format(poi)
+        if file_name_tmpl is None:
+            self.file_name_tmpl = "higgsCombine_SCAN_{}*.root".format(poi)
+        else:
+            self.file_name_tmpl = file_name_tmpl
         self.tree_name = "limit"
         self.poi = poi
 
@@ -61,14 +76,22 @@ class Scan:
             )
         )
         # If a file is corrupted, uproot will raise an error; it will have to be manually removed
-        branches = uproot.concatenate(
-            [
-                "{}/{}:{}".format(input_dir, self.file_name_tmpl, self.tree_name)
-                for input_dir in input_dirs
-            ],
-            expressions=[self.poi, "deltaNLL"],
-            # cut=self.default_cut,
-        )
+        dirs_template = [
+            "{}/{}:{}".format(input_dir, self.file_name_tmpl, self.tree_name)
+            for input_dir in input_dirs
+        ]
+        if skip_best:
+            to_concatenate = []
+            for batch in uproot.iterate(dirs_template):
+                batch = batch[[self.poi, "deltaNLL"]]
+                to_concatenate.append(batch[1:])
+            branches = ak.concatenate(to_concatenate)
+        else:
+            branches = uproot.concatenate(
+                dirs_template,
+                expressions=[self.poi, "deltaNLL"],
+                # cut=self.default_cut,
+            )
         logger.info("Found {} points".format(len(branches)))
 
         """
@@ -292,7 +315,9 @@ class Scan:
 
 
 class ScanSingles:
-    def __init__(self, poi, input_dirs):
+    def __init__(
+        self, poi, input_dirs, skip_best_fit=False
+    ):  # skip_best is useless here, but to keep the interface the same
         self.file_name_tmpl = "higgsCombine_SINGLES_{}".format(poi)
         self.tree_name = "limit"
         self.poi = poi
@@ -348,7 +373,13 @@ class Scan2D:
         colormap = plt.get_cmap("Oranges")
         colormap = colormap.reversed()
         pc = ax.pcolormesh(
-            self.x_int, self.y_int, self.z_int, cmap=colormap, shading="gouraud"
+            self.x_int,
+            self.y_int,
+            self.z_int,
+            vmin=0,
+            vmax=10,
+            cmap=colormap,
+            shading="gouraud",
         )
 
         return ax, colormap, pc

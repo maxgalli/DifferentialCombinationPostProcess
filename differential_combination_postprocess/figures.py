@@ -20,6 +20,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+tk_limits = {"kappac": (-40, 40), "kappab": (-20, 20)}
+
+
 class Figure:
     def __init__(self):
         self.fig, _ = plt.subplots()
@@ -357,6 +360,9 @@ class TwoDScansPerModel(Figure):
         if output_name is not None:
             self.output_name = output_name
 
+        # set limits on x and y
+        self.ax.set_xlim(*tk_limits[scan_dict[combination_name].pois[0]])
+        self.ax.set_ylim(*tk_limits[scan_dict[combination_name].pois[1]])
         # Miscellanea business that has to be done after
         self.ax.set_xlabel(scan_dict[combination_name].pois[0])
         self.ax.set_ylabel(scan_dict[combination_name].pois[1])
@@ -365,3 +371,31 @@ class TwoDScansPerModel(Figure):
 
         hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.ax)
 
+
+# Used for quick_scan only
+class NScans(Figure):
+    def __init__(self, scan_dict, ylim=8.0):
+        """
+        scan_dict is e.g. {"Hgg": Scan1D}
+        """
+        self.fig, self.ax = plt.subplots()
+        self.output_name = "NLLs_" + "_".join(scan_dict.keys())
+
+        # Set labels
+        self.ax.set_xlabel(list(scan_dict.values())[0].poi)
+        self.ax.set_ylabel("-2$\Delta$lnL")
+
+        # Set limits
+        self.ax.set_ylim(0.0, ylim)
+
+        # Draw all the NLLs on the ax
+        for scan_name, scan in scan_dict.items():
+            self.ax = scan.plot(self.ax, label=scan_name)
+
+        # Draw horizontal line at 1 and 4
+        self.ax.axhline(1.0, color="k", linestyle="--")
+        self.ax.axhline(4.0, color="k", linestyle="--")
+
+        # Legend
+        self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
+        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.ax)
