@@ -20,7 +20,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-tk_limits = {"kappac": (-40, 40), "kappab": (-20, 20)}
+tk_limits = {
+    "floatingBR": {"kappac": (-40, 40), "kappab": (-20, 20)},
+    "coupdep": {"kappac": (-8, 8), "kappab": (-2, 2)},
+}
 
 
 class Figure:
@@ -331,7 +334,7 @@ class DiffXSsPerObservable(Figure):
 
 
 class TwoDScansPerModel(Figure):
-    def __init__(self, scan_dict, combination_name, output_name=None):
+    def __init__(self, scan_dict, combination_name, scenario, output_name=None):
         """
         scan_dict is e.g. {"Hgg": Scan2D}
         combination_name: which one has to be plotted as combination
@@ -341,10 +344,8 @@ class TwoDScansPerModel(Figure):
 
         self.fig, self.ax = plt.subplots(1, 1, figsize=(18, 14))
         # Plot the combination one
-        self.ax, self.colormap, self.pc = self.scan_dict[
-            combination_name
-        ].plot_as_heatmap(self.ax)
-        self.fig.colorbar(self.pc, ax=self.ax, label="-2$\Delta$lnL")
+        self.ax = self.scan_dict[combination_name].plot_as_contourf(self.ax)
+        # self.fig.colorbar(self.pc, ax=self.ax, label="-2$\Delta$lnL")
 
         # Combination + others as countour
         for category, scan in scan_dict.items():
@@ -361,8 +362,8 @@ class TwoDScansPerModel(Figure):
             self.output_name = output_name
 
         # set limits on x and y
-        self.ax.set_xlim(*tk_limits[scan_dict[combination_name].pois[0]])
-        self.ax.set_ylim(*tk_limits[scan_dict[combination_name].pois[1]])
+        self.ax.set_xlim(*tk_limits[scenario][scan_dict[combination_name].pois[0]])
+        self.ax.set_ylim(*tk_limits[scenario][scan_dict[combination_name].pois[1]])
         # Miscellanea business that has to be done after
         self.ax.set_xlabel(scan_dict[combination_name].pois[0])
         self.ax.set_ylabel(scan_dict[combination_name].pois[1])

@@ -389,6 +389,7 @@ class Scan2D:
             self.x_int,
             self.y_int,
             self.z_int,
+            # levels=[1.0, 4.0],
             levels=[1.0],
             colors=[color],
             linewidths=[2.0],
@@ -396,6 +397,17 @@ class Scan2D:
         # Best value as point
         ax.plot(
             [self.minimum[0]], [self.minimum[1]], color=color, linestyle="", marker="o"
+        )
+
+        return ax
+
+    def plot_as_contourf(self, ax):
+        cs = ax.contourf(
+            self.x_int,
+            self.y_int,
+            self.z_int,
+            levels=[0.0, 1.0, 4.0],
+            colors=["darkorange", "yellow"],
         )
 
         return ax

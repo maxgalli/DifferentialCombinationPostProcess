@@ -4,6 +4,7 @@ from differential_combination_postprocess.figures import XSNLLsPerCategory, NSca
 from differential_combination_postprocess.utils import setup_logging
 from differential_combination_postprocess.scan import Scan2D
 from differential_combination_postprocess.figures import TwoDScansPerModel
+from differential_combination_postprocess.figures import tk_limits
 
 import argparse
 import matplotlib.pyplot as plt
@@ -43,6 +44,10 @@ def parse_arguments():
         required=False,
         default=None,
         help="File name template in case of 2D scans to plot the 1D ones, since the convention is different from the combination ones",
+    )
+
+    parser.add_argument(
+        "--scenario", type=str, default="floatingBR", choices=["floatingBR", "coupdep"]
     )
 
     group = parser.add_mutually_exclusive_group()
@@ -138,8 +143,23 @@ def main(args):
         tmpl = "higgsCombine_SCAN_*"
         scans = {}
         scans["test"] = Scan2D(args.pois, tmpl, [args.input_dir])
-        plot = TwoDScansPerModel(scans, "test", "test")
+        plot = TwoDScansPerModel(
+            scans, "test", scenario=args.scenario, output_name="test"
+        )
         plot.dump(args.output_dir)
+
+        if args.other_input_dir:
+            logger.info("Plotting other scan")
+            scans["other"] = Scan2D(args.pois, tmpl, [args.other_input_dir])
+            fig, ax = plt.subplots(figsize=(8, 6))
+            ax = scans["test"].plot_as_contour(ax)
+            ax = scans["other"].plot_as_contour(ax, color="red")
+            ax.set_xlim(*tk_limits[args.scenario][args.pois[0]])
+            ax.set_ylim(*tk_limits[args.scenario][args.pois[1]])
+            ax.set_xlabel(args.pois[0])
+            ax.set_ylabel(args.pois[1])
+            fig.savefig(f"{args.output_dir}/{args.pois[0]}_with_other.pdf")
+            fig.savefig(f"{args.output_dir}/{args.pois[0]}_with_other.png")
 
         if args.file_name_tmpl:
             for poi in args.pois:
