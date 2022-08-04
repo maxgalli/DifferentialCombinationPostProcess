@@ -47,7 +47,7 @@ def parse_arguments():
     parser.add_argument(
         "--input-dir",
         type=str,
-        default="outputs",
+        default="inputs",
         help="Directory where the .root files with 'limit' trees are stored",
     )
 

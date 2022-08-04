@@ -41,3 +41,11 @@ category_specs = {
     "HggHZZHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
 }
+
+TK_parameters_labels = {
+    "kappab": "$\kappa_{b}$",
+    "kappac": "$\kappa_{c}$",
+    "ct": "$\kappa_{t}$",
+    "cg": "$c_{g}$",
+    "cb": "$\kappa_{b}$",
+}

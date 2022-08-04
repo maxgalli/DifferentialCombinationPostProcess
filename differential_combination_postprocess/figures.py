@@ -7,7 +7,13 @@ hep.style.use("CMS")
 from itertools import cycle
 from copy import deepcopy
 
-from .cosmetics import rainbow, observable_specs, category_specs, fit_type_colors
+from .cosmetics import (
+    rainbow,
+    observable_specs,
+    category_specs,
+    fit_type_colors,
+    TK_parameters_labels,
+)
 from .shapes import ObservableShapeSM
 
 # Silence matplotlib warnings for Christ sake
@@ -18,12 +24,6 @@ warnings.filterwarnings("ignore", module="matplotlib")
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-tk_limits = {
-    "floatingBR": {"kappac": (-40, 40), "kappab": (-20, 20)},
-    "coupdep": {"kappac": (-8, 8), "kappab": (-2, 2)},
-}
 
 
 class Figure:
@@ -39,6 +39,7 @@ class Figure:
         self.fig.savefig(
             "{}/{}.pdf".format(output_dir, self.output_name), bbox_inches="tight"
         )
+        logger.debug(f"Saved {self.output_name} to {output_dir} in pdf and png")
 
 
 class XSNLLsPerPOI:
@@ -334,24 +335,44 @@ class DiffXSsPerObservable(Figure):
 
 
 class TwoDScansPerModel(Figure):
-    def __init__(self, scan_dict, combination_name, scenario, output_name=None):
+    def __init__(
+        self,
+        scan_dict,
+        combination_name,
+        model_config,
+        combination_asimov_scan=None,
+        output_name=None,
+    ):
         """
         scan_dict is e.g. {"Hgg": Scan2D}
         combination_name: which one has to be plotted as combination
+        model_config: a dictionary of the form {"kappac": (-8, 8), "kappab": (-2, 2)}
+        combination_asimov_scan: for the case in which the background has to be expected, 
+        use this scan instead of the combination_name one 
         """
         super().__init__()
         self.scan_dict = scan_dict
 
         self.fig, self.ax = plt.subplots(1, 1, figsize=(18, 14))
         # Plot the combination one
-        self.ax = self.scan_dict[combination_name].plot_as_contourf(self.ax)
-        # self.fig.colorbar(self.pc, ax=self.ax, label="-2$\Delta$lnL")
+        # self.ax = self.scan_dict[combination_name].plot_as_contourf(self.ax)
+        if combination_asimov_scan is not None:
+            self.ax, self.colormap, self.pc = combination_asimov_scan.plot_as_heatmap(
+                self.ax
+            )
+        else:
+            self.ax, self.colormap, self.pc = self.scan_dict[
+                combination_name
+            ].plot_as_heatmap(self.ax)
+        self.fig.colorbar(self.pc, ax=self.ax, label="-2$\Delta$lnL")
 
         # Combination + others as countour
         for category, scan in scan_dict.items():
             try:
                 self.ax = self.scan_dict[category].plot_as_contour(
-                    self.ax, color=category_specs[category]["color"]
+                    self.ax,
+                    color=category_specs[category.split("_")[0]]["color"],
+                    label=category_specs[category.split("_")[0]]["plot_label"],
                 )
             except KeyError:  # quick_scan case, in which the name is "test"
                 self.ax = self.scan_dict[category].plot_as_contour(
@@ -362,11 +383,12 @@ class TwoDScansPerModel(Figure):
             self.output_name = output_name
 
         # set limits on x and y
-        self.ax.set_xlim(*tk_limits[scenario][scan_dict[combination_name].pois[0]])
-        self.ax.set_ylim(*tk_limits[scenario][scan_dict[combination_name].pois[1]])
+        poi1, poi2 = list(model_config.keys())
+        self.ax.set_xlim(*model_config[poi1])
+        self.ax.set_ylim(*model_config[poi2])
         # Miscellanea business that has to be done after
-        self.ax.set_xlabel(scan_dict[combination_name].pois[0])
-        self.ax.set_ylabel(scan_dict[combination_name].pois[1])
+        self.ax.set_xlabel(TK_parameters_labels[scan_dict[combination_name].pois[0]])
+        self.ax.set_ylabel(TK_parameters_labels[scan_dict[combination_name].pois[1]])
         # self.colormap.ax.set_ylabel("-2$\Delta$lnL")
         self.ax.legend(loc="upper left")
 

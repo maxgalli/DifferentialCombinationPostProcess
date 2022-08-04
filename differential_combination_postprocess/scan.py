@@ -336,23 +336,35 @@ class ScanSingles:
 
 
 class Scan2D:
-    def __init__(self, pois, file_name_template, input_dirs):
+    def __init__(self, pois, file_name_template, input_dirs, skip_best=False):
         if pois is None:
             raise ValueError("pois must be a list of strings")
         self.pois = pois
-        self.file_name_template = file_name_template
+        self.file_name_tmpl = file_name_template
         self.default_cut = "deltaNLL<990.0"
         self.tree_name = "limit"
 
-        branches = uproot.concatenate(
-            [
-                "{}/{}:{}".format(input_dir, self.file_name_template, self.tree_name)
-                for input_dir in input_dirs
-            ],
-            expressions=[*pois, "deltaNLL"],
-            cut=self.default_cut,
-            library="np",
-        )
+        logger.info(f"Looking for files {file_name_template} inside {input_dirs}")
+
+        dirs_template = [
+            "{}/{}:{}".format(input_dir, self.file_name_tmpl, self.tree_name)
+            for input_dir in input_dirs
+        ]
+
+        if skip_best:
+            to_concatenate = []
+            for batch in uproot.iterate(dirs_template):
+                batch = batch[[*self.pois, "deltaNLL"]]
+                to_concatenate.append(batch[1:])
+            branches = ak.concatenate(to_concatenate)
+            branches = ak.to_numpy(branches)
+        else:
+            branches = uproot.concatenate(
+                dirs_template,
+                expressions=[*self.pois, "deltaNLL"],
+                cut=self.default_cut,
+                library="np",
+            )
 
         x = branches[pois[0]]
         y = branches[pois[1]]
@@ -362,7 +374,7 @@ class Scan2D:
         self.minimum = self.points[:, np.argmin(z)]
 
         self.y_int, self.x_int = np.mgrid[
-            y.min() : y.max() : 1000j, x.min() : x.max() : 1000j
+            y.min() : y.max() : 500j, x.min() : x.max() : 500j
         ]
         self.z_int = griddata((x, y), z, (self.x_int, self.y_int), method="cubic")
 
@@ -384,16 +396,22 @@ class Scan2D:
 
         return ax, colormap, pc
 
-    def plot_as_contour(self, ax, color="k"):
+    def plot_as_contour(self, ax, color="k", label=None):
         cs = ax.contour(
             self.x_int,
             self.y_int,
             self.z_int,
-            # levels=[1.0, 4.0],
-            levels=[1.0],
-            colors=[color],
-            linewidths=[2.0],
+            levels=[1.0, 4.0],
+            colors=[color, color],
+            linewidths=[2.0, 2.0],
+            linestyles=["solid", "dashed"],
         )
+        # add labels
+        levels = ["68%", "95%"]
+        if label is not None:
+            for i, cl in enumerate(levels):
+                cs.collections[i].set_label(f"{label} {cl}")
+
         # Best value as point
         ax.plot(
             [self.minimum[0]], [self.minimum[1]], color=color, linestyle="", marker="o"

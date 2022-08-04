@@ -7,6 +7,6 @@ setuptools.setup(
     author_email="massimiliano.galli.95@gmail.com",
     description="Package for Run 2 differential combination postprocessing",
     packages=setuptools.find_packages(),
-    scripts=["scripts/plot_xs_scans.py", "scripts/quick_scan.py"],
+    scripts=["scripts/plot_xs_scans.py", "scripts/quick_scan.py", "scripts/plot_TK_scans.py"],
     python_requires=">=3.6",
 )

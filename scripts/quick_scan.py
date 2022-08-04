@@ -4,7 +4,7 @@ from differential_combination_postprocess.figures import XSNLLsPerCategory, NSca
 from differential_combination_postprocess.utils import setup_logging
 from differential_combination_postprocess.scan import Scan2D
 from differential_combination_postprocess.figures import TwoDScansPerModel
-from differential_combination_postprocess.figures import tk_limits
+from differential_combination_postprocess.physics import TK_models
 
 import argparse
 import matplotlib.pyplot as plt
@@ -47,7 +47,7 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--scenario", type=str, default="floatingBR", choices=["floatingBR", "coupdep"]
+        "--scenario", type=str, choices=list(TK_models.keys()), help="Scenario to plot"
     )
 
     group = parser.add_mutually_exclusive_group()
@@ -142,20 +142,24 @@ def main(args):
         logger.info("Plotting 2D scan for {}".format(args.pois))
         tmpl = "higgsCombine_SCAN_*"
         scans = {}
-        scans["test"] = Scan2D(args.pois, tmpl, [args.input_dir])
+        scans["test"] = Scan2D(
+            args.pois, tmpl, [args.input_dir], skip_best=args.skip_best
+        )
         plot = TwoDScansPerModel(
-            scans, "test", scenario=args.scenario, output_name="test"
+            scans, "test", model_config=TK_models[args.scenario], output_name="test"
         )
         plot.dump(args.output_dir)
 
         if args.other_input_dir:
             logger.info("Plotting other scan")
-            scans["other"] = Scan2D(args.pois, tmpl, [args.other_input_dir])
+            scans["other"] = Scan2D(
+                args.pois, tmpl, [args.other_input_dir], skip_best=args.skip_best
+            )
             fig, ax = plt.subplots(figsize=(8, 6))
             ax = scans["test"].plot_as_contour(ax)
             ax = scans["other"].plot_as_contour(ax, color="red")
-            ax.set_xlim(*tk_limits[args.scenario][args.pois[0]])
-            ax.set_ylim(*tk_limits[args.scenario][args.pois[1]])
+            ax.set_xlim(*TK_models[args.scenario][args.pois[0]])
+            ax.set_ylim(*TK_models[args.scenario][args.pois[1]])
             ax.set_xlabel(args.pois[0])
             ax.set_ylabel(args.pois[1])
             fig.savefig(f"{args.output_dir}/{args.pois[0]}_with_other.pdf")
