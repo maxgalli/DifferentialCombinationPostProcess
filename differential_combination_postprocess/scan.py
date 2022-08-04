@@ -374,7 +374,7 @@ class Scan2D:
         self.minimum = self.points[:, np.argmin(z)]
 
         self.y_int, self.x_int = np.mgrid[
-            y.min() : y.max() : 500j, x.min() : x.max() : 500j
+            y.min() : y.max() : 2000j, x.min() : x.max() : 2000j
         ]
         self.z_int = griddata((x, y), z, (self.x_int, self.y_int), method="cubic")
 
@@ -382,7 +382,7 @@ class Scan2D:
         self.z_int[1] -= self.z_int.min()
 
     def plot_as_heatmap(self, ax):
-        colormap = plt.get_cmap("Oranges")
+        colormap = plt.get_cmap("Blues")
         colormap = colormap.reversed()
         pc = ax.pcolormesh(
             self.x_int,
