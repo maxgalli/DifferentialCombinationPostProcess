@@ -39,6 +39,7 @@ category_specs = {
     "HggHZZ": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
+    "HggHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
 }
 

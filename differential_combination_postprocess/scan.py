@@ -316,7 +316,7 @@ class Scan:
 
 class ScanSingles:
     def __init__(
-        self, poi, input_dirs, skip_best_fit=False
+        self, poi, input_dirs, skip_best=False, file_name_tmpl=None
     ):  # skip_best is useless here, but to keep the interface the same
         self.file_name_tmpl = "higgsCombine_SINGLES_{}".format(poi)
         self.tree_name = "limit"

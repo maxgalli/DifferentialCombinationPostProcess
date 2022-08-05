@@ -270,7 +270,13 @@ class DiffXSsPerObservable(Figure):
                 "HWW": 0,
                 "Htt": -0.4,
             },
-            "Njets": {"HggHWW": 0, "Hgg": 0.2, "HWW": -0.2},
+            "Njets": {
+                "HggHWW": 0,
+                "HggHWWHtt": 0,
+                "Hgg": 0.2,
+                "HWW": -0.2,
+                "Htt": -0.4,
+            },
             "yH": {"HggHZZ": 0, "HggHZZHWW": 0, "Hgg": 0.2, "HZZ": -0.2, "HWW": 0},
         }
         logger.debug(f"Displacements: {displacements_dict}")
