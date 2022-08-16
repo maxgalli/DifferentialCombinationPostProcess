@@ -50,3 +50,5 @@ TK_parameters_labels = {
     "cg": "$c_{g}$",
     "cb": "$\kappa_{b}$",
 }
+
+SMEFT_parameters_labels = {"chg": "$c_{Hg}$", "chb": "$c_{Hb}$", "chw": "$c_{HW}$"}

@@ -13,7 +13,14 @@ from .cosmetics import (
     category_specs,
     fit_type_colors,
     TK_parameters_labels,
+    SMEFT_parameters_labels,
 )
+
+bsm_parameters_labels = {}
+for k, v in TK_parameters_labels.items():
+    bsm_parameters_labels[k] = v
+for k, v in SMEFT_parameters_labels.items():
+    bsm_parameters_labels[k] = v
 from .shapes import ObservableShapeSM
 
 # Silence matplotlib warnings for Christ sake
@@ -40,6 +47,50 @@ class Figure:
             "{}/{}.pdf".format(output_dir, self.output_name), bbox_inches="tight"
         )
         logger.debug(f"Saved {self.output_name} to {output_dir} in pdf and png")
+
+
+class GenericNLLsPerPOI(Figure):
+    """ 
+    Introduced to plot following NLLS in SMEFT scans:
+    fig1:
+        - coeff: chg
+        - observed
+        - NLLS: Hgg HZZ Comb
+    But it can probably be used in other contexts
+    
+    scans is a dictionary like the folliwing:
+    {
+        "Hgg": Scan,
+        "HZZ": Scan,
+    }
+    """
+
+    def __init__(self, poi, scans, subcategory):
+        self.scans = scans
+        self.categories = list(scans.keys())
+        categories_string = "-".join(self.categories)
+        self.fig, self.ax = plt.subplots()
+        self.output_name = f"NLLs_{poi}_{categories_string}_{subcategory}"
+
+        # Set labels
+        self.ax.set_xlabel(SMEFT_parameters_labels[poi])
+        self.ax.set_ylabel("-2$\Delta$lnL")
+
+        # Set limits
+        self.ax.set_ylim(0.0, 8.0)
+
+        # Draw horizontal line at 1 and 4
+        self.ax.axhline(1.0, color="k", linestyle="--")
+        self.ax.axhline(4.0, color="k", linestyle="--")
+
+        for scan_name, scan in scans.items():
+            self.ax = scan.plot(
+                self.ax, color=category_specs[scan_name]["color"], label=scan_name
+            )
+
+        # Legend
+        self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
+        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.ax)
 
 
 class XSNLLsPerPOI:
@@ -393,8 +444,8 @@ class TwoDScansPerModel(Figure):
         self.ax.set_xlim(*model_config[poi1])
         self.ax.set_ylim(*model_config[poi2])
         # Miscellanea business that has to be done after
-        self.ax.set_xlabel(TK_parameters_labels[scan_dict[combination_name].pois[0]])
-        self.ax.set_ylabel(TK_parameters_labels[scan_dict[combination_name].pois[1]])
+        self.ax.set_xlabel(bsm_parameters_labels[scan_dict[combination_name].pois[0]])
+        self.ax.set_ylabel(bsm_parameters_labels[scan_dict[combination_name].pois[1]])
         # self.colormap.ax.set_ylabel("-2$\Delta$lnL")
         self.ax.legend(loc="upper left")
 

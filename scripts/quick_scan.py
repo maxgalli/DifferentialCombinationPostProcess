@@ -61,9 +61,15 @@ def main(args):
     logger = setup_logging(level="DEBUG")
 
     if args.poi:
+        file_name_tmpl = args.file_name_tmpl
         logger.info("Plotting single scan for {}".format(args.poi))
         ds = DifferentialSpectrum(
-            "POI", "category", [args.poi], [args.input_dir], skip_best=args.skip_best
+            "POI",
+            "category",
+            [args.poi],
+            [args.input_dir],
+            skip_best=args.skip_best,
+            file_name_tmpl=file_name_tmpl,
         )
 
         fig = XSNLLsPerCategory(ds, ylim=8, print_best=True)
@@ -96,6 +102,7 @@ def main(args):
                 [args.poi],
                 [args.other_input_dir],
                 skip_best=args.skip_best,
+                file_name_tmpl=file_name_tmpl,
             )
 
             fig = NScans(

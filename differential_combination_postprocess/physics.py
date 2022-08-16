@@ -218,7 +218,7 @@ TK_models = {
     "top_coupdep_ctcg": {"ct": (0, 2), "cg": (-0.04, 0.08)},
     "top_floatingBR_ctcg": {"ct": (-3, 3), "cg": (-0.15, 0.15)},
     "top_coupdep_ctcb": {"ct": (-3, 3), "cb": (-3, 3)},
-    "top_floatingBR_ctb": {"ct": (-3, 3), "cb": (-12, 12)},
+    "top_floatingBR_ctcb": {"ct": (-3, 3), "cb": (-12, 12)},
 }
 
 
