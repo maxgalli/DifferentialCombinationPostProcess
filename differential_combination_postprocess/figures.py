@@ -65,7 +65,7 @@ class GenericNLLsPerPOI(Figure):
     }
     """
 
-    def __init__(self, poi, scans, subcategory):
+    def __init__(self, poi, scans, subcategory, simple=False):
         self.scans = scans
         self.categories = list(scans.keys())
         categories_string = "-".join(self.categories)
@@ -84,9 +84,14 @@ class GenericNLLsPerPOI(Figure):
         self.ax.axhline(4.0, color="k", linestyle="--")
 
         for scan_name, scan in scans.items():
-            self.ax = scan.plot(
-                self.ax, color=category_specs[scan_name]["color"], label=scan_name
-            )
+            if simple:
+                self.ax = scan.plot_simple(
+                    self.ax, color=category_specs[scan_name]["color"], label=scan_name
+                )
+            else:
+                self.ax = scan.plot(
+                    self.ax, color=category_specs[scan_name]["color"], label=scan_name
+                )
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)

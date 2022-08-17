@@ -28,6 +28,7 @@ class DifferentialSpectrum:
         from_singles=False,
         skip_best=False,
         file_name_tmpl=None,
+        cut_strings=None,
     ):
         logger.info(
             "Building a DifferentialSpectrum for variable {} and category {} with the following POIs {}".format(
@@ -42,7 +43,7 @@ class DifferentialSpectrum:
             try:
                 which_scan = ScanSingles if from_singles else Scan
                 self.scans[poi] = which_scan(
-                    poi, input_dirs, skip_best=skip_best, file_name_tmpl=file_name_tmpl
+                    poi, input_dirs, skip_best=skip_best, file_name_tmpl=file_name_tmpl, cut_strings=cut_strings
                 )
             # this is the case in which there are no scans for poi in input_dir, but we are looking
             # for them anyways because the list of pois is taken from the metadata
@@ -60,7 +61,11 @@ class Scan:
     """
     """
 
-    def __init__(self, poi, input_dirs, skip_best=False, file_name_tmpl=None):
+    def __init__(
+        self, poi, input_dirs, skip_best=False, file_name_tmpl=None, cut_strings=None
+    ):
+        if cut_strings is None:
+            cut_strings = []
         self.default_cut = "deltaNLL<990.0"
         if file_name_tmpl is None:
             self.file_name_tmpl = "higgsCombine_SCAN_{}*.root".format(poi)
@@ -132,6 +137,20 @@ class Scan:
 
         logger.debug(
             "Original points found (after sorting, removing zeroes and removing duplicates): {}".format(
+                [
+                    (x, y)
+                    for x, y in zip(
+                        self.original_points[0], self.original_points[1] / 2
+                    )
+                ]
+            )
+        )
+
+        for cut_string in cut_strings:
+            self.cut_from_string(cut_string)
+
+        logger.debug(
+            "Original points found (after applying custom cuts): {}".format(
                 [
                     (x, y)
                     for x, y in zip(
@@ -238,6 +257,33 @@ class Scan:
 
         return down, up, down_uncertainty, up_uncertainty
 
+    def cut_from_string(self, cut_string):
+        """
+        Cut the original points from the original points array using the cut_string
+        :param cut_string: string with the cut
+        :return: numpy array with the points that pass the cut
+        """
+        if ">" in cut_string:
+            thr = float(cut_string.split(">")[-1])
+            if cut_string.startswith("0"):
+                self.original_points = self.original_points[
+                    :, self.original_points[0] > thr
+                ]
+            if cut_string.startswith("1"):
+                self.original_points = self.original_points[
+                    :, self.original_points[1] > thr
+                ]
+        elif "<" in cut_string:
+            thr = float(cut_string.split("<")[-1])
+            if cut_string.startswith("0"):
+                self.original_points = self.original_points[
+                    :, self.original_points[0] < thr
+                ]
+            if cut_string.startswith("1"):
+                self.original_points = self.original_points[
+                    :, self.original_points[1] < thr
+                ]
+
     def plot(self, ax, color=None, label=None, ylim=8.0):
         if label is None:
             label = self.poi
@@ -300,6 +346,18 @@ class Scan:
 
         return ax
 
+    def plot_simple(self, ax, color="k", label=None, ylim=8.0):
+        if label is None:
+            label = self.poi
+        # Restrict the plotted values to a dnll less than ylim
+        x = self.interpolated_points[0][self.interpolated_points[1] < ylim]
+        y = self.interpolated_points[1][self.interpolated_points[1] < ylim]
+        logger.debug(f"min x: {x[0]}, max x: {x[-1]}")
+        logger.debug(f"min y {min(y)}, max y {max(y)}")
+        ax.plot(x, y, color=color, label=label, linewidth=3)
+
+        return ax
+
     def plot_original_points(self, ax, color=None, label=None, for_single_plot=False):
         if label is None:
             label = f"{self.poi} (original)"
@@ -316,7 +374,7 @@ class Scan:
 
 class ScanSingles:
     def __init__(
-        self, poi, input_dirs, skip_best=False, file_name_tmpl=None
+        self, poi, input_dirs, skip_best=False, file_name_tmpl=None, cut_string=None
     ):  # skip_best is useless here, but to keep the interface the same
         self.file_name_tmpl = "higgsCombine_SINGLES_{}".format(poi)
         self.tree_name = "limit"

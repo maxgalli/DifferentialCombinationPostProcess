@@ -50,6 +50,15 @@ def parse_arguments():
         "--scenario", type=str, choices=list(TK_models.keys()), help="Scenario to plot"
     )
 
+    parser.add_argument(
+        "--cut-strings",
+        nargs="+",
+        type=str,
+        required=False,
+        default=None,
+        help="Cut strings to apply to the limit trees",
+    )
+
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--poi", type=str, help="POI to plot in single scan")
     group.add_argument("--pois", nargs="+", help="POIs to plot in 2D")
@@ -70,6 +79,7 @@ def main(args):
             [args.input_dir],
             skip_best=args.skip_best,
             file_name_tmpl=file_name_tmpl,
+            cut_strings=args.cut_strings,
         )
 
         fig = XSNLLsPerCategory(ds, ylim=8, print_best=True)

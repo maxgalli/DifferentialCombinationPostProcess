@@ -54,10 +54,20 @@ def parse_arguments():
         "--categories",
         nargs="+",
         type=str,
-        required=False,
-        default=[],
+        required=True,
         help="Categories for which the plots are produced",
     )
+
+    parser.add_argument(
+        "--coefficients",
+        nargs="+",
+        type=str,
+        required=False,
+        default=None,
+        help="Wilson coefficients for which the plots are produced",
+    )
+
+    parser.add_argument("--skip-2d", action="store_true", help="Skip 2D scans")
 
     parser.add_argument("--debug", action="store_true", help="Print debug messages")
 
@@ -81,11 +91,14 @@ def main(args):
         output_dir = os.path.join(output_dir, "freezeothers")
         os.makedirs(output_dir, exist_ok=True)
         # loop over wilson coefficients
-        wilson_coefficients = [
-            dr.split("_")[-1]
-            for dr in os.listdir(input_dir)
-            if dr.startswith("FreezeOthers")
-        ]
+        if args.coefficients:
+            wilson_coefficients = args.coefficients
+        else:
+            wilson_coefficients = [
+                dr.split("_")[-1]
+                for dr in os.listdir(input_dir)
+                if dr.startswith("FreezeOthers")
+            ]
         logger.info(
             f"Will plot 1D scans for the following Wilson coefficients: {wilson_coefficients}"
         )
@@ -124,7 +137,10 @@ def main(args):
                 submodel_extracted[key]["min"],
                 submodel_extracted[key]["max"],
             )
-        submodel_pois = list(submodel_extracted.keys())
+        if args.coefficients:
+            submodel_pois = args.coefficients
+        else:
+            submodel_pois = list(submodel_extracted.keys())
         logger.info(f"Submodel {submodel_name} has the following POIs: {submodel_pois}")
 
         # first, one figure per wilson coefficient per subcategory with all the decay channels
@@ -145,46 +161,47 @@ def main(args):
                     scans[category] = Scan(
                         coeff,
                         input_dirs,
-                        skip_best=False,
-                        file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}*.root",
+                        skip_best=True,
+                        file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
                     )
                 if len(scans) > 0:
-                    fig = GenericNLLsPerPOI(coeff, scans, subcat)
+                    fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=True)
                     fig.dump(output_dir)
 
         # then, 2D plots
-        pairs = list(combinations(submodel_pois, 2))
-        logger.info(f"Will plot 2D scans for the following pairs of WCs: {pairs}")
-        for pair in pairs:
-            # expected with gradient and observed with lines for each category
-            for category in args.categories:
-                scans = {}
-                for subcat, subcat_suff in subcategory_suff.items():
-                    input_dirs = [
-                        os.path.join(input_dir, d)
-                        for d in os.listdir(input_dir)
-                        if d.startswith(f"{category}{subcat_suff}-")
-                    ]
-                    if len(input_dirs) == 0:
-                        logger.warning(
-                            f"No input directories found for {category}{subcat_suff}"
+        if not args.skip_2d and args.coefficients is None:
+            pairs = list(combinations(submodel_pois, 2))
+            logger.info(f"Will plot 2D scans for the following pairs of WCs: {pairs}")
+            for pair in pairs:
+                # expected with gradient and observed with lines for each category
+                for category in args.categories:
+                    scans = {}
+                    for subcat, subcat_suff in subcategory_suff.items():
+                        input_dirs = [
+                            os.path.join(input_dir, d)
+                            for d in os.listdir(input_dir)
+                            if d.startswith(f"{category}{subcat_suff}-")
+                        ]
+                        if len(input_dirs) == 0:
+                            logger.warning(
+                                f"No input directories found for {category}{subcat_suff}"
+                            )
+                            continue
+                        scans[f"{category}{subcat_suff}"] = Scan2D(
+                            pois=pair,
+                            file_name_template=f"higgsCombine_SCAN_2D{pair[0]}-{pair[1]}*.root",
+                            input_dirs=input_dirs,
+                            skip_best=True,
                         )
-                        continue
-                    scans[f"{category}{subcat_suff}"] = Scan2D(
-                        pois=pair,
-                        file_name_template=f"higgsCombine_SCAN_2D{pair[0]}-{pair[1]}*.root",
-                        input_dirs=input_dirs,
-                        skip_best=True,
-                    )
-                if len(scans) > 0:
-                    logger.debug(f"Found scan dictionary {scans}")
-                    fig = TwoDScansPerModel(
-                        scan_dict=scans,
-                        combination_name=f"{category}_asimov",
-                        model_config=submodel_config,
-                        output_name=f"2D_{pair[0]}-{pair[1]}_{category}",
-                    )
-                    fig.dump(output_dir)
+                    if len(scans) > 0:
+                        logger.debug(f"Found scan dictionary {scans}")
+                        fig = TwoDScansPerModel(
+                            scan_dict=scans,
+                            combination_name=f"{category}_asimov",
+                            model_config=submodel_config,
+                            output_name=f"2D_{pair[0]}-{pair[1]}_{category}",
+                        )
+                        fig.dump(output_dir)
 
 
 if __name__ == "__main__":
