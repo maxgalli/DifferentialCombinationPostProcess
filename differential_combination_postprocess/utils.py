@@ -1,6 +1,8 @@
 import logging
 from rich.logging import RichHandler
 import yaml
+import matplotlib.colors as colors
+import numpy as np
 
 
 class CustomFilter(logging.Filter):
@@ -33,3 +35,11 @@ def extract_from_yaml_file(path_to_file):
         dct = yaml.load(fl, Loader=yaml.FullLoader)
 
     return dct
+
+
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+    new_cmap = colors.LinearSegmentedColormap.from_list(
+        "trunc({n},{a:.2f},{b:.2f})".format(n=cmap.name, a=minval, b=maxval),
+        cmap(np.linspace(minval, maxval, n)),
+    )
+    return new_cmap

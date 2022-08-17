@@ -14,6 +14,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+from differential_combination_postprocess.utils import truncate_colormap
+
 
 class DifferentialSpectrum:
     """ Basically a collection of Scan instances, one per POI, for a single category 
@@ -43,7 +45,11 @@ class DifferentialSpectrum:
             try:
                 which_scan = ScanSingles if from_singles else Scan
                 self.scans[poi] = which_scan(
-                    poi, input_dirs, skip_best=skip_best, file_name_tmpl=file_name_tmpl, cut_strings=cut_strings
+                    poi,
+                    input_dirs,
+                    skip_best=skip_best,
+                    file_name_tmpl=file_name_tmpl,
+                    cut_strings=cut_strings,
                 )
             # this is the case in which there are no scans for poi in input_dir, but we are looking
             # for them anyways because the list of pois is taken from the metadata
@@ -442,6 +448,7 @@ class Scan2D:
     def plot_as_heatmap(self, ax):
         colormap = plt.get_cmap("Blues")
         colormap = colormap.reversed()
+        colormap = truncate_colormap(colormap, 0.1, 1.0, 1000)
         pc = ax.pcolormesh(
             self.x_int,
             self.y_int,

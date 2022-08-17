@@ -58,4 +58,6 @@ SMEFT_parameters_labels = {
     "chbtil": "$c_{H\widetilde{B}}$",
     "chw": "$c_{HW}$",
     "chwtil": "$c_{H\widetilde{W}}$",
+    "chwb": "$c_{HWB}$",
+    "chwbtil": "$c_{H\widetilde{W}B}$",
 }
