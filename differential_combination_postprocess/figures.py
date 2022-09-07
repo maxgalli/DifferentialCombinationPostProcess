@@ -65,32 +65,44 @@ class GenericNLLsPerPOI(Figure):
     }
     """
 
-    def __init__(self, poi, scans, subcategory, simple=False):
+    def __init__(self, poi, scans, subcategory, simple=False, full_range=False):
         self.scans = scans
         self.categories = list(scans.keys())
         categories_string = "-".join(self.categories)
         self.fig, self.ax = plt.subplots()
         self.output_name = f"NLLs_{poi}_{categories_string}_{subcategory}"
+        if full_range:
+            self.output_name = (
+                f"NLLs_{poi}_{categories_string}_{subcategory}_full_range"
+            )
 
         # Set labels
         self.ax.set_xlabel(SMEFT_parameters_labels[poi])
         self.ax.set_ylabel("-2$\Delta$lnL")
 
         # Set limits
-        self.ax.set_ylim(0.0, 8.0)
+        if not full_range:
+            self.ax.set_ylim(0.0, 8.0)
 
         # Draw horizontal line at 1 and 4
-        self.ax.axhline(1.0, color="k", linestyle="--")
-        self.ax.axhline(4.0, color="k", linestyle="--")
+        if not full_range:
+            self.ax.axhline(1.0, color="k", linestyle="--")
+            self.ax.axhline(4.0, color="k", linestyle="--")
 
         for scan_name, scan in scans.items():
             if simple:
                 self.ax = scan.plot_simple(
-                    self.ax, color=category_specs[scan_name]["color"], label=scan_name
+                    self.ax,
+                    color=category_specs[scan_name]["color"],
+                    label=scan_name,
+                    ylim=1000000 if full_range else 8.0,
                 )
             else:
                 self.ax = scan.plot(
-                    self.ax, color=category_specs[scan_name]["color"], label=scan_name
+                    self.ax,
+                    color=category_specs[scan_name]["color"],
+                    label=scan_name,
+                    ylim=1000000 if full_range else 8.0,
                 )
 
         # Legend
@@ -418,6 +430,7 @@ class TwoDScansPerModel(Figure):
         self.fig, self.ax = plt.subplots(1, 1, figsize=(18, 14))
         # Plot the combination one
         # self.ax = self.scan_dict[combination_name].plot_as_contourf(self.ax)
+        """
         if combination_asimov_scan is not None:
             self.ax, self.colormap, self.pc = combination_asimov_scan.plot_as_heatmap(
                 self.ax
@@ -427,6 +440,7 @@ class TwoDScansPerModel(Figure):
                 combination_name
             ].plot_as_heatmap(self.ax)
         self.fig.colorbar(self.pc, ax=self.ax, label="-2$\Delta$lnL")
+        """
 
         # Combination + others as countour
         for category, scan in scan_dict.items():
@@ -449,8 +463,16 @@ class TwoDScansPerModel(Figure):
         self.ax.set_xlim(*model_config[poi1])
         self.ax.set_ylim(*model_config[poi2])
         # Miscellanea business that has to be done after
-        self.ax.set_xlabel(bsm_parameters_labels[scan_dict[combination_name].pois[0]])
-        self.ax.set_ylabel(bsm_parameters_labels[scan_dict[combination_name].pois[1]])
+        try:
+            self.ax.set_xlabel(
+                bsm_parameters_labels[scan_dict[combination_name].pois[0]]
+            )
+            self.ax.set_ylabel(
+                bsm_parameters_labels[scan_dict[combination_name].pois[1]]
+            )
+        except KeyError:
+            self.ax.set_xlabel(bsm_parameters_labels[combination_asimov_scan.pois[0]])
+            self.ax.set_ylabel(bsm_parameters_labels[combination_asimov_scan.pois[1]])
         # self.colormap.ax.set_ylabel("-2$\Delta$lnL")
         self.ax.legend(loc="upper left")
 

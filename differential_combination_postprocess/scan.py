@@ -174,10 +174,14 @@ class Scan:
         ROOT: https://root.cern.ch/doc/master/classTSpline3.html#ac94f978dc582faf55dcb574003b8fdeb
         """
         self.dNLL_func = interpolate.interp1d(
-            poi_values_original, two_dnll_original, kind="cubic"
+            # poi_values_original, two_dnll_original, kind="cubic"
+            self.original_points[0],
+            self.original_points[1],
+            kind="cubic",
         )
         self.n_interpol = 1000000
-        self.poi_boundaries = (poi_values_original[0], poi_values_original[-1])
+        # self.poi_boundaries = (poi_values_original[0], poi_values_original[-1])
+        self.poi_boundaries = (self.original_points[0][0], self.original_points[0][-1])
         poi_values = np.linspace(
             self.poi_boundaries[0], self.poi_boundaries[1], self.n_interpol
         )
@@ -400,7 +404,15 @@ class ScanSingles:
 
 
 class Scan2D:
-    def __init__(self, pois, file_name_template, input_dirs, skip_best=False):
+    def __init__(
+        self,
+        pois,
+        file_name_template,
+        input_dirs,
+        skip_best=False,
+        best_fit_file=None,
+        model_config=None,
+    ):
         if pois is None:
             raise ValueError("pois must be a list of strings")
         self.pois = pois
@@ -409,6 +421,7 @@ class Scan2D:
         self.tree_name = "limit"
 
         logger.info(f"Looking for files {file_name_template} inside {input_dirs}")
+        logger.debug(f"POIs: {self.pois}")
 
         dirs_template = [
             "{}/{}:{}".format(input_dir, self.file_name_tmpl, self.tree_name)
@@ -417,7 +430,7 @@ class Scan2D:
 
         if skip_best:
             to_concatenate = []
-            for batch in uproot.iterate(dirs_template):
+            for batch in uproot.iterate(dirs_template, cut=self.default_cut):
                 batch = batch[[*self.pois, "deltaNLL"]]
                 to_concatenate.append(batch[1:])
             branches = ak.concatenate(to_concatenate)
@@ -435,18 +448,41 @@ class Scan2D:
         z = 2 * branches["deltaNLL"]
 
         self.points = np.array([x, y, z])
-        self.minimum = self.points[:, np.argmin(z)]
+        # Remove nans
+        self.points = self.points[:, ~np.isnan(self.points).any(axis=0)]
 
-        self.y_int, self.x_int = np.mgrid[
-            y.min() : y.max() : 2000j, x.min() : x.max() : 2000j
-        ]
+        logger.debug(
+            f"Points:\nx: {list(self.points[0])}\ny: {list(self.points[1])}\nz: {list(self.points[2])}"
+        )
+
+        self.minimum = self.points[:, np.argmin(z)]
+        if best_fit_file is not None:
+            logger.info(f"Using best fit from file {best_fit_file}")
+            f = uproot.open(best_fit_file)
+            t = f[self.tree_name]
+            arr = t.arrays([self.pois[0], self.pois[1]])
+            self.minimum = np.array([arr[self.pois[0]][0], arr[self.pois[1]][0]])
+
+        if model_config:
+            x_min = model_config[pois[0]][0]
+            x_max = model_config[pois[0]][1]
+            y_min = model_config[pois[1]][0]
+            y_max = model_config[pois[1]][1]
+        else:
+            x_min = x.min()
+            x_max = x.max()
+            y_min = y.min()
+            y_max = y.max()
+        logger.debug(f"Interpolating points between {x_min} and {x_max} for {pois[0]}")
+        logger.debug(f"Interpolating points between {y_min} and {y_max} for {pois[1]}")
+        self.y_int, self.x_int = np.mgrid[y_min:y_max:1000j, x_min:x_max:1000j]
         self.z_int = griddata((x, y), z, (self.x_int, self.y_int), method="cubic")
 
         self.z_int[0] -= self.z_int.min()
         self.z_int[1] -= self.z_int.min()
 
     def plot_as_heatmap(self, ax):
-        colormap = plt.get_cmap("Blues")
+        colormap = plt.get_cmap("Oranges")
         colormap = colormap.reversed()
         colormap = truncate_colormap(colormap, 0.1, 1.0, 1000)
         pc = ax.pcolormesh(

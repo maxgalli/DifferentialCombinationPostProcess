@@ -1,5 +1,5 @@
 """
-Run wuth e.g.:
+Run with e.g.:
 plot_TK_scans.py --model yukawa_coupdep --input-dir /work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/outputs/TK_scans/Yukawa_NOTscalingbbH_couplingdependentBRs --output-dir /eos/home-g/gallim/www/plots/DifferentialCombination/CombinationRun2/TK_plots --categories HggHZZHWWHtt --combination HggHZZHWWHtt --expected
 """
 import argparse
@@ -64,7 +64,7 @@ def parse_arguments():
     parser.add_argument(
         "--expected-bkg",
         action="store_true",
-        help="When plotting observed values, plot the expected 2NLL for the combination instead",
+        help="When plotting observed values, plot the expected 2NLL for the combination instead as coloured heatmap",
     )
 
     parser.add_argument("--debug", action="store_true", help="Print debug messages")
@@ -97,9 +97,24 @@ def main(args):
         input_subdirs = [
             os.path.join(input_dir, d)
             for d in os.listdir(input_dir)
-            if d.startswith(category)
+            if d.startswith(f"{category}-")
         ]
-        scan_dict[category] = Scan2D(pois, file_name_template, input_subdirs)
+        best_fit_file = os.path.join(
+            input_subdirs[0],
+            f"higgsCombine_POSTFIT_{category}.MultiDimFit.mH125.38.root",
+        )
+        if args.expected:
+            best_fit_file = os.path.join(
+                input_subdirs[0], "higgsCombineAsimovBestFit.MultiDimFit.mH125.38.root"
+            )
+        scan_dict[category] = Scan2D(
+            pois,
+            file_name_template,
+            input_subdirs,
+            skip_best=True,
+            best_fit_file=best_fit_file,
+            model_config=models[args.model],
+        )
     logger.debug(f"Scan dictionary: {scan_dict}")
 
     # if we want the expected as bkg, make the scan
@@ -108,10 +123,20 @@ def main(args):
         category = f"{combination}_asimov"
         input_subdirs = [
             os.path.join(input_dir, d)
-            for d in os.listdirs(input_dir)
+            for d in os.listdir(input_dir)
             if d.startswith(category)
         ]
-        expected_combination_scan = Scan2D(pois, file_name_template, input_subdirs)
+        best_fit_file = os.path.join(
+            input_subdirs[0], "higgsCombineAsimovBestFit.MultiDimFit.mH125.38.root"
+        )
+        expected_combination_scan = Scan2D(
+            pois,
+            file_name_template,
+            input_subdirs,
+            skip_best=True,
+            best_fit_file=best_fit_file,
+            model_config=models[args.model],
+        )
 
     cat_names_string = "_".join(list(scan_dict.keys()))
     output_name = f"{args.model}_{cat_names_string}"

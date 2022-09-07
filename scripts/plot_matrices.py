@@ -14,7 +14,8 @@ from differential_combination_postprocess.matrix import MatricesExtractor
 def parse_arguments():
     parser = argparse.ArgumentParser(description="")
 
-    parser.add_argument("--input-file", type=str, required=True, help="")
+    parser.add_argument("--rfr-file", type=str, default="", help="")
+    parser.add_argument("--robusthesse-file", type=str, default="", help="")
 
     parser.add_argument(
         "--output-dir",
@@ -24,6 +25,8 @@ def parse_arguments():
     )
 
     parser.add_argument("--pois", nargs="+", type=str, required=True, help="")
+
+    parser.add_argument("--suffix", type=str, default="", help="")
 
     parser.add_argument("--debug", action="store_true", help="Print debug messages")
 
@@ -37,8 +40,11 @@ def main(args):
         logger = setup_logging(level="INFO")
 
     me = MatricesExtractor(args.pois)
-    me.extract_from_roofitresult(args.input_file, "fit_mdf")
-    me.dump(args.output_dir)
+    if args.rfr_file:
+        me.extract_from_roofitresult(args.rfr_file, "fit_mdf")
+    if args.robusthesse_file:
+        me.extract_from_robusthesse(args.robusthesse_file)
+    me.dump(args.output_dir, args.suffix)
 
 
 if __name__ == "__main__":
