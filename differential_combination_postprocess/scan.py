@@ -475,7 +475,7 @@ class Scan2D:
             y_max = y.max()
         logger.debug(f"Interpolating points between {x_min} and {x_max} for {pois[0]}")
         logger.debug(f"Interpolating points between {y_min} and {y_max} for {pois[1]}")
-        self.y_int, self.x_int = np.mgrid[y_min:y_max:1000j, x_min:x_max:1000j]
+        self.y_int, self.x_int = np.mgrid[y_min:y_max:2000j, x_min:x_max:2000j]
         self.z_int = griddata((x, y), z, (self.x_int, self.y_int), method="cubic")
 
         self.z_int[0] -= self.z_int.min()

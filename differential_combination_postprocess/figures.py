@@ -430,7 +430,6 @@ class TwoDScansPerModel(Figure):
         self.fig, self.ax = plt.subplots(1, 1, figsize=(18, 14))
         # Plot the combination one
         # self.ax = self.scan_dict[combination_name].plot_as_contourf(self.ax)
-        """
         if combination_asimov_scan is not None:
             self.ax, self.colormap, self.pc = combination_asimov_scan.plot_as_heatmap(
                 self.ax
@@ -440,7 +439,6 @@ class TwoDScansPerModel(Figure):
                 combination_name
             ].plot_as_heatmap(self.ax)
         self.fig.colorbar(self.pc, ax=self.ax, label="-2$\Delta$lnL")
-        """
 
         # Combination + others as countour
         for category, scan in scan_dict.items():
