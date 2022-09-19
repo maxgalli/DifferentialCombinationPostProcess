@@ -198,6 +198,8 @@ def main(args):
 
     differential_spectra = {}
     differential_spectra_statonly = {}
+    differential_spectra_asimov = {}
+    differential_spectra_asimov_statonly = {}
 
     for fl in categories_yamls:
         full_path_to_file = f"{metadata_dir}/{observable}/{fl}"
@@ -252,6 +254,13 @@ def main(args):
                 differential_spectra[sub_cat] = diff_spectrum
             if sub_cat == statonly_cat and sub_cat.split("_")[0] in systematic_bands:
                 differential_spectra_statonly[sub_cat] = diff_spectrum
+            if sub_cat == asimov_cat:
+                differential_spectra_asimov[sub_cat] = diff_spectrum
+            if (
+                sub_cat == asimov_statonly_cat
+                and sub_cat.split("_")[0] in systematic_bands
+            ):
+                differential_spectra_asimov_statonly[sub_cat] = diff_spectrum
 
             if not args.no_nll and not diff_spectrum.from_singles:
                 plot_to_dump = XSNLLsPerCategory(diff_spectrum)
@@ -270,40 +279,57 @@ def main(args):
             full_plot_to_dump = XSNLLsPerPOI_Full(sub_cat_spectra)
             full_plot_to_dump.dump(output_dir)
 
+    ds_full_list = [differential_spectra, differential_spectra_asimov]
+    ds_statonly_list = [
+        differential_spectra_statonly,
+        differential_spectra_asimov_statonly,
+    ]
+
     if "inclusive" not in (categories + singles)[0]:
-        logger.debug(f"Differential spectra: {differential_spectra}")
+        for i, (ds_full, ds_statonly) in enumerate(zip(ds_full_list, ds_statonly_list)):
+            try:
+                logger.debug(f"Differential spectra: {ds_full}")
 
-        # Produce the final differential xs plot including all the categories
-        logger.info(
-            f"Now producing the final differential xs plot for observable {observable}"
-        )
+                # Produce the final differential xs plot including all the categories
+                logger.info(
+                    f"Now producing the final differential xs plot for observable {observable}"
+                )
 
-        shapes = get_shapes_from_differential_spectra(differential_spectra, observable)
-        shapes_statonly = get_shapes_from_differential_spectra(
-            differential_spectra_statonly, observable
-        )
-        # horrible
-        # I should probably introduce another dict
-        shapes_systonly = []
-        for shape in shapes:
-            for shape_statonly in shapes_statonly:
-                if (
-                    shape.category == shape_statonly.category
-                    and shape.observable == shape_statonly.observable
-                ):
-                    shapes_systonly.append(shape - shape_statonly)
-        if args.debug:
-            for shape in shapes_systonly:
-                logger.debug(f"Systematic shape: \n{shape}")
+                shapes = get_shapes_from_differential_spectra(ds_full, observable)
+                shapes_statonly = get_shapes_from_differential_spectra(
+                    ds_statonly, observable
+                )
+                # horrible
+                # I should probably introduce another dict
+                shapes_systonly = []
+                for shape in shapes:
+                    for shape_statonly in shapes_statonly:
+                        if (
+                            shape.category == shape_statonly.category
+                            and shape.observable == shape_statonly.observable
+                        ):
+                            shapes_systonly.append(shape - shape_statonly)
+                if args.debug:
+                    for shape in shapes_systonly:
+                        logger.debug(f"Systematic shape: \n{shape}")
 
-        if not args.no_final:
-            final_plot_output_name = f"Final-{observable}-" + "_".join(
-                categories + singles
-            )
-            final_plot = DiffXSsPerObservable(
-                final_plot_output_name, sm_shapes[observable], shapes, shapes_systonly
-            )
-            final_plot.dump(output_dir)
+                if not args.no_final:
+                    final_plot_output_name = (
+                        f"Final{'Asimov' if i == 1 else ''}-{observable}-"
+                        + "_".join(categories + singles)
+                    )
+                    final_plot = DiffXSsPerObservable(
+                        final_plot_output_name,
+                        sm_shapes[observable],
+                        shapes,
+                        shapes_systonly,
+                    )
+                    final_plot.dump(output_dir)
+            except:
+                logger.warning(
+                    "Something went wrong while producing the final plot, maybe some scans missing?"
+                )
+                pass
 
 
 if __name__ == "__main__":
