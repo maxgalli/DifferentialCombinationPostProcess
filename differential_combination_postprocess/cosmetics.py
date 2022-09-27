@@ -25,6 +25,10 @@ observable_specs = {
         "x_plot_label": "$y_{H}$",
         "y_plot_label": "$\\Delta\\sigma\ / \Delta y_{H}$ [fb]",
     },
+    "smH_PTJ0": {
+        "x_plot_label": "$p_{T}^{jet}$ [GeV]",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta p_{T}^{jet}$ [fb/GeV]",
+    },
 }
 
 category_specs = {
@@ -41,6 +45,7 @@ category_specs = {
     "HggHZZHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
+    "HggHZZHWWHttHbb": {"plot_label": "Combination", "color": "black", "marker": "o"},
 }
 
 TK_parameters_labels = {

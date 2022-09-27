@@ -2,6 +2,7 @@ import numpy as np
 import scipy.interpolate as itr
 import pickle as pkl
 import awkward as ak
+import os
 
 import logging
 
@@ -143,6 +144,59 @@ analyses_edges = {
             450,
             1000,
         ],
+        "HggHZZHWWHttHbb": [
+            0,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30,
+            35,
+            45,
+            60,
+            80,
+            100,
+            120,
+            140,
+            170,
+            200,
+            250,
+            350,
+            450,
+            650,
+            1000,
+        ],
+        "MaximumGranularity": [
+            0,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30,
+            35,
+            45,
+            60,
+            80,
+            100,
+            120,
+            140,
+            170,
+            200,
+            250,
+            300,
+            350,
+            400,
+            450,
+            500,
+            550,
+            600,
+            650,
+            700,
+            750,
+            1000,
+        ],
     },
     "Njets": {
         "Hgg": [0, 1, 2, 3, 4, 5],
@@ -168,9 +222,12 @@ analyses_edges = {
         ],  # because we merged last two bins
         "HggHZZ": [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.20, 1.60, 2.0, 3.0],
     },
+    "smH_PTJ0": {
+        "Hgg": [0.0, 30.0, 40.0, 55.0, 75.0, 95.0, 120.0, 150.0, 200.0, 1000.0]
+    },
 }
 
-overflows = ["smH_PTH"]
+overflows = ["smH_PTH", "smH_PTJ0"]
 
 
 def make_hgg_theory_pred_array(pickle_central, pickle_uncertainty):
@@ -181,11 +238,19 @@ def make_hgg_theory_pred_array(pickle_central, pickle_uncertainty):
     also note how this is done for up and down
     """
     obs_xs_dict = {}
-    with open(f"{theor_pred_base_dir}/{pickle_central}", "rb") as f:
+    if pickle_central.startswith("/"):
+        full_path = pickle_central
+    else:
+        full_path = os.path.join(theor_pred_base_dir, pickle_central)
+    if pickle_uncertainty.startswith("/"):
+        full_path_unc = pickle_uncertainty
+    else:
+        full_path_unc = os.path.join(theor_pred_base_dir, pickle_uncertainty)
+    with open(full_path, "rb") as f:
         obs = pkl.load(f)
         obs = get_prediction(obs, mass, weights=weights)
     obs_xs_dict["central"] = obs
-    with open(f"{theor_pred_base_dir}/{pickle_uncertainty}", "rb") as f:
+    with open(full_path_unc, "rb") as f:
         obs_uncs = pkl.load(f)
         obs_down = obs - obs_uncs[0, :]
         obs_up = obs + obs_uncs[1, :]
@@ -201,12 +266,19 @@ def make_hgg_theory_pred_array(pickle_central, pickle_uncertainty):
 smH_PTH_Hgg_xs = make_hgg_theory_pred_array(
     "theoryPred_Pt_18_fullPS.pkl", "theoryPred_Pt_18_fullPS_theoryUnc.pkl"
 )
+smH_PTH_MaximumGranularity_xs = make_hgg_theory_pred_array(
+    "/work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/TheoreticalPredictions/production_modes/ggH_MoreGranular/theoryPred_Pt_2018_ggHMoreGranular.pkl",
+    "/work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/TheoreticalPredictions/production_modes/ggH_MoreGranular/theoryPred_Pt_2018_ggHMoreGranular_theoryUnc.pkl",
+)
 Njets_Hgg_xs = make_hgg_theory_pred_array(
     "theoryPred_Njets2p5_18_fullPS.pkl", "theoryPred_Njets2p5_18_fullPS_theoryUnc.pkl"
 )
 yH_Hgg_xs = make_hgg_theory_pred_array(
     "theoryPred_AbsRapidityFine_18_fullPS.pkl",
     "theoryPred_AbsRapidityFine_18_fullPS_theoryUnc.pkl",
+)
+smH_PTJ0_Hgg_xs = make_hgg_theory_pred_array(
+    "theoryPred_Jet2p5Pt0_18_fullPS.pkl", "theoryPred_Jet2p5Pt0_18_fullPS_theoryUnc.pkl"
 )
 
 

@@ -79,7 +79,9 @@ def main(args):
             [args.input_dir],
             skip_best=args.skip_best,
             file_name_tmpl=file_name_tmpl,
-            cut_strings=args.cut_strings,
+            cut_strings={args.poi: args.cut_strings}
+            if args.cut_strings is not None
+            else None,
         )
 
         fig = XSNLLsPerCategory(ds, ylim=8, print_best=True)

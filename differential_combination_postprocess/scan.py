@@ -37,10 +37,13 @@ class DifferentialSpectrum:
                 variable, category, pois
             )
         )
+        logger.debug(f"cut_strings: {cut_strings}")
         self.variable = variable
         self.category = category
         self.scans = {}
         self.from_singles = from_singles
+        if cut_strings is None:
+            cut_strings = {}
         for poi in pois:
             try:
                 which_scan = ScanSingles if from_singles else Scan
@@ -49,7 +52,7 @@ class DifferentialSpectrum:
                     input_dirs,
                     skip_best=skip_best,
                     file_name_tmpl=file_name_tmpl,
-                    cut_strings=cut_strings,
+                    cut_strings=cut_strings[poi] if poi in cut_strings else None,
                 )
             # this is the case in which there are no scans for poi in input_dir, but we are looking
             # for them anyways because the list of pois is taken from the metadata
@@ -166,6 +169,13 @@ class Scan:
             )
         )
 
+        # Check if there are nan values in original points
+        if np.isnan(self.original_points[1]).any():
+            logger.warning("NaN values detected in NLLs values, removing them")
+            self.original_points = self.original_points[
+                :, ~np.isnan(self.original_points[1])
+            ]
+
         # Interpolate and re-make arrays to have more points
         """ For my future self and in case of problems during the presentation of results: 
         interp1d with cubic should perform a spline third order interpolation, exactly like the ones 
@@ -273,6 +283,7 @@ class Scan:
         :param cut_string: string with the cut
         :return: numpy array with the points that pass the cut
         """
+        logger.debug(f"Cutting points with cut string: {cut_string}")
         if ">" in cut_string:
             thr = float(cut_string.split(">")[-1])
             if cut_string.startswith("0"):

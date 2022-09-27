@@ -5,8 +5,14 @@ from matplotlib.patches import Rectangle
 from itertools import cycle
 from copy import deepcopy
 
-from .physics import YR4_totalXS
-from .physics import smH_PTH_Hgg_xs, Njets_Hgg_xs, yH_Hgg_xs, analyses_edges
+from .physics import (
+    smH_PTH_Hgg_xs,
+    smH_PTH_MaximumGranularity_xs,
+    Njets_Hgg_xs,
+    yH_Hgg_xs,
+    smH_PTJ0_Hgg_xs,
+    analyses_edges,
+)
 from .cosmetics import markers, category_specs
 
 import logging
@@ -75,6 +81,9 @@ class ObservableShape:
         self.xs_up = self.merge_bins(self.xs_up, self.edges, new_edges)
         self.xs_down = self.merge_bins(self.xs_down, self.edges, new_edges)
         self.edges = new_edges
+        self.fake_edges = np.arange(0, len(self.edges), self.fake_bin_width)
+        self.fake_centers = (self.fake_edges[1:] + self.fake_edges[:-1]) / 2
+        self.fake_maybe_moved_centers = self.fake_centers.copy()
 
     def fake_rebin(self, other_shape):
         logger.debug(f"Stretching fake range for {self.observable} {self.category}")
@@ -349,6 +358,19 @@ smH_PTH_Hgg_obs_shape = ObservableShapeSM(
     smH_PTH_Hgg_xs["down"].to_numpy(),
 )
 
+smH_PTH_MaximumGranularity_obs_shape = ObservableShapeSM(
+    "smH_PTH",
+    "Hgg",
+    analyses_edges["smH_PTH"]["MaximumGranularity"],
+    smH_PTH_MaximumGranularity_xs["central"].to_numpy(),
+    smH_PTH_MaximumGranularity_xs["up"].to_numpy(),
+    smH_PTH_MaximumGranularity_xs["down"].to_numpy(),
+)
+
+smH_PTH_HggHZZHWWHttHbb_obs_shape = deepcopy(smH_PTH_MaximumGranularity_obs_shape)
+smH_PTH_HggHZZHWWHttHbb_obs_shape.category = "HggHZZHWWHttHbb"
+smH_PTH_HggHZZHWWHttHbb_obs_shape.rebin(analyses_edges["smH_PTH"]["HggHZZHWWHttHbb"])
+
 Njets_Hgg_obs_shape = ObservableShapeSM(
     "Njets",
     "Hgg",
@@ -368,12 +390,22 @@ yH_Hgg_obs_shape = ObservableShapeSM(
     overflow=False,
 )
 
+smH_PTJ0_Hgg_obs_shape = ObservableShapeSM(
+    "smH_PTJ0",
+    "Hgg",
+    analyses_edges["smH_PTJ0"]["Hgg"],
+    smH_PTJ0_Hgg_xs["central"].to_numpy(),
+    smH_PTJ0_Hgg_xs["up"].to_numpy(),
+    smH_PTJ0_Hgg_xs["down"].to_numpy(),
+)
+
 
 # It is assumed that the SM shapes are the ones with the finest binning, i.e. Hgg
 # if something different will come up, we'll change it
 sm_shapes = {
-    "smH_PTH": smH_PTH_Hgg_obs_shape,
+    "smH_PTH": smH_PTH_HggHZZHWWHttHbb_obs_shape,
     "Njets": Njets_Hgg_obs_shape,
     "yH": yH_Hgg_obs_shape,
+    "smH_PTJ0": smH_PTJ0_Hgg_obs_shape,
 }
 

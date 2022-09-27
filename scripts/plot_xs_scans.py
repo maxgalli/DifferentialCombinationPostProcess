@@ -114,6 +114,14 @@ def parse_arguments():
         help="Skip production of NLL plots",
     )
 
+    parser.add_argument(
+        "--config-file",
+        type=str,
+        required=False,
+        default=None,
+        help="Path to the configuration file containing cuts and stuff per POI per category",
+    )
+
     return parser.parse_args()
 
 
@@ -188,6 +196,10 @@ def main(args):
         raise ValueError("Please specify at least one category or singles")
     systematic_bands = args.systematic_bands
     exclude_dirs = args.exclude_dirs
+    cfg = {}
+    if args.config_file is not None:
+        cfg = extract_from_yaml_file(args.config_file)
+
     logger.info(f"Plotting session for observable {observable}")
 
     # First produce NLL plots, one for each category
@@ -207,6 +219,8 @@ def main(args):
         # Based on the assumption that we have a config file for each category called 'category_name.yaml'
         category = fl.split(".")[0]
         pois = extract_from_yaml_file(full_path_to_file)
+        # if observable in ["smH_PTJ0"]:
+        #    pois = pois[1:]
 
         # Here define categories for asimov, statonly and asimov_statonly
         asimov_cat = f"{category}_asimov"
@@ -248,6 +262,14 @@ def main(args):
                 pois,
                 category_input_dirs,
                 from_singles=category in singles,
+                skip_best=cfg[sub_cat]["skip_best"]
+                if (sub_cat in cfg and "skip_best" in cfg[sub_cat])
+                else False,
+                cut_strings={
+                    p: cfg[sub_cat][p]["cut_strings"] for p in pois if p in cfg[sub_cat]
+                }
+                if sub_cat in cfg
+                else None,
             )
             sub_cat_spectra[sub_cat] = diff_spectrum
             if sub_cat == category:
@@ -287,49 +309,43 @@ def main(args):
 
     if "inclusive" not in (categories + singles)[0]:
         for i, (ds_full, ds_statonly) in enumerate(zip(ds_full_list, ds_statonly_list)):
-            try:
-                logger.debug(f"Differential spectra: {ds_full}")
+            logger.debug(f"Differential spectra: {ds_full}")
 
-                # Produce the final differential xs plot including all the categories
-                logger.info(
-                    f"Now producing the final differential xs plot for observable {observable}"
-                )
+            # Produce the final differential xs plot including all the categories
+            logger.info(
+                f"Now producing the final differential xs plot for observable {observable}"
+            )
 
-                shapes = get_shapes_from_differential_spectra(ds_full, observable)
-                shapes_statonly = get_shapes_from_differential_spectra(
-                    ds_statonly, observable
-                )
-                # horrible
-                # I should probably introduce another dict
-                shapes_systonly = []
-                for shape in shapes:
-                    for shape_statonly in shapes_statonly:
-                        if (
-                            shape.category == shape_statonly.category
-                            and shape.observable == shape_statonly.observable
-                        ):
-                            shapes_systonly.append(shape - shape_statonly)
-                if args.debug:
-                    for shape in shapes_systonly:
-                        logger.debug(f"Systematic shape: \n{shape}")
+            shapes = get_shapes_from_differential_spectra(ds_full, observable)
+            shapes_statonly = get_shapes_from_differential_spectra(
+                ds_statonly, observable
+            )
+            # horrible
+            # I should probably introduce another dict
+            shapes_systonly = []
+            for shape in shapes:
+                for shape_statonly in shapes_statonly:
+                    if (
+                        shape.category == shape_statonly.category
+                        and shape.observable == shape_statonly.observable
+                    ):
+                        shapes_systonly.append(shape - shape_statonly)
+            if args.debug:
+                for shape in shapes_systonly:
+                    logger.debug(f"Systematic shape: \n{shape}")
 
-                if not args.no_final:
-                    final_plot_output_name = (
-                        f"Final{'Asimov' if i == 1 else ''}-{observable}-"
-                        + "_".join(categories + singles)
-                    )
-                    final_plot = DiffXSsPerObservable(
-                        final_plot_output_name,
-                        sm_shapes[observable],
-                        shapes,
-                        shapes_systonly,
-                    )
-                    final_plot.dump(output_dir)
-            except:
-                logger.warning(
-                    "Something went wrong while producing the final plot, maybe some scans missing?"
+            if not args.no_final:
+                final_plot_output_name = (
+                    f"Final{'Asimov' if i == 1 else ''}-{observable}-"
+                    + "_".join(categories + singles)
                 )
-                pass
+                final_plot = DiffXSsPerObservable(
+                    final_plot_output_name,
+                    sm_shapes[observable],
+                    shapes,
+                    shapes_systonly,
+                )
+                final_plot.dump(output_dir)
 
 
 if __name__ == "__main__":
