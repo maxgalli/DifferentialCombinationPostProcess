@@ -230,6 +230,9 @@ def main(args):
                                 file_name_template=f"higgsCombine_SCAN_2D{pair[0]}-{pair[1]}.*.root",
                                 input_dirs=input_dirs,
                                 skip_best=True,
+                                best_fit_file=f"{input_dirs[0]}/higgsCombineAsimovBestFit.MultiDimFit.mH125.38.root"
+                                if "asimov" in subcat_suff
+                                else None,
                             )
                         except:
                             pass
@@ -243,6 +246,7 @@ def main(args):
                             combination_name=f"{category}_asimov",
                             model_config=pair_submodel_config,
                             output_name=f"2D_{pair[0]}-{pair[1]}_{category}",
+                            is_asimov=True,
                         )
                         fig.dump(output_dir)
 

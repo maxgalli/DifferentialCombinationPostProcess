@@ -21,7 +21,7 @@ for k, v in TK_parameters_labels.items():
     bsm_parameters_labels[k] = v
 for k, v in SMEFT_parameters_labels.items():
     bsm_parameters_labels[k] = v
-from .shapes import ObservableShapeSM
+from .shapes import ObservableShapeSM, smH_PTH_MaximumGranularity_obs_shape
 
 # Silence matplotlib warnings for Christ sake
 import warnings
@@ -338,6 +338,7 @@ class DiffXSsPerObservable(Figure):
                 "HZZ": -0.2,
                 "HWW": 0,
                 "Htt": -0.4,
+                "Hbb": -0.2,
             },
             "Njets": {
                 "HggHWW": 0,
@@ -351,8 +352,18 @@ class DiffXSsPerObservable(Figure):
         }
         logger.debug(f"Displacements: {displacements_dict}")
 
+        passed_sm_shape = sm_shape  # che brutta roba che mi tocca fare
         for shape in observable_shapes:
-            shape.fake_rebin(sm_shape)
+            # Fuckin Nick porcodiqueldio
+            if shape.observable == "smH_PTH" and shape.category.startswith("Hbb"):
+                sm_shape = smH_PTH_MaximumGranularity_obs_shape
+                shape.fake_edges = np.array([16.5, 18, 19, 20])
+                shape.fake_centers = np.array([17.25, 18.5, 19.5])
+                shape.fake_maybe_moved_centers = np.array([17.25, 18.5, 19.5])
+                logger.debug(f"Mannaggia a Nick fake edges: {shape.fake_edges}")
+            else:
+                sm_shape = passed_sm_shape
+                shape.fake_rebin(sm_shape)
 
             displacement = displacements_dict[sm_shape.observable][shape.category]
             shape.fake_maybe_moved_centers = (
@@ -382,6 +393,7 @@ class DiffXSsPerObservable(Figure):
             self.main_ax, self.ratio_ax = shape.plot(
                 self.main_ax, self.ratio_ax, prediction, bins_with_hline
             )
+        sm_shape = passed_sm_shape
 
         # Add bands for systonly
         for shape_systonly in observable_shapes_systonly:
@@ -418,6 +430,7 @@ class TwoDScansPerModel(Figure):
         model_config,
         combination_asimov_scan=None,
         output_name=None,
+        is_asimov=False,
     ):
         """
         scan_dict is e.g. {"Hgg": Scan2D}
@@ -431,15 +444,19 @@ class TwoDScansPerModel(Figure):
 
         self.fig, self.ax = plt.subplots(1, 1, figsize=(18, 14))
         # Plot the combination one
-        # self.ax = self.scan_dict[combination_name].plot_as_contourf(self.ax)
         if combination_asimov_scan is not None:
             self.ax, self.colormap, self.pc = combination_asimov_scan.plot_as_heatmap(
                 self.ax
             )
+            self.ax = combination_asimov_scan.plot_as_contour(
+                self.ax, color="maroon", label="Exp. Combination"
+            )
+            # self.ax = combination_asimov_scan.plot_as_contourf(self.ax)
         else:
             self.ax, self.colormap, self.pc = self.scan_dict[
                 combination_name
             ].plot_as_heatmap(self.ax)
+            # self.ax = self.scan_dict[combination_name].plot_as_contourf(self.ax)
         self.fig.colorbar(self.pc, ax=self.ax, label="-2$\Delta$lnL")
 
         # Combination + others as countour
@@ -448,7 +465,7 @@ class TwoDScansPerModel(Figure):
                 self.ax = self.scan_dict[category].plot_as_contour(
                     self.ax,
                     color=category_specs[category.split("_")[0]]["color"],
-                    label=category_specs[category.split("_")[0]]["plot_label"],
+                    label=f'{"Exp. " if is_asimov else ""}{category_specs[category.split("_")[0]]["plot_label"]}',
                 )
             except KeyError:  # quick_scan case, in which the name is "test"
                 self.ax = self.scan_dict[category].plot_as_contour(
@@ -460,8 +477,20 @@ class TwoDScansPerModel(Figure):
 
         # set limits on x and y
         poi1, poi2 = list(model_config.keys())
-        self.ax.set_xlim(*model_config[poi1])
-        self.ax.set_ylim(*model_config[poi2])
+        x_left = np.max(
+            [model_config[poi1][0], *[np.min(s.x_int) for s in scan_dict.values()]]
+        )
+        x_right = np.min(
+            [model_config[poi1][1], *[np.max(s.x_int) for s in scan_dict.values()]]
+        )
+        y_down = np.max(
+            [model_config[poi2][0], *[np.min(s.y_int) for s in scan_dict.values()]]
+        )
+        y_up = np.min(
+            [model_config[poi2][1], *[np.max(s.y_int) for s in scan_dict.values()]]
+        )
+        self.ax.set_xlim(x_left, x_right)
+        self.ax.set_ylim(y_down, y_up)
         # Miscellanea business that has to be done after
         try:
             self.ax.set_xlabel(

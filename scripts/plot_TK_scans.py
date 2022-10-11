@@ -150,6 +150,7 @@ def main(args):
         model_config=models[args.model],
         combination_asimov_scan=expected_combination_scan,
         output_name=output_name,
+        is_asimov=args.expected,
     )
     plot.dump(output_dir)
 

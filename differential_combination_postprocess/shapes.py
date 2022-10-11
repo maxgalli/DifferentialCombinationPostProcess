@@ -92,7 +92,8 @@ class ObservableShape:
         self.fake_edges = []
         self.fake_centers = []
         new_unit = other_shape.fake_bin_width
-        new_edge = other_shape.fake_edges[0]
+        new_edge = other_shape.edges.index(self.edges[0])
+        # new_edge = other_shape.fake_edges[0]
         self.fake_edges.append(new_edge)
         for first, second in zip(self.edges, self.edges[1:]):
             other_first_index = other_shape.edges.index(first)
@@ -104,6 +105,7 @@ class ObservableShape:
         self.fake_edges = np.array(self.fake_edges)
         self.fake_centers = (self.fake_edges[1:] + self.fake_edges[:-1]) / 2
         self.fake_maybe_moved_centers = self.fake_centers.copy()
+        logger.debug(f"New Fake edges after fake_rebin: {self.fake_edges}")
 
     def merge_bins(self, old_bins, old_edges, new_edges):
         if not all(edge in old_edges for edge in new_edges):

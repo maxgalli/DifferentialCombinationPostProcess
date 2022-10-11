@@ -395,7 +395,7 @@ class Scan:
 
 class ScanSingles:
     def __init__(
-        self, poi, input_dirs, skip_best=False, file_name_tmpl=None, cut_string=None
+        self, poi, input_dirs, skip_best=False, file_name_tmpl=None, cut_strings=None
     ):  # skip_best is useless here, but to keep the interface the same
         self.file_name_tmpl = "higgsCombine_SINGLES_{}".format(poi)
         self.tree_name = "limit"
@@ -486,8 +486,11 @@ class Scan2D:
             y_max = y.max()
         logger.debug(f"Interpolating points between {x_min} and {x_max} for {pois[0]}")
         logger.debug(f"Interpolating points between {y_min} and {y_max} for {pois[1]}")
-        self.y_int, self.x_int = np.mgrid[y_min:y_max:2000j, x_min:x_max:2000j]
-        self.z_int = griddata((x, y), z, (self.x_int, self.y_int), method="cubic")
+        self.y_int, self.x_int = np.mgrid[y_min:y_max:1000j, x_min:x_max:1000j]
+        # self.y_int, self.x_int = np.mgrid[y_min:y_max:500j, x_min:x_max:500j]
+        self.z_int = griddata(
+            (x, y), z, (self.x_int, self.y_int), method="cubic", fill_value=10.0
+        )
 
         self.z_int[0] -= self.z_int.min()
         self.z_int[1] -= self.z_int.min()
@@ -526,7 +529,12 @@ class Scan2D:
 
         # Best value as point
         ax.plot(
-            [self.minimum[0]], [self.minimum[1]], color=color, linestyle="", marker="o"
+            [self.minimum[0]],
+            [self.minimum[1]],
+            color=color,
+            linestyle="",
+            marker="o",
+            label=f"{label} best fit",
         )
 
         return ax
@@ -537,7 +545,8 @@ class Scan2D:
             self.y_int,
             self.z_int,
             levels=[0.0, 1.0, 4.0],
-            colors=["darkorange", "yellow"],
+            # colors=["darkorange", "yellow"],
+            colors=["navy", "cornflowerblue"],
         )
 
         return ax

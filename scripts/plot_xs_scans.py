@@ -26,7 +26,11 @@ from differential_combination_postprocess.figures import (
     XSNLLsPerPOI_Full,
     DiffXSsPerObservable,
 )
-from differential_combination_postprocess.shapes import ObservableShapeFitted, sm_shapes
+from differential_combination_postprocess.shapes import (
+    ObservableShapeFitted,
+    sm_shapes,
+    smH_PTH_MaximumGranularity_obs_shape,
+)
 from differential_combination_postprocess.physics import analyses_edges, overflows
 
 import logging
@@ -97,7 +101,7 @@ def parse_arguments():
         nargs="+",
         type=str,
         default=[],
-        help="Directory to exclude from the list of input directories",
+        help="Directory to exclude from the list of input directories. Note that since I'm retarded it only needs the name of the folder (no previous path), otherwise it breaks",
     )
 
     parser.add_argument(
@@ -135,6 +139,9 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
         )
         # First: copy the finest possible shape (Hgg) and rebin it with what we need
         sm_rebinned_shape = deepcopy(sm_shapes[observable])
+        # Fuckin Nick porcaccioddio
+        if simple_category == "Hbb" and observable == "smH_PTH":
+            sm_rebinned_shape = deepcopy(smH_PTH_MaximumGranularity_obs_shape)
         logging.debug(f"SM original xs: {sm_rebinned_shape.xs}")
         logging.debug(
             f"SM original xs_over_binwidth: {sm_rebinned_shape.xs_over_bin_width}"

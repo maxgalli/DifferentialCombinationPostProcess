@@ -78,6 +78,7 @@ analyses_edges = {
         "HZZ": [0, 15, 30, 45, 80, 120, 200, 1000],  # because we merged last three bins
         "HWW": [0, 30, 45, 80, 120, 200, 1000],
         "Htt": [0, 45, 80, 120, 140, 170, 200, 350, 450, 1000],
+        "Hbb": [300, 450, 650, 1000],
         "HggHZZ": [
             0,
             5,
@@ -285,9 +286,9 @@ smH_PTJ0_Hgg_xs = make_hgg_theory_pred_array(
 # TK stuff
 
 TK_models = {
-    "yukawa_coupdep": {"kappac": (-12, 12), "kappab": (-3, 3)},
-    "yukawa_floatingBR": {"kappac": (-20, 30), "kappab": (-5, 10)},
-    "top_coupdep_ctcg": {"ct": (-0.3, 2.3), "cg": (-0.1, 0.12)},
+    "yukawa_coupdep": {"kappac": (-8, 8), "kappab": (-2, 2)},
+    "yukawa_floatingBR": {"kappac": (-20, 30), "kappab": (-5, 12)},
+    "top_coupdep_ctcg": {"ct": (0.0, 2.0), "cg": (-0.06, 0.08)},
     "top_floatingBR_ctcg": {"ct": (-3, 3), "cg": (-0.15, 0.15)},
     "top_coupdep_ctcb": {"ct": (-3, 3), "cb": (-3, 3)},
     "top_floatingBR_ctcb": {"ct": (-3, 3), "cb": (-12, 12)},
