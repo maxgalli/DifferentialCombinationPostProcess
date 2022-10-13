@@ -475,15 +475,16 @@ class Scan2D:
             self.minimum = np.array([arr[self.pois[0]][0], arr[self.pois[1]][0]])
 
         if model_config:
-            x_min = model_config[pois[0]][0]
-            x_max = model_config[pois[0]][1]
-            y_min = model_config[pois[1]][0]
-            y_max = model_config[pois[1]][1]
+            x_min = np.min([model_config[pois[0]][0], x.min()])
+            x_max = np.max([model_config[pois[0]][1], x.max()])
+            y_min = np.min([model_config[pois[1]][0], y.min()])
+            y_max = np.max([model_config[pois[1]][1], y.max()])
         else:
             x_min = x.min()
             x_max = x.max()
             y_min = y.min()
             y_max = y.max()
+
         logger.debug(f"Interpolating points between {x_min} and {x_max} for {pois[0]}")
         logger.debug(f"Interpolating points between {y_min} and {y_max} for {pois[1]}")
         self.y_int, self.x_int = np.mgrid[y_min:y_max:1000j, x_min:x_max:1000j]

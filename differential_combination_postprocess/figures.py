@@ -448,9 +448,17 @@ class TwoDScansPerModel(Figure):
             self.ax, self.colormap, self.pc = combination_asimov_scan.plot_as_heatmap(
                 self.ax
             )
-            self.ax = combination_asimov_scan.plot_as_contour(
-                self.ax, color="maroon", label="Exp. Combination"
-            )
+            # this is because we assign an attribute category to the scan only in the SMEFT case!! (for now)
+            try:
+                self.ax = combination_asimov_scan.plot_as_contour(
+                    self.ax,
+                    color="maroon",
+                    label=f"Exp. {category_specs[combination_asimov_scan.category]['plot_label']}",
+                )
+            except:
+                self.ax = combination_asimov_scan.plot_as_contour(
+                    self.ax, color="maroon", label=f"Exp. Combination"
+                )
             # self.ax = combination_asimov_scan.plot_as_contourf(self.ax)
         else:
             self.ax, self.colormap, self.pc = self.scan_dict[
