@@ -298,7 +298,7 @@ smH_PTJ0_Hgg_xs = make_hgg_theory_pred_array(
 
 TK_models = {
     "yukawa_coupdep": {"kappac": (-8, 8), "kappab": (-2, 2)},
-    "yukawa_floatingBR": {"kappac": (-20, 30), "kappab": (-5, 12)},
+    "yukawa_floatingBR": {"kappac": (-30, 35), "kappab": (-8, 20)},
     "top_coupdep_ctcg": {"ct": (0.0, 2.0), "cg": (-0.06, 0.08)},
     "top_floatingBR_ctcg": {"ct": (-3, 3), "cg": (-0.15, 0.15)},
     "top_coupdep_ctcb": {"ct": (-3, 3), "cb": (-3, 3)},

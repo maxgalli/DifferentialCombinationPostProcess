@@ -77,7 +77,7 @@ class GenericNLLsPerPOI(Figure):
             )
 
         # Set labels
-        self.ax.set_xlabel(SMEFT_parameters_labels[poi])
+        self.ax.set_xlabel(bsm_parameters_labels[poi])
         self.ax.set_ylabel("-2$\Delta$lnL")
 
         # Set limits

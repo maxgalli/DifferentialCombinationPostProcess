@@ -13,9 +13,14 @@ import matplotlib.pyplot as plt
 matplotlib.use("AGG")
 
 from differential_combination_postprocess.utils import setup_logging
-from differential_combination_postprocess.figures import TwoDScansPerModel
-from differential_combination_postprocess.scan import Scan2D
+from differential_combination_postprocess.figures import (
+    TwoDScansPerModel,
+    GenericNLLsPerPOI,
+)
+from differential_combination_postprocess.scan import Scan2D, Scan
 from differential_combination_postprocess.physics import TK_models as models
+
+from plot_SMEFT_scans import plot_original_points
 
 
 def parse_arguments():
@@ -83,13 +88,49 @@ def main(args):
     categories = args.categories
     combination = args.combination
 
-    file_name_template = "higgsCombine_SCAN_*"
     # infer pois from model, order is important
     pois = list(models[args.model].keys())
+    file_name_template_2d = f"higgsCombine_SCAN_2D{pois[0]}-{pois[1]}.*.root"
+
+    subcat = "observed"
+    subcat_suff = ""
+    if args.expected:
+        subcat = "expected"
+        subcat_suff = "_asimov"
 
     logger.info(f"Working with the following categories: {categories}")
     logger.info(f"Will use {combination} as combination category")
 
+    for coeff in pois:
+        scans = {}
+        subcat_suff
+        for category in args.categories:
+            input_dirs = [
+                os.path.join(input_dir, d)
+                for d in os.listdir(input_dir)
+                if d.startswith(f"{category}{subcat_suff}-")
+            ]
+            if len(input_dirs) == 0:
+                logger.warning(
+                    f"No input directories found for {category}{subcat_suff}"
+                )
+                continue
+            scans[category] = Scan(
+                coeff,
+                input_dirs,
+                skip_best=True,
+                file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
+            )
+        if len(scans) > 0:
+            fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=True)
+            fig.dump(output_dir)
+            fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=True, full_range=True)
+            fig.dump(output_dir)
+            logger.debug("Dumping original points")
+            for scan_name, scan in scans.items():
+                plot_original_points(coeff, scan_name, scan, subcat, output_dir)
+
+    # 2D scans
     scan_dict = {}
     for category in categories:
         if args.expected:
@@ -99,6 +140,8 @@ def main(args):
             for d in os.listdir(input_dir)
             if d.startswith(f"{category}-")
         ]
+        # order subdirs alphabetically
+        input_subdirs.sort()
         best_fit_file = os.path.join(
             input_subdirs[0],
             f"higgsCombine_POSTFIT_{category}.MultiDimFit.mH125.38.root",
@@ -109,7 +152,7 @@ def main(args):
             )
         scan_dict[category] = Scan2D(
             pois,
-            file_name_template,
+            file_name_template_2d,
             input_subdirs,
             skip_best=True,
             best_fit_file=best_fit_file,
@@ -126,12 +169,14 @@ def main(args):
             for d in os.listdir(input_dir)
             if d.startswith(category)
         ]
+        # order subdirs alphabetically
+        input_subdirs.sort()
         best_fit_file = os.path.join(
             input_subdirs[0], "higgsCombineAsimovBestFit.MultiDimFit.mH125.38.root"
         )
         expected_combination_scan = Scan2D(
             pois,
-            file_name_template,
+            file_name_template_2d,
             input_subdirs,
             skip_best=True,
             best_fit_file=best_fit_file,
