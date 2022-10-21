@@ -499,7 +499,7 @@ class Scan2D:
     def plot_as_heatmap(self, ax):
         colormap = plt.get_cmap("Oranges")
         colormap = colormap.reversed()
-        colormap = truncate_colormap(colormap, 0.1, 1.0, 1000)
+        colormap = truncate_colormap(colormap, 0.3, 1.0, 1000)
         pc = ax.pcolormesh(
             self.x_int,
             self.y_int,
@@ -517,9 +517,9 @@ class Scan2D:
             self.x_int,
             self.y_int,
             self.z_int,
-            levels=[1.0, 4.0],
+            levels=[2.295748928898636, 6.180074306244173],
             colors=[color, color],
-            linewidths=[2.0, 2.0],
+            linewidths=[2.2, 2.2],
             linestyles=["solid", "dashed"],
         )
         # add labels
@@ -545,7 +545,7 @@ class Scan2D:
             self.x_int,
             self.y_int,
             self.z_int,
-            levels=[0.0, 1.0, 4.0],
+            levels=[0.0, 2.295748928898636, 6.180074306244173],
             # colors=["darkorange", "yellow"],
             colors=["navy", "cornflowerblue"],
         )
