@@ -45,12 +45,27 @@ category_specs = {
         "marker": "p",
     },
     "Hbb": {"plot_label": "H $\longrightarrow$ bb", "color": "orange", "marker": "*"},
+    "HbbVBF": {
+        "plot_label": "H $\longrightarrow$ bb",
+        "color": "orange",
+        "marker": "*",
+    },
+    "HttBoost": {
+        "plot_label": "H $\longrightarrow\\tau \\tau$ Boosted",
+        "color": "hotpink",
+        "marker": "D",
+    },
     "HggHZZ": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWWHttHbb": {"plot_label": "Combination", "color": "black", "marker": "o"},
+    "HggHZZHWWHttHbbVBF": {
+        "plot_label": "Combination",
+        "color": "black",
+        "marker": "o",
+    },
 }
 
 TK_parameters_labels = {
@@ -70,4 +85,10 @@ SMEFT_parameters_labels = {
     "chwtil": "$c_{H\widetilde{W}}$",
     "chwb": "$c_{HWB}$",
     "chwbtil": "$c_{H\widetilde{W}B}$",
+    "EV0": "$EV_{0}$",
+    "EV1": "$EV_{1}$",
+    "EV2": "$EV_{2}$",
+    "EV3": "$EV_{3}$",
+    "EV4": "$EV_{4}$",
+    "EV5": "$EV_{5}$",
 }

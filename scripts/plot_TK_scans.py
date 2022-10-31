@@ -72,6 +72,8 @@ def parse_arguments():
         help="When plotting observed values, plot the expected 2NLL for the combination instead as coloured heatmap",
     )
 
+    parser.add_argument("--twod-only", action="store_true", help="Only plot 2D scans")
+
     parser.add_argument("--debug", action="store_true", help="Print debug messages")
 
     return parser.parse_args()
@@ -91,6 +93,7 @@ def main(args):
     # infer pois from model, order is important
     pois = list(models[args.model].keys())
     file_name_template_2d = f"higgsCombine_SCAN_2D{pois[0]}-{pois[1]}.*.root"
+    # file_name_template_2d = "higgsCombine_SCAN_*"  # for old version
 
     subcat = "observed"
     subcat_suff = ""
@@ -101,34 +104,38 @@ def main(args):
     logger.info(f"Working with the following categories: {categories}")
     logger.info(f"Will use {combination} as combination category")
 
-    for coeff in pois:
-        scans = {}
-        subcat_suff
-        for category in args.categories:
-            input_dirs = [
-                os.path.join(input_dir, d)
-                for d in os.listdir(input_dir)
-                if d.startswith(f"{category}{subcat_suff}-")
-            ]
-            if len(input_dirs) == 0:
-                logger.warning(
-                    f"No input directories found for {category}{subcat_suff}"
+    if not args.twod_only:
+        logger.info("Plotting 1D scans")
+        for coeff in pois:
+            scans = {}
+            subcat_suff
+            for category in args.categories:
+                input_dirs = [
+                    os.path.join(input_dir, d)
+                    for d in os.listdir(input_dir)
+                    if d.startswith(f"{category}{subcat_suff}-")
+                ]
+                if len(input_dirs) == 0:
+                    logger.warning(
+                        f"No input directories found for {category}{subcat_suff}"
+                    )
+                    continue
+                scans[category] = Scan(
+                    coeff,
+                    input_dirs,
+                    skip_best=True,
+                    file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
                 )
-                continue
-            scans[category] = Scan(
-                coeff,
-                input_dirs,
-                skip_best=True,
-                file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
-            )
-        if len(scans) > 0:
-            fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=True)
-            fig.dump(output_dir)
-            fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=True, full_range=True)
-            fig.dump(output_dir)
-            logger.debug("Dumping original points")
-            for scan_name, scan in scans.items():
-                plot_original_points(coeff, scan_name, scan, subcat, output_dir)
+            if len(scans) > 0:
+                fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=True)
+                fig.dump(output_dir)
+                fig = GenericNLLsPerPOI(
+                    coeff, scans, subcat, simple=True, full_range=True
+                )
+                fig.dump(output_dir)
+                logger.debug("Dumping original points")
+                for scan_name, scan in scans.items():
+                    plot_original_points(coeff, scan_name, scan, subcat, output_dir)
 
     # 2D scans
     scan_dict = {}
@@ -142,13 +149,18 @@ def main(args):
         ]
         # order subdirs alphabetically
         input_subdirs.sort()
-        best_fit_file = os.path.join(
-            input_subdirs[0],
-            f"higgsCombine_POSTFIT_{category}.MultiDimFit.mH125.38.root",
-        )
-        if args.expected:
+        if args.expected and "Hgg" in category:
             best_fit_file = os.path.join(
                 input_subdirs[0], "higgsCombineAsimovBestFit.MultiDimFit.mH125.38.root"
+            )
+        else:
+            best_fit_file = os.path.join(
+                input_subdirs[0],
+                [
+                    f
+                    for f in os.listdir(input_subdirs[0])
+                    if f.startswith("higgsCombine_POSTFIT_")
+                ][0],
             )
         scan_dict[category] = Scan2D(
             pois,

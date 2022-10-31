@@ -21,7 +21,7 @@ for k, v in TK_parameters_labels.items():
     bsm_parameters_labels[k] = v
 for k, v in SMEFT_parameters_labels.items():
     bsm_parameters_labels[k] = v
-from .shapes import ObservableShapeSM, smH_PTH_MaximumGranularity_obs_shape
+from .shapes import ObservableShapeSM, smH_PTH_EvenMoreMaximumGranularity_obs_shape
 
 # Silence matplotlib warnings for Christ sake
 import warnings
@@ -287,8 +287,16 @@ class DiffXSsPerObservable(Figure):
         self.main_ax.set_xlim(sm_shape.fake_edges[0], sm_shape.fake_edges[-1])
         self.ratio_ax.set_xlim(sm_shape.fake_edges[0], sm_shape.fake_edges[-1])
         self.main_ax.set_yscale("log")
-        self.ratio_ax.set_ylim(0, 2)
-        self.ratio_ax.set_yticks([0, 1, 2])
+        large_ratio = False
+        for os in observable_shapes:
+            if os.category in ["HggHZZHWWHttHbbVBF", "HbbVBF"]:
+                large_ratio = True
+        if large_ratio:
+            self.ratio_ax.set_ylim(-10, 10)
+            self.ratio_ax.set_yticks([-10, -5, 0, 5, 10])
+        else:
+            self.ratio_ax.set_ylim(0, 2)
+            self.ratio_ax.set_yticks([0, 1, 2])
         if "Njets" in output_name:
             self.ratio_ax.set_ylim(0, 4)
             self.ratio_ax.set_yticks([0, 1, 2, 3, 4])
@@ -313,7 +321,9 @@ class DiffXSsPerObservable(Figure):
             tick_labels = deepcopy(sm_shape.edges)
             if sm_shape.overflow:
                 tick_labels[-1] = r"$\infty$"
-            self.ratio_ax.set_xticklabels(tick_labels)
+            self.ratio_ax.set_xticklabels(
+                tick_labels, rotation=45 if sm_shape.observable == "smH_PTH" else 0
+            )
         self.ratio_ax.tick_params(axis="x", which="major", labelsize=13)
         self.main_ax.tick_params(axis="x", which="minor", bottom=False, top=False)
         self.ratio_ax.tick_params(axis="x", which="minor", bottom=False, top=False)
@@ -334,11 +344,14 @@ class DiffXSsPerObservable(Figure):
                 "HggHZZHWW": 0,
                 "HggHZZHWWHtt": 0,
                 "HggHZZHWWHttHbb": 0,
+                "HggHZZHWWHttHbbVBF": 0,
                 "Hgg": 0.2,
                 "HZZ": -0.2,
                 "HWW": 0,
                 "Htt": -0.4,
                 "Hbb": -0.2,
+                "HbbVBF": 0,
+                "HttBoost": -0.2,
             },
             "Njets": {
                 "HggHWW": 0,
@@ -354,9 +367,13 @@ class DiffXSsPerObservable(Figure):
 
         passed_sm_shape = sm_shape  # che brutta roba che mi tocca fare
         for shape in observable_shapes:
-            # Fuckin Nick porcodiqueldio
-            if shape.observable == "smH_PTH" and shape.category.startswith("Hbb"):
-                sm_shape = smH_PTH_MaximumGranularity_obs_shape
+            # Fuckin Hbb porcodiqueldio
+            if (
+                shape.observable == "smH_PTH"
+                and shape.category.startswith("Hbb")
+                and shape.category != "HbbVBF"
+            ):
+                sm_shape = smH_PTH_EvenMoreMaximumGranularity_obs_shape
                 shape.fake_edges = np.array([16.5, 18, 19, 20])
                 shape.fake_centers = np.array([17.25, 18.5, 19.5])
                 shape.fake_maybe_moved_centers = np.array([17.25, 18.5, 19.5])
@@ -485,18 +502,10 @@ class TwoDScansPerModel(Figure):
 
         # set limits on x and y
         poi1, poi2 = list(model_config.keys())
-        x_left = np.max(
-            [model_config[poi1][0], *[np.min(s.x_int) for s in scan_dict.values()]]
-        )
-        x_right = np.min(
-            [model_config[poi1][1], *[np.max(s.x_int) for s in scan_dict.values()]]
-        )
-        y_down = np.max(
-            [model_config[poi2][0], *[np.min(s.y_int) for s in scan_dict.values()]]
-        )
-        y_up = np.min(
-            [model_config[poi2][1], *[np.max(s.y_int) for s in scan_dict.values()]]
-        )
+        x_left = model_config[poi1][0]
+        x_right = model_config[poi1][1]
+        y_down = model_config[poi2][0]
+        y_up = model_config[poi2][1]
         self.ax.set_xlim(x_left, x_right)
         self.ax.set_ylim(y_down, y_up)
         # Miscellanea business that has to be done after

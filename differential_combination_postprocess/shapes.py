@@ -8,6 +8,7 @@ from copy import deepcopy
 from .physics import (
     smH_PTH_Hgg_xs,
     smH_PTH_MaximumGranularity_xs,
+    smH_PTH_EvenMoreMaximumGranularity_xs,
     Njets_Hgg_xs,
     yH_Hgg_xs,
     smH_PTJ0_Hgg_xs,
@@ -369,9 +370,26 @@ smH_PTH_MaximumGranularity_obs_shape = ObservableShapeSM(
     smH_PTH_MaximumGranularity_xs["down"].to_numpy(),
 )
 
+smH_PTH_EvenMoreMaximumGranularity_obs_shape = ObservableShapeSM(
+    "smH_PTH",
+    "Hgg",
+    analyses_edges["smH_PTH"]["EvenMoreMaximumGranularity"],
+    smH_PTH_EvenMoreMaximumGranularity_xs["central"].to_numpy(),
+    smH_PTH_EvenMoreMaximumGranularity_xs["up"].to_numpy(),
+    smH_PTH_EvenMoreMaximumGranularity_xs["down"].to_numpy(),
+)
+
 smH_PTH_HggHZZHWWHttHbb_obs_shape = deepcopy(smH_PTH_MaximumGranularity_obs_shape)
 smH_PTH_HggHZZHWWHttHbb_obs_shape.category = "HggHZZHWWHttHbb"
 smH_PTH_HggHZZHWWHttHbb_obs_shape.rebin(analyses_edges["smH_PTH"]["HggHZZHWWHttHbb"])
+
+smH_PTH_HggHZZHWWHttHbbVBF_obs_shape = deepcopy(
+    smH_PTH_EvenMoreMaximumGranularity_obs_shape
+)
+smH_PTH_HggHZZHWWHttHbbVBF_obs_shape.category = "HggHZZHWWHttHbbVBF"
+smH_PTH_HggHZZHWWHttHbbVBF_obs_shape.rebin(
+    analyses_edges["smH_PTH"]["HggHZZHWWHttHbbVBF"]
+)
 
 Njets_Hgg_obs_shape = ObservableShapeSM(
     "Njets",
@@ -405,7 +423,7 @@ smH_PTJ0_Hgg_obs_shape = ObservableShapeSM(
 # It is assumed that the SM shapes are the ones with the finest binning, i.e. Hgg
 # if something different will come up, we'll change it
 sm_shapes = {
-    "smH_PTH": smH_PTH_HggHZZHWWHttHbb_obs_shape,
+    "smH_PTH": smH_PTH_HggHZZHWWHttHbbVBF_obs_shape,
     "Njets": Njets_Hgg_obs_shape,
     "yH": yH_Hgg_obs_shape,
     "smH_PTJ0": smH_PTJ0_Hgg_obs_shape,

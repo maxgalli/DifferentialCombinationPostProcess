@@ -14,10 +14,11 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Plot quick scan")
 
     parser.add_argument(
-        "--input-dir",
+        "--input-dirs",
+        nargs="+",
         type=str,
         required=True,
-        help="Directory where the .root files with 'limit' trees are stored",
+        help="Directories where the .root files with 'limit' trees are stored",
     )
 
     parser.add_argument(
@@ -76,7 +77,7 @@ def main(args):
             "POI",
             "category",
             [args.poi],
-            [args.input_dir],
+            args.input_dirs,
             skip_best=args.skip_best,
             file_name_tmpl=file_name_tmpl,
             cut_strings={args.poi: args.cut_strings}
@@ -128,7 +129,7 @@ def main(args):
             f, ax = plt.subplots(figsize=(8, 6))
             x_other = ds_other.scans[args.poi].original_points[0]
             y_other = ds_other.scans[args.poi].original_points[1] / 2
-            ax.scatter(x, y, marker="o", color="black", s=10, label=args.input_dir)
+            ax.scatter(x, y, marker="o", color="black", s=10, label=args.input_dirs[0])
             ax.scatter(
                 x_other,
                 y_other,
@@ -144,7 +145,9 @@ def main(args):
             f, ax = plt.subplots(figsize=(8, 6))
             x2_other = ds_other.scans[args.poi].original_points[0]
             y2_other = ds_other.scans[args.poi].original_points[1]
-            ax.scatter(x2, y2, marker="o", color="black", s=10, label=args.input_dir)
+            ax.scatter(
+                x2, y2, marker="o", color="black", s=10, label=args.input_dirs[0]
+            )
             ax.scatter(
                 x2_other,
                 y2_other,
@@ -162,7 +165,7 @@ def main(args):
         tmpl = "higgsCombine_SCAN_*"
         scans = {}
         scans["test"] = Scan2D(
-            args.pois, tmpl, [args.input_dir], skip_best=args.skip_best
+            args.pois, tmpl, args.input_dir, skip_best=args.skip_best
         )
         plot = TwoDScansPerModel(
             scans, "test", model_config=TK_models[args.scenario], output_name="test"
@@ -190,7 +193,7 @@ def main(args):
                     "POI",
                     "category",
                     [poi],
-                    [args.input_dir],
+                    args.input_dirs,
                     file_name_tmpl=args.file_name_tmpl,
                 )
                 fig = XSNLLsPerCategory(ds, ylim=8, print_best=True)
