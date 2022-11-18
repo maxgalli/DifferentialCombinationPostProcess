@@ -86,6 +86,14 @@ def parse_arguments():
 
     parser.add_argument("--skip-2d", action="store_true", help="Skip 2D scans")
 
+    parser.add_argument(
+        "--config-file",
+        type=str,
+        required=False,
+        default=None,
+        help="Path to the configuration file containing cuts and stuff per POI per category",
+    )
+
     parser.add_argument("--debug", action="store_true", help="Print debug messages")
 
     return parser.parse_args()
@@ -120,6 +128,11 @@ def main(args):
         subcat_suff = "_asimov"
     combination = args.combination
 
+    cfg = {}
+    if args.config_file is not None:
+        cfg = extract_from_yaml_file(args.config_file)
+    logger.debug(f"Configuration file: {cfg}")
+
     if args.how == "freezeothers":
         output_dir = os.path.join(output_dir, "freezeothers")
         os.makedirs(output_dir, exist_ok=True)
@@ -152,7 +165,9 @@ def main(args):
                     continue
                 scans[category] = Scan(coeff, input_dirs, skip_best=True)
             if len(scans) > 0:
-                fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=True)
+                fig = GenericNLLsPerPOI(
+                    coeff, scans, subcat, simple=True, plot_string=False
+                )
                 fig.dump(output_dir)
                 fig = GenericNLLsPerPOI(
                     coeff, scans, subcat, simple=True, full_range=True
@@ -208,9 +223,18 @@ def main(args):
                     input_dirs,
                     skip_best=True,
                     file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
+                    cut_strings=cfg[args.model][f"{category}{subcat_suff}"][coeff][
+                        "cut_strings"
+                    ]
+                    if args.model in cfg
+                    and f"{category}{subcat_suff}" in cfg[args.model]
+                    and coeff in cfg[args.model][f"{category}{subcat_suff}"]
+                    else None,
                 )
             if len(scans) > 0:
-                fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=True)
+                fig = GenericNLLsPerPOI(
+                    coeff, scans, subcat, simple=False, plot_string=True
+                )
                 fig.dump(output_dir)
                 fig = GenericNLLsPerPOI(
                     coeff, scans, subcat, simple=True, full_range=True
@@ -248,8 +272,12 @@ def main(args):
                             if "asimov" in subcat_suff
                             else None,
                         )
-                    except:
+                    except Exception as e:
                         pass
+                        logger.warning(
+                            f"Could not load 2D scan for {pair} in {category}{subcat_suff}"
+                        )
+                        logger.warning(e)
                 if len(scans) > 0:
                     logger.debug(f"Found scan dictionary {scans}")
                     pair_submodel_config = {}

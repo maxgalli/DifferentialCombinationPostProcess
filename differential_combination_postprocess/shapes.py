@@ -11,7 +11,10 @@ from .physics import (
     smH_PTH_EvenMoreMaximumGranularity_xs,
     Njets_Hgg_xs,
     yH_Hgg_xs,
+    yH_Granular_xs,
     smH_PTJ0_Hgg_xs,
+    mjj_Hgg_xs,
+    DEtajj_Hgg_xs,
     analyses_edges,
 )
 from .cosmetics import markers, category_specs
@@ -410,6 +413,16 @@ yH_Hgg_obs_shape = ObservableShapeSM(
     overflow=False,
 )
 
+yH_Granular_obs_shape = ObservableShapeSM(
+    "yH",
+    "Hgg",
+    analyses_edges["yH"]["Granular"],
+    yH_Granular_xs["central"].to_numpy(),
+    yH_Granular_xs["up"].to_numpy(),
+    yH_Granular_xs["down"].to_numpy(),
+    overflow=False,
+)
+
 smH_PTJ0_Hgg_obs_shape = ObservableShapeSM(
     "smH_PTJ0",
     "Hgg",
@@ -417,6 +430,24 @@ smH_PTJ0_Hgg_obs_shape = ObservableShapeSM(
     smH_PTJ0_Hgg_xs["central"].to_numpy(),
     smH_PTJ0_Hgg_xs["up"].to_numpy(),
     smH_PTJ0_Hgg_xs["down"].to_numpy(),
+)
+
+mjj_Hgg_obs_shape = ObservableShapeSM(
+    "mjj",
+    "Hgg",
+    analyses_edges["mjj"]["Hgg"],
+    mjj_Hgg_xs["central"].to_numpy(),
+    mjj_Hgg_xs["up"].to_numpy(),
+    mjj_Hgg_xs["down"].to_numpy(),
+)
+
+DEtajj_Hgg_obs_shape = ObservableShapeSM(
+    "DEtajj",
+    "Hgg",
+    analyses_edges["DEtajj"]["Hgg"],
+    DEtajj_Hgg_xs["central"].to_numpy(),
+    DEtajj_Hgg_xs["up"].to_numpy(),
+    DEtajj_Hgg_xs["down"].to_numpy(),
 )
 
 
@@ -427,5 +458,7 @@ sm_shapes = {
     "Njets": Njets_Hgg_obs_shape,
     "yH": yH_Hgg_obs_shape,
     "smH_PTJ0": smH_PTJ0_Hgg_obs_shape,
+    "mjj": mjj_Hgg_obs_shape,
+    "DEtajj": DEtajj_Hgg_obs_shape,
 }
 

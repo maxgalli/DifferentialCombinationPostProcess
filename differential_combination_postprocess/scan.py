@@ -6,6 +6,7 @@ import os
 import numpy as np
 from scipy import interpolate
 from scipy.interpolate import griddata
+from scipy.interpolate import UnivariateSpline
 import matplotlib.pyplot as plt
 from warnings import warn
 from copy import deepcopy
@@ -75,6 +76,7 @@ class Scan:
     ):
         if cut_strings is None:
             cut_strings = []
+        logger.debug(f"cut_strings: {cut_strings}")
         self.default_cut = "deltaNLL<990.0"
         if file_name_tmpl is None:
             self.file_name_tmpl = "higgsCombine_SCAN_{}*.root".format(poi)
@@ -198,6 +200,29 @@ class Scan:
         two_dnll = self.dNLL_func(poi_values)
         self.interpolated_points = np.array([poi_values, two_dnll])
 
+        self.check_points_and_compute_all_uncertainties()
+
+        # If up68 or down68 are 0, it means that NLL does not cross 1.0 at all
+        # In this case we repeat the interpolation procedure in a wider range with UnivariateSpline
+        if self.up68_unc == 0 or self.down68_unc == 0:
+            logger.warning(
+                "NLL does not cross 1.0 at all. Will try to interpolate with a wider range"
+            )
+            self.dNLL_func = UnivariateSpline(
+                self.original_points[0], self.original_points[1], k=2
+            )
+            poi_values = np.linspace(
+                poi_values_original[0] - 2, poi_values_original[-1] + 2, self.n_interpol
+            )
+            logger.info(
+                "Extrapolating between {} and {}".format(poi_values[0], poi_values[-1])
+            )
+            two_dnll = self.dNLL_func(poi_values)
+            self.interpolated_points = np.array([poi_values, two_dnll])
+
+            self.check_points_and_compute_all_uncertainties()
+
+    def check_points_and_compute_all_uncertainties(self):
         # Check if there are nan values in two_dnnl
         if np.isnan(self.interpolated_points[1]).any():
             logger.warning("NaN values detected in NLLs values, removing them")
@@ -251,7 +276,7 @@ class Scan:
         if len(points) < 2:
             # If this is the case, set up and down to the minimum and the uncertainties to 0, so it gets plotted anyways
             logger.warning(
-                f"The NLL curve does not seem to cross the horizontal line. Try scanning a wider range of points for {self.poi}!"
+                f"The NLL curve does not seem to cross the horizontal line for level {level}. Try scanning a wider range of points for {self.poi}!"
             )
             logger.info("Setting up and down to minimum and uncertainties to 0.")
             down = self.minimum
@@ -392,6 +417,17 @@ class Scan:
 
         return ax
 
+    def get_bestfit_string(self):
+        nomstring = f"{self.minimum[0]:.3f}"
+        upstring = f"{self.up68_unc:.3f}"
+        upstring = "{+" + upstring + "}"
+        downstring = f"{self.down68_unc:.3f}"
+        downstring = "{-" + downstring + "}"
+        return f"{self.poi} = ${nomstring}^{upstring}_{downstring}$"
+
+    def get_68interval_string(self):
+        return f"{self.poi}: [{self.down68[0]:.3f}, {self.up68[0]:.3f}]"
+
 
 class ScanSingles:
     def __init__(
@@ -409,9 +445,9 @@ class ScanSingles:
         t = f[self.tree_name]
         arr = t.arrays()
         logger.info("Found following array for singles: {}".format(arr[self.poi]))
-        self.mu = arr[self.poi][0] if arr[self.poi][0] > 0 else 0.0
-        self.mu_down = arr[self.poi][1] if arr[self.poi][1] > 0 else 0.0
-        self.mu_up = arr[self.poi][2] if arr[self.poi][2] > 0 else 0.0
+        self.mu = arr[self.poi][0]
+        self.mu_down = arr[self.poi][1]
+        self.mu_up = arr[self.poi][2]
 
 
 class Scan2D:

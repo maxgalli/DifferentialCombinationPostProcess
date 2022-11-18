@@ -29,6 +29,14 @@ observable_specs = {
         "x_plot_label": "$p_{T}^{jet}$ [GeV]",
         "y_plot_label": "$\\Delta\\sigma\ / \Delta p_{T}^{jet}$ [fb/GeV]",
     },
+    "mjj": {
+        "x_plot_label": "$m_{jj}$ [GeV]",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta m_{jj}$ [fb/GeV]",
+    },
+    "DEtajj": {
+        "x_plot_label": "$\\Delta\\eta_{jj}$",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta \\Delta\\eta_{jj}$ [fb]",
+    }
 }
 
 category_specs = {
@@ -58,10 +66,21 @@ category_specs = {
     "HggHZZ": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
+    "HggHZZHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
+    "HggHZZHWWHttHttBoost": {
+        "plot_label": "Combination",
+        "color": "black",
+        "marker": "o",
+    },
     "HggHZZHWWHttHbb": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWWHttHbbVBF": {
+        "plot_label": "Combination",
+        "color": "black",
+        "marker": "o",
+    },
+    "HggHZZHWWHttHbbVBFHttBoost": {
         "plot_label": "Combination",
         "color": "black",
         "marker": "o",
@@ -85,6 +104,23 @@ SMEFT_parameters_labels = {
     "chwtil": "$c_{H\widetilde{W}}$",
     "chwb": "$c_{HWB}$",
     "chwbtil": "$c_{H\widetilde{W}B}$",
+    "chdd": "$c_{HD}$",
+    "chd": "$c_{Hd}$",
+    "cll1": "$c^{(1)}_{ll}$",
+    "cll3": "$c^{(3)}_{ll}$",
+    "chl1": "$c^{(1)}_{Hl}$",
+    "chl3": "$c^{(3)}_{Hl}$",
+    "chq1": "$c^{(1)}_{Hq}$",
+    "chq3": "$c^{(3)}_{Hq}$",
+    "chu": "$c_{Hu}$",
+    "chbox": "$c_{Hbox}$",
+    "cw": "$c_{W}$",
+    "cbhre": "$Re(c_{bH})$",
+    "cbhim": "$Im(c_{bH})$",
+    "cthre": "$Re(c_{tH})$",
+    "cthim": "$Im(c_{tH})$",
+    "ctgre": "$Re(c_{tG})$",
+    "che": "$c_{He}$",
     "EV0": "$EV_{0}$",
     "EV1": "$EV_{1}$",
     "EV2": "$EV_{2}$",

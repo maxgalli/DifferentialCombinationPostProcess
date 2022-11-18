@@ -21,7 +21,11 @@ for k, v in TK_parameters_labels.items():
     bsm_parameters_labels[k] = v
 for k, v in SMEFT_parameters_labels.items():
     bsm_parameters_labels[k] = v
-from .shapes import ObservableShapeSM, smH_PTH_EvenMoreMaximumGranularity_obs_shape
+from .shapes import (
+    ObservableShapeSM,
+    smH_PTH_EvenMoreMaximumGranularity_obs_shape,
+    yH_Granular_obs_shape,
+)
 
 # Silence matplotlib warnings for Christ sake
 import warnings
@@ -65,7 +69,9 @@ class GenericNLLsPerPOI(Figure):
     }
     """
 
-    def __init__(self, poi, scans, subcategory, simple=False, full_range=False):
+    def __init__(
+        self, poi, scans, subcategory, simple=False, full_range=False, plot_string=False
+    ):
         self.scans = scans
         self.categories = list(scans.keys())
         categories_string = "-".join(self.categories)
@@ -77,7 +83,10 @@ class GenericNLLsPerPOI(Figure):
             )
 
         # Set labels
-        self.ax.set_xlabel(bsm_parameters_labels[poi])
+        try:
+            self.ax.set_xlabel(bsm_parameters_labels[poi])
+        except KeyError:
+            self.ax.set_xlabel(poi)
         self.ax.set_ylabel("-2$\Delta$lnL")
 
         # Set limits
@@ -89,6 +98,7 @@ class GenericNLLsPerPOI(Figure):
             self.ax.axhline(1.0, color="k", linestyle="--")
             self.ax.axhline(4.0, color="k", linestyle="--")
 
+        start_y_for_text = 6.0
         for scan_name, scan in scans.items():
             if simple:
                 self.ax = scan.plot_simple(
@@ -104,6 +114,19 @@ class GenericNLLsPerPOI(Figure):
                     label=scan_name,
                     ylim=1000000 if full_range else 8.0,
                 )
+            if plot_string:
+                # also add text with best fit
+                best_fit_string = scan.get_68interval_string()
+                self.ax.text(
+                    0.0,
+                    start_y_for_text,
+                    best_fit_string,
+                    color=category_specs[scan_name]["color"],
+                    fontsize=14,
+                    ha="center",
+                    va="center",
+                )
+                start_y_for_text -= 0.5
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
@@ -289,11 +312,15 @@ class DiffXSsPerObservable(Figure):
         self.main_ax.set_yscale("log")
         large_ratio = False
         for os in observable_shapes:
-            if os.category in ["HggHZZHWWHttHbbVBF", "HbbVBF"]:
+            if os.category in [
+                "HggHZZHWWHttHbbVBF",
+                "HggHZZHWWHttHbbVBFHttBoost",
+                "HbbVBF",
+            ]:
                 large_ratio = True
         if large_ratio:
-            self.ratio_ax.set_ylim(-10, 10)
-            self.ratio_ax.set_yticks([-10, -5, 0, 5, 10])
+            self.ratio_ax.set_ylim(-6, 6)
+            self.ratio_ax.set_yticks([-6, -3, 0, 3, 6])
         else:
             self.ratio_ax.set_ylim(0, 2)
             self.ratio_ax.set_yticks([0, 1, 2])
@@ -345,6 +372,7 @@ class DiffXSsPerObservable(Figure):
                 "HggHZZHWWHtt": 0,
                 "HggHZZHWWHttHbb": 0,
                 "HggHZZHWWHttHbbVBF": 0,
+                "HggHZZHWWHttHbbVBFHttBoost": 0,
                 "Hgg": 0.2,
                 "HZZ": -0.2,
                 "HWW": 0,
@@ -356,12 +384,16 @@ class DiffXSsPerObservable(Figure):
             "Njets": {
                 "HggHWW": 0,
                 "HggHWWHtt": 0,
+                "HggHZZHWWHtt": 0,
                 "Hgg": 0.2,
-                "HWW": -0.2,
+                "HZZ": -0.2,
+                "HWW": 0.4,
                 "Htt": -0.4,
             },
             "yH": {"HggHZZ": 0, "HggHZZHWW": 0, "Hgg": 0.2, "HZZ": -0.2, "HWW": 0},
             "smH_PTJ0": {"Hgg": 0.2},
+            "mjj": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
+            "DEtajj": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
         }
         logger.debug(f"Displacements: {displacements_dict}")
 
@@ -502,10 +534,22 @@ class TwoDScansPerModel(Figure):
 
         # set limits on x and y
         poi1, poi2 = list(model_config.keys())
-        x_left = model_config[poi1][0]
-        x_right = model_config[poi1][1]
-        y_down = model_config[poi2][0]
-        y_up = model_config[poi2][1]
+        x_left = np.max(
+            [model_config[poi1][0], *[np.min(s.x_int) for s in scan_dict.values()]]
+        )
+        x_right = np.min(
+            [model_config[poi1][1], *[np.max(s.x_int) for s in scan_dict.values()]]
+        )
+        y_down = np.max(
+            [model_config[poi2][0], *[np.min(s.y_int) for s in scan_dict.values()]]
+        )
+        y_up = np.min(
+            [model_config[poi2][1], *[np.max(s.y_int) for s in scan_dict.values()]]
+        )
+        # x_left = model_config[poi1][0]
+        # x_right = model_config[poi1][1]
+        # y_down = model_config[poi2][0]
+        # y_up = model_config[poi2][1]
         self.ax.set_xlim(x_left, x_right)
         self.ax.set_ylim(y_down, y_up)
         # Miscellanea business that has to be done after

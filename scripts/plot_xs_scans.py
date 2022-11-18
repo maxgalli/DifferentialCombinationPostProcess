@@ -30,6 +30,7 @@ from differential_combination_postprocess.shapes import (
     ObservableShapeFitted,
     sm_shapes,
     smH_PTH_EvenMoreMaximumGranularity_obs_shape,
+    yH_Granular_obs_shape,
 )
 from differential_combination_postprocess.physics import analyses_edges, overflows
 
@@ -226,8 +227,9 @@ def main(args):
         # Based on the assumption that we have a config file for each category called 'category_name.yaml'
         category = fl.split(".")[0]
         pois = extract_from_yaml_file(full_path_to_file)
-        # if observable in ["smH_PTJ0"]:
-        #    pois = pois[1:]
+        # in mjj we fit r_out that we don't plot
+        if observable in ["mjj", "DEtajj"]:
+            pois = pois[1:]
 
         # Here define categories for asimov, statonly and asimov_statonly
         asimov_cat = f"{category}_asimov"
