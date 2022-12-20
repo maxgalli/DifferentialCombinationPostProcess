@@ -163,7 +163,9 @@ def main(args):
                         f"No input directories found for {category}{subcat_suff}"
                     )
                     continue
-                scans[category] = Scan(coeff, input_dirs, skip_best=True)
+                scans[category] = Scan(
+                    coeff, input_dirs, skip_best=True, allow_extrapolation=False
+                )
             if len(scans) > 0:
                 fig = GenericNLLsPerPOI(
                     coeff, scans, subcat, simple=True, plot_string=False
@@ -179,6 +181,7 @@ def main(args):
 
     elif args.how == "submodel":
         submodel_name = args.submodel.split("/")[-1].split(".")[0].split("_")[-1]
+        model_plus_submodel_name = args.submodel.split("/")[-1].split(".")[0]
         if submodel_name not in os.listdir(input_dir):
             raise ValueError(f"No submodel {submodel_name} found in {input_dir}")
         output_dir = os.path.join(output_dir, submodel_name)
@@ -223,13 +226,15 @@ def main(args):
                     input_dirs,
                     skip_best=True,
                     file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
-                    cut_strings=cfg[args.model][f"{category}{subcat_suff}"][coeff][
-                        "cut_strings"
-                    ]
-                    if args.model in cfg
-                    and f"{category}{subcat_suff}" in cfg[args.model]
-                    and coeff in cfg[args.model][f"{category}{subcat_suff}"]
+                    cut_strings=cfg[model_plus_submodel_name][
+                        f"{category}{subcat_suff}"
+                    ][coeff]["cut_strings"]
+                    if model_plus_submodel_name in cfg
+                    and f"{category}{subcat_suff}" in cfg[model_plus_submodel_name]
+                    and coeff
+                    in cfg[model_plus_submodel_name][f"{category}{subcat_suff}"]
                     else None,
+                    allow_extrapolation=False,
                 )
             if len(scans) > 0:
                 fig = GenericNLLsPerPOI(

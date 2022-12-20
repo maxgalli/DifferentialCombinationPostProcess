@@ -310,26 +310,43 @@ analyses_edges = {
         "HggHZZHWWHtt": [0, 1, 2, 3, 4, 5],
     },
     "yH": {
-        "Hgg": [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.20, 1.60, 2.0, 3.5],
+        "Hgg": [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.20, 1.60, 2.0, 2.5],
         "HZZ": [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.20, 1.60, 2.5],
         "HggHZZ": [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.20, 1.60, 2.0, 2.5],
-        "Granular": [
-            0.0,
-            0.15,
-            0.30,
-            0.45,
-            0.60,
-            0.75,
-            0.90,
-            1.20,
-            1.60,
-            2.0,
-            2.5,
-            3.0,
-        ],
+        "Granular": [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.20, 1.60, 2.0, 2.5],
     },
     "smH_PTJ0": {
-        "Hgg": [0.0, 30.0, 40.0, 55.0, 75.0, 95.0, 120.0, 150.0, 200.0, 1000.0]
+        "Hgg": [0.0, 30.0, 40.0, 55.0, 75.0, 95.0, 120.0, 150.0, 200.0, 10000.0],
+        "HZZ": [0.0, 30.0, 55.0, 95.0, 200.0, 10000.0],
+        "HttBoost": [450.0, 600.0, 10000.0],
+        "HggHZZHttBoost": [
+            0.0,
+            30.0,
+            40.0,
+            55.0,
+            75.0,
+            95.0,
+            120.0,
+            150.0,
+            200.0,
+            450.0,
+            600.0,
+            10000.0,
+        ],
+        "Granular": [
+            0.0,
+            30.0,
+            40.0,
+            55.0,
+            75.0,
+            95.0,
+            120.0,
+            150.0,
+            200.0,
+            450.0,
+            600.0,
+            10000.0,
+        ],
     },
     "mjj": {
         "Hgg": [
@@ -350,9 +367,14 @@ analyses_edges = {
         "HZZ": [0.0, 1.6, 3.0, 100.0],
         "HggHZZ": [0.0, 0.7, 1.6, 3.0, 5.0, 100.0],
     },
+    "TauCJ": {
+        "Hgg": [15.0, 20.0, 30.0, 50.0, 80.0, 10000.0],
+        "HZZ": [15.0, 20.0, 30.0, 50.0, 80.0, 10000.0],
+        "HggHZZ": [15.0, 20.0, 30.0, 50.0, 80.0, 10000.0],
+    },
 }
 
-overflows = ["smH_PTH", "smH_PTJ0", "mjj", "DEtajj"]
+overflows = ["smH_PTH", "smH_PTJ0", "mjj", "DEtajj", "TauCJ"]
 
 
 def make_hgg_theory_pred_array(pickle_central, pickle_uncertainty):
@@ -413,12 +435,19 @@ yH_Granular_xs = make_hgg_theory_pred_array(
 smH_PTJ0_Hgg_xs = make_hgg_theory_pred_array(
     "theoryPred_Jet2p5Pt0_18_fullPS.pkl", "theoryPred_Jet2p5Pt0_18_fullPS_theoryUnc.pkl"
 )
+smH_PTJ0_Granular_xs = make_hgg_theory_pred_array(
+    "theoryPred_Jet2p5Pt0_2018_HggHZZHttBoost_fullPS.pkl",
+    "theoryPred_Jet2p5Pt0_2018_HggHZZHttBoost_fullPS_theoryUnc.pkl",
+)
 mjj_Hgg_xs = make_hgg_theory_pred_array(
     "theoryPred_Mjj_18_fullPS.pkl", "theoryPred_Mjj_18_fullPS_theoryUnc.pkl"
 )
 DEtajj_Hgg_xs = make_hgg_theory_pred_array(
     "theoryPred_AbsDeltaEtaJ1J2Jets4p7_UL17_fullPS.pkl",
     "theoryPred_AbsDeltaEtaJ1J2Jets4p7_UL17_fullPS_theoryUnc.pkl",
+)
+TauCJ_Hgg_xs = make_hgg_theory_pred_array(
+    "theoryPred_TauCJets4p7_UL17.pkl", "theoryPred_TauCJets4p7_UL17_theoryUnc.pkl"
 )
 
 

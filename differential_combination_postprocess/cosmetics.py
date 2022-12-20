@@ -36,7 +36,11 @@ observable_specs = {
     "DEtajj": {
         "x_plot_label": "$\\Delta\\eta_{jj}$",
         "y_plot_label": "$\\Delta\\sigma\ / \Delta \\Delta\\eta_{jj}$ [fb]",
-    }
+    },
+    "TauCJ": {
+        "x_plot_label": "$\\tau_{C}^{j}$ [GeV]",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta \\tau_{C}^{j}$ [fb/GeV]",
+    },
 }
 
 category_specs = {
@@ -67,6 +71,7 @@ category_specs = {
     "HggHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWW": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
+    "HggHZZHttBoost": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWWHtt": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "HggHZZHWWHttHttBoost": {
@@ -120,11 +125,20 @@ SMEFT_parameters_labels = {
     "cthre": "$Re(c_{tH})$",
     "cthim": "$Im(c_{tH})$",
     "ctgre": "$Re(c_{tG})$",
+    "cbbre": "$Rec_{bB}$",
+    "cbwim": "$Im(c_{bW})$",
+    "cbwre": "$Re(c_{bW})$",
+    "cehre": "$Re(c_{eH})$",
+    "cehim": "$Im(c_{eH})$",
     "che": "$c_{He}$",
-    "EV0": "$EV_{0}$",
-    "EV1": "$EV_{1}$",
-    "EV2": "$EV_{2}$",
-    "EV3": "$EV_{3}$",
-    "EV4": "$EV_{4}$",
-    "EV5": "$EV_{5}$",
+    "chbq": "$c_{Hb}$",
+    "chj1": "chj1",  # change me
+    "chj3": "chj3",  # change me
+    "ctbre": "$Re(c_{tB})$",
+    "cht": "$c_{Ht}$",
+    "ctwre": "$Re(c_{tW})$",
+    "cuhre": "$Re(c_{uH})$",
 }
+
+for i in range(100):
+    SMEFT_parameters_labels[f"EV{i}"] = f"$EV_{i}$"

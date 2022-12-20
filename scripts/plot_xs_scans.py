@@ -127,6 +127,13 @@ def parse_arguments():
         help="Path to the configuration file containing cuts and stuff per POI per category",
     )
 
+    parser.add_argument(
+        "--allow-extrapolation",
+        action="store_true",
+        default=False,
+        help="Whether or not extrapolating if NLL does not cross 1"
+    )
+
     return parser.parse_args()
 
 
@@ -230,6 +237,10 @@ def main(args):
         # in mjj we fit r_out that we don't plot
         if observable in ["mjj", "DEtajj"]:
             pois = pois[1:]
+        elif observable == "TauCJ" and category in ["Hgg", "HZZ"]:
+            pois = pois[1:]
+        elif observable == "TauCJ" and category in ["HggHZZ"]:
+            pois = pois[2:]
 
         # Here define categories for asimov, statonly and asimov_statonly
         asimov_cat = f"{category}_asimov"
@@ -279,6 +290,7 @@ def main(args):
                 }
                 if sub_cat in cfg
                 else None,
+                allow_extrapolation=args.allow_extrapolation,
             )
             sub_cat_spectra[sub_cat] = diff_spectrum
             if sub_cat == category:

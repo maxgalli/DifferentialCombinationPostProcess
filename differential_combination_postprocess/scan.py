@@ -32,6 +32,7 @@ class DifferentialSpectrum:
         skip_best=False,
         file_name_tmpl=None,
         cut_strings=None,
+        allow_extrapolation=True,
     ):
         logger.info(
             "Building a DifferentialSpectrum for variable {} and category {} with the following POIs {}".format(
@@ -54,6 +55,7 @@ class DifferentialSpectrum:
                     skip_best=skip_best,
                     file_name_tmpl=file_name_tmpl,
                     cut_strings=cut_strings[poi] if poi in cut_strings else None,
+                    allow_extrapolation=allow_extrapolation,
                 )
             # this is the case in which there are no scans for poi in input_dir, but we are looking
             # for them anyways because the list of pois is taken from the metadata
@@ -72,7 +74,13 @@ class Scan:
     """
 
     def __init__(
-        self, poi, input_dirs, skip_best=False, file_name_tmpl=None, cut_strings=None
+        self,
+        poi,
+        input_dirs,
+        skip_best=False,
+        file_name_tmpl=None,
+        cut_strings=None,
+        allow_extrapolation=True,
     ):
         if cut_strings is None:
             cut_strings = []
@@ -84,6 +92,7 @@ class Scan:
             self.file_name_tmpl = file_name_tmpl
         self.tree_name = "limit"
         self.poi = poi
+        self.allow_extrapolation = allow_extrapolation
 
         # Read the two branches we are interested in: deltaNLL and the POI one
         logger.info(
@@ -204,7 +213,7 @@ class Scan:
 
         # If up68 or down68 are 0, it means that NLL does not cross 1.0 at all
         # In this case we repeat the interpolation procedure in a wider range with UnivariateSpline
-        if self.up68_unc == 0 or self.down68_unc == 0:
+        if (self.up68_unc == 0 or self.down68_unc == 0) and self.allow_extrapolation:
             logger.warning(
                 "NLL does not cross 1.0 at all. Will try to interpolate with a wider range"
             )
@@ -392,7 +401,7 @@ class Scan:
 
         return ax
 
-    def plot_simple(self, ax, color="k", label=None, ylim=8.0):
+    def plot_simple(self, ax, color="k", label=None, ylim=8.0, linestyle="-"):
         if label is None:
             label = self.poi
         # Restrict the plotted values to a dnll less than ylim
@@ -400,7 +409,7 @@ class Scan:
         y = self.interpolated_points[1][self.interpolated_points[1] < ylim]
         logger.debug(f"min x: {x[0]}, max x: {x[-1]}")
         logger.debug(f"min y {min(y)}, max y {max(y)}")
-        ax.plot(x, y, color=color, label=label, linewidth=3)
+        ax.plot(x, y, color=color, label=label, linewidth=3, linestyle=linestyle)
 
         return ax
 
@@ -431,7 +440,13 @@ class Scan:
 
 class ScanSingles:
     def __init__(
-        self, poi, input_dirs, skip_best=False, file_name_tmpl=None, cut_strings=None
+        self,
+        poi,
+        input_dirs,
+        skip_best=False,
+        file_name_tmpl=None,
+        cut_strings=None,
+        allow_extrapolation=True,
     ):  # skip_best is useless here, but to keep the interface the same
         self.file_name_tmpl = "higgsCombine_SINGLES_{}".format(poi)
         self.tree_name = "limit"
@@ -493,6 +508,10 @@ class Scan2D:
         x = branches[pois[0]]
         y = branches[pois[1]]
         z = 2 * branches["deltaNLL"]
+
+        # Sanity check: min and max of x and y of the found files
+        logger.debug(f"Sanity check: min x: {min(x)}, max x: {max(x)}")
+        logger.debug(f"Sanity check: min y: {min(y)}, max y: {max(y)}")
 
         self.points = np.array([x, y, z])
         # Remove nans

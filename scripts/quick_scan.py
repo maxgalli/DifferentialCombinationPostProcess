@@ -83,6 +83,7 @@ def main(args):
             cut_strings={args.poi: args.cut_strings}
             if args.cut_strings is not None
             else None,
+            allow_extrapolation=False,
         )
 
         fig = XSNLLsPerCategory(ds, ylim=8, print_best=True)

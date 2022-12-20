@@ -13,8 +13,10 @@ from .physics import (
     yH_Hgg_xs,
     yH_Granular_xs,
     smH_PTJ0_Hgg_xs,
+    smH_PTJ0_Granular_xs,
     mjj_Hgg_xs,
     DEtajj_Hgg_xs,
+    TauCJ_Hgg_xs,
     analyses_edges,
 )
 from .cosmetics import markers, category_specs
@@ -432,6 +434,15 @@ smH_PTJ0_Hgg_obs_shape = ObservableShapeSM(
     smH_PTJ0_Hgg_xs["down"].to_numpy(),
 )
 
+smH_PTJ0_Granular_obs_shape = ObservableShapeSM(
+    "smH_PTJ0",
+    "Hgg",
+    analyses_edges["smH_PTJ0"]["Granular"],
+    smH_PTJ0_Granular_xs["central"].to_numpy(),
+    smH_PTJ0_Granular_xs["up"].to_numpy(),
+    smH_PTJ0_Granular_xs["down"].to_numpy(),
+)
+
 mjj_Hgg_obs_shape = ObservableShapeSM(
     "mjj",
     "Hgg",
@@ -450,15 +461,25 @@ DEtajj_Hgg_obs_shape = ObservableShapeSM(
     DEtajj_Hgg_xs["down"].to_numpy(),
 )
 
+TauCJ_Hgg_obs_shape = ObservableShapeSM(
+    "TauCJ",
+    "Hgg",
+    analyses_edges["TauCJ"]["Hgg"],
+    TauCJ_Hgg_xs["central"].to_numpy(),
+    TauCJ_Hgg_xs["up"].to_numpy(),
+    TauCJ_Hgg_xs["down"].to_numpy(),
+)
+
 
 # It is assumed that the SM shapes are the ones with the finest binning, i.e. Hgg
 # if something different will come up, we'll change it
 sm_shapes = {
     "smH_PTH": smH_PTH_HggHZZHWWHttHbbVBF_obs_shape,
     "Njets": Njets_Hgg_obs_shape,
-    "yH": yH_Hgg_obs_shape,
-    "smH_PTJ0": smH_PTJ0_Hgg_obs_shape,
+    "yH": yH_Granular_obs_shape,
+    "smH_PTJ0": smH_PTJ0_Granular_obs_shape,
     "mjj": mjj_Hgg_obs_shape,
     "DEtajj": DEtajj_Hgg_obs_shape,
+    "TauCJ": TauCJ_Hgg_obs_shape,
 }
 

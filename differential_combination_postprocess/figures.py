@@ -130,7 +130,72 @@ class GenericNLLsPerPOI(Figure):
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+
+
+class TwoScans(Figure):
+    def __init__(
+        self,
+        poi,
+        category,
+        scan1,
+        scan2,
+        label1,
+        label2,
+        prefix="TwoScans",
+        bestfit1=True,
+        bestfit2=True,
+    ):
+        self.fig, self.ax = plt.subplots()
+        self.output_name = f"{prefix}_{poi}_{category}"
+
+        # Set labels
+        try:
+            self.ax.set_xlabel(bsm_parameters_labels[poi])
+        except KeyError:
+            self.ax.set_xlabel(poi)
+        self.ax.set_ylabel("-2$\Delta$lnL")
+
+        # Set limits
+        self.ax.set_ylim(0.0, 8.0)
+
+        # Draw horizontal line at 1 and 4
+        self.ax.axhline(1.0, color="k", linestyle="--")
+        self.ax.axhline(4.0, color="k", linestyle="--")
+
+        self.ax = scan1.plot_simple(self.ax, "k", label=label1, ylim=8.0)
+        self.ax = scan2.plot_simple(
+            self.ax, "red", label=label2, ylim=8.0, linestyle="--"
+        )
+        # see https://stackoverflow.com/questions/8482588/putting-text-in-top-left-corner-of-matplotlib-plot for text coordinates
+        if bestfit1:
+            best_fit_string1 = scan1.get_bestfit_string()
+            self.ax.text(
+                0.5,
+                0.75,
+                best_fit_string1,
+                color="k",
+                fontsize=14,
+                ha="center",
+                va="center",
+                transform=self.ax.transAxes,
+            )
+        if bestfit2:
+            best_fit_string2 = scan2.get_bestfit_string()
+            self.ax.text(
+                0.5,
+                0.65,
+                best_fit_string2,
+                color="red",
+                fontsize=14,
+                ha="center",
+                va="center",
+                transform=self.ax.transAxes,
+            )
+
+        # Legend
+        self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
+        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
 
 
 class XSNLLsPerPOI:
@@ -193,7 +258,7 @@ class XSNLLsPerPOI:
 
             # Legend
             ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-            hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=ax)
+            hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=ax)
 
             self.figures.append((fig, ax, output_name))
 
@@ -236,7 +301,7 @@ class XSNLLsPerPOI_Full(XSNLLsPerPOI):
 
             # Legend
             ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-            hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=ax)
+            hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=ax)
 
             self.figures.append((fig, ax, output_name))
 
@@ -287,7 +352,7 @@ class XSNLLsPerCategory(Figure):
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
 
 
 class DiffXSsPerObservable(Figure):
@@ -391,9 +456,10 @@ class DiffXSsPerObservable(Figure):
                 "Htt": -0.4,
             },
             "yH": {"HggHZZ": 0, "HggHZZHWW": 0, "Hgg": 0.2, "HZZ": -0.2, "HWW": 0},
-            "smH_PTJ0": {"Hgg": 0.2},
+            "smH_PTJ0": {"HggHZZHttBoost": 0, "Hgg": 0.2, "HZZ": -0.2, "HttBoost": 0},
             "mjj": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
             "DEtajj": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
+            "TauCJ": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
         }
         logger.debug(f"Displacements: {displacements_dict}")
 
@@ -466,9 +532,7 @@ class DiffXSsPerObservable(Figure):
         # Miscellanea business that has to be done after
         self.main_ax.legend(loc="lower left")
 
-        hep.cms.label(
-            loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.main_ax
-        )
+        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.main_ax)
 
 
 class TwoDScansPerModel(Figure):
@@ -566,7 +630,7 @@ class TwoDScansPerModel(Figure):
         # self.colormap.ax.set_ylabel("-2$\Delta$lnL")
         self.ax.legend(loc="upper left")
 
-        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
 
 
 # Used for quick_scan only
@@ -595,4 +659,4 @@ class NScans(Figure):
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-        hep.cms.label(loc=0, data=True, llabel="Work in Progress", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
