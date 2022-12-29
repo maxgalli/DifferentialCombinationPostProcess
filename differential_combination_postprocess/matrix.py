@@ -155,7 +155,7 @@ class MatricesExtractor:
                 try:
                     labels = [TK_parameters_labels[c] for c in coefficients]
                 except KeyError:
-                    labels = self.coefficients
+                    labels = coefficients
 
             ax.set_xticks(np.arange(len(matrix)), minor=False)
             ax.set_yticks(np.arange(len(matrix)), minor=False)
