@@ -98,35 +98,36 @@ class GenericNLLsPerPOI(Figure):
             self.ax.axhline(1.0, color="k", linestyle="--")
             self.ax.axhline(4.0, color="k", linestyle="--")
 
-        start_y_for_text = 6.0
+        start_y_for_text = 0.6
         for scan_name, scan in scans.items():
             if simple:
                 self.ax = scan.plot_simple(
                     self.ax,
                     color=category_specs[scan_name]["color"],
-                    label=scan_name,
+                    label=category_specs[scan_name]["plot_label"],
                     ylim=1000000 if full_range else 8.0,
                 )
             else:
                 self.ax = scan.plot(
                     self.ax,
                     color=category_specs[scan_name]["color"],
-                    label=scan_name,
+                    label=category_specs[scan_name]["plot_label"],
                     ylim=1000000 if full_range else 8.0,
                 )
             if plot_string:
                 # also add text with best fit
-                best_fit_string = scan.get_68interval_string()
+                best_fit_string = scan.get_bestfit_string()
                 self.ax.text(
-                    0.0,
+                    0.5,
                     start_y_for_text,
                     best_fit_string,
                     color=category_specs[scan_name]["color"],
                     fontsize=14,
                     ha="center",
                     va="center",
+                    transform=self.ax.transAxes,
                 )
-                start_y_for_text -= 0.5
+                start_y_for_text -= 0.05
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
@@ -392,6 +393,12 @@ class DiffXSsPerObservable(Figure):
         if "Njets" in output_name:
             self.ratio_ax.set_ylim(0, 4)
             self.ratio_ax.set_yticks([0, 1, 2, 3, 4])
+        if "DEtajj" in output_name:
+            self.ratio_ax.set_ylim(-1, 2)
+            self.ratio_ax.set_yticks([-1, 0, 1, 2])
+        if "mjj" in output_name:
+            self.ratio_ax.set_ylim(-1, 3)
+            self.ratio_ax.set_yticks([-1, 0, 1, 2, 3])
         self.main_ax, self.ratio_ax = sm_shape.plot(self.main_ax, self.ratio_ax)
         # in the case of Njets, labels are in the middle of the bins
         if sm_shape.observable in ["Njets"]:
@@ -530,7 +537,12 @@ class DiffXSsPerObservable(Figure):
             )
 
         # Miscellanea business that has to be done after
-        self.main_ax.legend(loc="lower left")
+        location = "lower left"
+        prop = {"size": 14}
+        if sm_shape.observable == "Njets":
+            location = "upper right"
+            prop = {"size": 12}
+        self.main_ax.legend(loc=location, prop=prop)
 
         hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.main_ax)
 

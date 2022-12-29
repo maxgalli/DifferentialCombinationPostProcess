@@ -35,7 +35,7 @@ observable_specs = {
     },
     "DEtajj": {
         "x_plot_label": "$\\Delta\\eta_{jj}$",
-        "y_plot_label": "$\\Delta\\sigma\ / \Delta \\Delta\\eta_{jj}$ [fb]",
+        "y_plot_label": "$\\Delta\\sigma\ / \\Delta\\eta_{jj}$ [fb]",
     },
     "TauCJ": {
         "x_plot_label": "$\\tau_{C}^{j}$ [GeV]",
@@ -111,12 +111,13 @@ SMEFT_parameters_labels = {
     "chwbtil": "$c_{H\widetilde{W}B}$",
     "chdd": "$c_{HD}$",
     "chd": "$c_{Hd}$",
-    "cll1": "$c^{(1)}_{ll}$",
-    "cll3": "$c^{(3)}_{ll}$",
+    "cll1": "$c^{(\prime)}_{ll}$",
     "chl1": "$c^{(1)}_{Hl}$",
     "chl3": "$c^{(3)}_{Hl}$",
-    "chq1": "$c^{(1)}_{Hq}$",
-    "chq3": "$c^{(3)}_{Hq}$",
+    "chq1": "$c^{(1)}_{HQ}$",
+    "chq3": "$c^{(3)}_{HQ}$",
+    "chj1": "$c^{(1)}_{Hq}$",
+    "chj3": "$c^{(3)}_{Hq}$",
     "chu": "$c_{Hu}$",
     "chbox": "$c_{Hbox}$",
     "cw": "$c_{W}$",
@@ -125,15 +126,13 @@ SMEFT_parameters_labels = {
     "cthre": "$Re(c_{tH})$",
     "cthim": "$Im(c_{tH})$",
     "ctgre": "$Re(c_{tG})$",
-    "cbbre": "$Rec_{bB}$",
+    "cbbre": "$Re(c_{bB})$",
     "cbwim": "$Im(c_{bW})$",
     "cbwre": "$Re(c_{bW})$",
     "cehre": "$Re(c_{eH})$",
     "cehim": "$Im(c_{eH})$",
     "che": "$c_{He}$",
     "chbq": "$c_{Hb}$",
-    "chj1": "chj1",  # change me
-    "chj3": "chj3",  # change me
     "ctbre": "$Re(c_{tB})$",
     "cht": "$c_{Ht}$",
     "ctwre": "$Re(c_{tW})$",
@@ -141,4 +140,4 @@ SMEFT_parameters_labels = {
 }
 
 for i in range(100):
-    SMEFT_parameters_labels[f"EV{i}"] = f"$EV_{i}$"
+    SMEFT_parameters_labels[f"EV{i}"] = "$EV_{" + f"{i}" + "}$"

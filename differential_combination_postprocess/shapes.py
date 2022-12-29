@@ -159,7 +159,7 @@ class ObservableShapeSM(ObservableShape):
             values=self.xs_over_bin_width,
             color="grey",
             linewidth=1,
-            label="aMC@NLO",
+            label="aMC@NLO, NNLOPS",
         )
 
         rax.axhline(y=1, color="grey", linewidth=1)
