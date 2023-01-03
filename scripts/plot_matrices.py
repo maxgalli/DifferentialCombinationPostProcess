@@ -7,7 +7,10 @@ import matplotlib.pyplot as plt
 
 matplotlib.use("AGG")
 
-from differential_combination_postprocess.utils import setup_logging
+from differential_combination_postprocess.utils import (
+    setup_logging,
+    extract_from_yaml_file,
+)
 from differential_combination_postprocess.matrix import MatricesExtractor
 
 
@@ -39,7 +42,12 @@ def main(args):
     else:
         logger = setup_logging(level="INFO")
 
-    me = MatricesExtractor(args.pois)
+    if len(args.pois) == 1 and args.pois[0].endswith(".yml"):
+        pois = extract_from_yaml_file(args.pois[0])
+    else:
+        pois = args.pois
+    logger.debug("POIs: {}".format(pois))
+    me = MatricesExtractor(pois)
     if args.rfr_file:
         me.extract_from_roofitresult(args.rfr_file, "fit_mdf")
     if args.robusthesse_file:

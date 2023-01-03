@@ -120,14 +120,36 @@ class MatricesExtractor:
 
         logger.debug(f"Found following matrices: {self.matrices}")
 
+    def order_matrix(self, matrix, current_coefficients):
+        """
+        Order the matrix according to the order of the coefficients
+        """
+        ordered_matrix = []
+        for i in self.coefficients:
+            row = []
+            for j in self.coefficients:
+                row.append(
+                    matrix[current_coefficients.index(i)][current_coefficients.index(j)]
+                )
+            ordered_matrix.append(row)
+
+        return np.array(ordered_matrix), self.coefficients
+
     def dump(self, ouptut_dir, suffix=""):
         for matrix_name, matrix in self.matrices.items():
-            coefficients = (
+            current_coefficients = (
                 self.rfr_coefficients
                 if "rfr_" in matrix_name
                 else self.hessian_coefficients
             )
+            logger.debug("First row of matrix: {}".format(matrix[0]))
+            matrix, coefficients = self.order_matrix(matrix, current_coefficients)
+            logger.debug("First row of ordered matrix: {}".format(matrix[0]))
             fig, ax = plt.subplots()
+            number_size = 120 / len(current_coefficients)
+            letter_size = (
+                150 / len(current_coefficients) if len(current_coefficients) > 8 else 20
+            )
             cmap = plt.get_cmap("bwr")
             cax = ax.matshow(
                 matrix,
@@ -135,7 +157,8 @@ class MatricesExtractor:
                 vmin=-1 if "corr" in matrix_name else None,
                 vmax=1 if "corr" in matrix_name else None,
             )
-            cbar = plt.colorbar(cax)
+            cbar = plt.colorbar(cax, fraction=0.047, pad=0.01)
+            cbar.ax.tick_params(labelsize=letter_size)
 
             for i in range(len(matrix)):
                 for j in range(len(matrix)):
@@ -146,7 +169,7 @@ class MatricesExtractor:
                         str("{:.4f}".format(c)),
                         va="center",
                         ha="center",
-                        fontsize=12,
+                        fontsize=number_size,
                     )
 
             try:
@@ -159,11 +182,12 @@ class MatricesExtractor:
 
             ax.set_xticks(np.arange(len(matrix)), minor=False)
             ax.set_yticks(np.arange(len(matrix)), minor=False)
-            ax.set_xticklabels(labels, rotation=45, fontsize=12)
-            ax.set_yticklabels(labels, rotation=45, fontsize=12)
+            ax.set_xticklabels(labels, rotation=45, fontsize=letter_size)
+            ax.set_yticklabels(labels, rotation=45, fontsize=letter_size)
             ax.tick_params(axis="x", which="both", bottom=False, top=False)
             ax.tick_params(axis="y", which="both", left=False, right=False)
 
             # save
+            fig.tight_layout()
             fig.savefig(f"{ouptut_dir}/{matrix_name}{suffix}.png")
             fig.savefig(f"{ouptut_dir}/{matrix_name}{suffix}.pdf")

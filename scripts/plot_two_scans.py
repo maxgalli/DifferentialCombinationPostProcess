@@ -52,6 +52,14 @@ def parse_arguments():
         help="File name templates",
     )
 
+    parser.add_argument(
+        "--other-file-name-tmpl",
+        type=str,
+        required=False,
+        default=None,
+        help="File name templates",
+    )
+
     parser.add_argument("--poi", type=str, help="POI to plot in single scan")
 
     parser.add_argument("--debug", action="store_true", help="Print debug messages")
@@ -66,14 +74,16 @@ def main(args):
         logger = setup_logging(level="INFO")
 
     scans = {}
-    for label, input_dir in zip(
-        [args.label, args.other_label], [args.input_dir, args.other_input_dir]
+    for label, input_dir, tmpl in zip(
+        [args.label, args.other_label],
+        [args.input_dir, args.other_input_dir],
+        [args.file_name_tmpl, args.other_file_name_tmpl],
     ):
         scans[label] = Scan(
             poi=args.poi,
             input_dirs=[input_dir],
             skip_best=True,
-            file_name_tmpl=args.file_name_tmpl,
+            file_name_tmpl=tmpl,
             cut_strings=None,
             allow_extrapolation=False,
         )
