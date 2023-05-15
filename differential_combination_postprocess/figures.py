@@ -122,7 +122,7 @@ class GenericNLLsPerPOI(Figure):
                     start_y_for_text,
                     best_fit_string,
                     color=category_specs[scan_name]["color"],
-                    fontsize=14,
+                    fontsize=20,
                     ha="center",
                     va="center",
                     transform=self.ax.transAxes,
@@ -130,7 +130,7 @@ class GenericNLLsPerPOI(Figure):
                 start_y_for_text -= 0.05
 
         # Legend
-        self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
+        self.ax.legend(loc="upper center", prop={"size": 16}, ncol=4)
         hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
 
 
@@ -195,7 +195,48 @@ class TwoScans(Figure):
             )
 
         # Legend
-        self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
+        self.ax.legend(loc="upper center", prop={"size": 16}, ncol=4)
+        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+
+
+class ScanChiSquare(Figure):
+    def __init__(self, poi, scan, chi_dct):
+        self.fig, self.ax = plt.subplots()
+        self.output_name = f"ScanChiSquare_{poi}"
+
+        # Set labels
+        try:
+            self.ax.set_xlabel(bsm_parameters_labels[poi])
+        except KeyError:
+            self.ax.set_xlabel(poi)
+        self.ax.set_ylabel("-2$\Delta$lnL")
+
+        # Set limits
+        self.ax.set_ylim(0.0, 8.0)
+
+        # Draw horizontal line at 1 and 4
+        self.ax.axhline(1.0, color="k", linestyle="--")
+        self.ax.axhline(4.0, color="k", linestyle="--")
+
+        self.ax = scan.plot_simple(self.ax, "k", label="Scan", ylim=8.0)
+
+        # second axis
+        self.ax2 = self.ax.twinx()
+
+        # Set labels
+        self.ax2.set_ylabel("$\Delta\chi^2$")
+
+        # Set limits
+        self.ax2.set_ylim(0.0, 8.0)
+
+        # plot
+        self.ax2.plot(
+            chi_dct["values"], chi_dct["chi_square"], color="red", label="$\chi^2$"
+        )
+
+        # Legend
+        self.ax.legend(loc="upper left", prop={"size": 16}, ncol=4)
+        self.ax2.legend(loc="upper right", prop={"size": 16}, ncol=4)
         hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
 
 
@@ -399,6 +440,9 @@ class DiffXSsPerObservable(Figure):
         if "mjj" in output_name:
             self.ratio_ax.set_ylim(-1, 3)
             self.ratio_ax.set_yticks([-1, 0, 1, 2, 3])
+        if "smH_PTJ0" in output_name:
+            self.ratio_ax.set_ylim(-1, 3)
+            self.ratio_ax.set_yticks([-1, 0, 1, 2, 3])
         self.main_ax, self.ratio_ax = sm_shape.plot(self.main_ax, self.ratio_ax)
         # in the case of Njets, labels are in the middle of the bins
         if sm_shape.observable in ["Njets"]:
@@ -450,7 +494,7 @@ class DiffXSsPerObservable(Figure):
                 "HWW": 0,
                 "Htt": -0.4,
                 "Hbb": -0.2,
-                "HbbVBF": 0,
+                "HbbVBF": 0.2,
                 "HttBoost": -0.2,
             },
             "Njets": {
@@ -463,7 +507,7 @@ class DiffXSsPerObservable(Figure):
                 "Htt": -0.4,
             },
             "yH": {"HggHZZ": 0, "HggHZZHWW": 0, "Hgg": 0.2, "HZZ": -0.2, "HWW": 0},
-            "smH_PTJ0": {"HggHZZHttBoost": 0, "Hgg": 0.2, "HZZ": -0.2, "HttBoost": 0},
+            "smH_PTJ0": {"HggHZZHttBoost": 0, "Hgg": 0.2, "HZZ": -0.2, "HttBoost": 0.2},
             "mjj": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
             "DEtajj": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
             "TauCJ": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
@@ -482,7 +526,7 @@ class DiffXSsPerObservable(Figure):
                 shape.fake_edges = np.array([16.5, 18, 19, 20])
                 shape.fake_centers = np.array([17.25, 18.5, 19.5])
                 shape.fake_maybe_moved_centers = np.array([17.25, 18.5, 19.5])
-                logger.debug(f"Mannaggia a Nick fake edges: {shape.fake_edges}")
+                logger.debug(f"Mannaggia a Hbb fake edges: {shape.fake_edges}")
             else:
                 sm_shape = passed_sm_shape
                 shape.fake_rebin(sm_shape)

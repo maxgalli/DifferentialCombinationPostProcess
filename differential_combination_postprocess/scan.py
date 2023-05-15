@@ -542,8 +542,8 @@ class Scan2D:
 
         logger.debug(f"Interpolating points between {x_min} and {x_max} for {pois[0]}")
         logger.debug(f"Interpolating points between {y_min} and {y_max} for {pois[1]}")
-        self.y_int, self.x_int = np.mgrid[y_min:y_max:1000j, x_min:x_max:1000j]
-        # self.y_int, self.x_int = np.mgrid[y_min:y_max:500j, x_min:x_max:500j]
+        # self.y_int, self.x_int = np.mgrid[y_min:y_max:1000j, x_min:x_max:1000j]
+        self.y_int, self.x_int = np.mgrid[y_min:y_max:500j, x_min:x_max:500j]
         self.z_int = griddata(
             (x, y), z, (self.x_int, self.y_int), method="cubic", fill_value=10.0
         )
@@ -555,6 +555,21 @@ class Scan2D:
         colormap = plt.get_cmap("Oranges")
         colormap = colormap.reversed()
         colormap = truncate_colormap(colormap, 0.3, 1.0, 1000)
+        pc = ax.pcolormesh(
+            self.x_int,
+            self.y_int,
+            self.z_int,
+            vmin=0,
+            vmax=10,
+            cmap=colormap,
+            shading="gouraud",
+        )
+
+        return ax, colormap, pc
+
+    def plot_as_colorful_heatmap(self, ax):
+        colormap = plt.get_cmap("plasma")
+        colormap = truncate_colormap(colormap, 0.2, 1.0, 1000)
         pc = ax.pcolormesh(
             self.x_int,
             self.y_int,

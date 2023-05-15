@@ -25,13 +25,6 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Plot SMEFT scans")
 
     parser.add_argument(
-        "--observable",
-        default="smH_PTH",
-        type=str,
-        help="observable to produce XS plots for",
-    )
-
-    parser.add_argument(
         "--how",
         required=True,
         choices=["freezeothers", "submodel"],
@@ -116,10 +109,10 @@ def main(args):
     else:
         logger = setup_logging(level="INFO")
     logger.info(
-        f"Will run in {args.how} mode for model {args.model}, categories {args.categories} (and observable {args.observable})"
+        f"Will run in {args.how} mode for model {args.model} and categories {args.categories}"
     )
-    input_dir = os.path.join(args.input_dir, args.observable, args.model)
-    output_dir = os.path.join(args.output_dir, args.observable, args.model)
+    input_dir = os.path.join(args.input_dir, args.model)
+    output_dir = os.path.join(args.output_dir, args.model)
 
     subcat = "observed"
     subcat_suff = ""

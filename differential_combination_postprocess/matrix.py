@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 from differential_combination_postprocess.cosmetics import (
     SMEFT_parameters_labels,
     TK_parameters_labels,
+    matrix_bin_names,
+    observable_specs,
 )
 
 
@@ -81,11 +83,20 @@ class MatricesExtractor:
         corr_matrix = rfr.correlationMatrix()
         cov_matrix = rfr.covarianceMatrix()
 
-        self.matrices["rfr_correlation"] = self.root_to_numpy_matrix(
+        rfr_correlation = self.root_to_numpy_matrix(
             corr_matrix, list(self.rfr_coefficients_indices.values())
         )
-        self.matrices["rfr_covariance"] = self.root_to_numpy_matrix(
+        logger.debug(f"rfr_correlation before reordering: {rfr_correlation}")
+        rfr_covariance = self.root_to_numpy_matrix(
             cov_matrix, list(self.rfr_coefficients_indices.values())
+        )
+        logger.debug(f"rfr_covariance before reordering: {rfr_covariance}")
+
+        self.matrices["rfr_correlation"] = self.order_matrix(
+            rfr_correlation, self.rfr_coefficients
+        )
+        self.matrices["rfr_covariance"] = self.order_matrix(
+            rfr_covariance, self.rfr_coefficients
         )
 
         logger.debug(f"Found following matrices: {self.matrices}")
@@ -105,13 +116,22 @@ class MatricesExtractor:
                 # note that this is different from the other one because when TH2Ds are treated as histos, the first bin has empty label; this does not happen with matrices
                 self.hessian_coefficients_indices[label] = i
         self.hessian_coefficients = list(self.hessian_coefficients_indices.keys())
-        self.matrices["hessian_correlation"] = self.root_histo_to_numpy_matrix(
+        hessian_correlation = self.root_histo_to_numpy_matrix(
             corr_hist, list(self.hessian_coefficients_indices.values())
         )
+        logger.debug(f"hessian_correlation before reordering: {hessian_correlation}")
 
         cov_hist = f.Get("h_covariance")
-        self.matrices["hessian_covariance"] = self.root_histo_to_numpy_matrix(
+        hessian_covariance = self.root_histo_to_numpy_matrix(
             cov_hist, list(self.hessian_coefficients_indices.values())
+        )
+        logger.debug(f"hessian_covariance before reordering: {hessian_covariance}")
+
+        self.matrices["hessian_correlation"] = self.order_matrix(
+            hessian_correlation, self.hessian_coefficients
+        )
+        self.matrices["hessian_covariance"] = self.order_matrix(
+            hessian_covariance, self.hessian_coefficients
         )
 
         logger.debug(
@@ -133,22 +153,16 @@ class MatricesExtractor:
                 )
             ordered_matrix.append(row)
 
-        return np.array(ordered_matrix), self.coefficients
+        return np.array(ordered_matrix)
 
-    def dump(self, ouptut_dir, suffix=""):
+    def dump(self, ouptut_dir, suffix="", observable=None):
         for matrix_name, matrix in self.matrices.items():
-            current_coefficients = (
-                self.rfr_coefficients
-                if "rfr_" in matrix_name
-                else self.hessian_coefficients
-            )
             logger.debug("First row of matrix: {}".format(matrix[0]))
-            matrix, coefficients = self.order_matrix(matrix, current_coefficients)
             logger.debug("First row of ordered matrix: {}".format(matrix[0]))
             fig, ax = plt.subplots()
-            number_size = 120 / len(current_coefficients)
+            number_size = 130 / len(self.coefficients)
             letter_size = (
-                150 / len(current_coefficients) if len(current_coefficients) > 8 else 20
+                200 / len(self.coefficients) if len(self.coefficients) > 8 else 20
             )
             cmap = plt.get_cmap("bwr")
             cax = ax.matshow(
@@ -173,21 +187,37 @@ class MatricesExtractor:
                     )
 
             try:
-                labels = [SMEFT_parameters_labels[c] for c in coefficients]
+                labels = [SMEFT_parameters_labels[c] for c in self.coefficients]
             except KeyError:
                 try:
-                    labels = [TK_parameters_labels[c] for c in coefficients]
+                    labels = [TK_parameters_labels[c] for c in self.coefficients]
                 except KeyError:
-                    labels = coefficients
+                    try:
+                        labels = [matrix_bin_names[c] for c in self.coefficients]
+                    except KeyError as e:
+                        print(e)
+                        labels = self.coefficients
 
+            # set x axis tick labels to the bottom
             ax.set_xticks(np.arange(len(matrix)), minor=False)
             ax.set_yticks(np.arange(len(matrix)), minor=False)
             ax.set_xticklabels(labels, rotation=45, fontsize=letter_size)
-            ax.set_yticklabels(labels, rotation=45, fontsize=letter_size)
-            ax.tick_params(axis="x", which="both", bottom=False, top=False)
+            ax.set_yticklabels(labels, fontsize=letter_size)
+            ax.tick_params(
+                axis="x",
+                which="both",
+                bottom=False,
+                labelbottom=True,
+                top=False,
+                labeltop=False,
+            )
             ax.tick_params(axis="y", which="both", left=False, right=False)
 
+            if observable is not None:
+                ax.set_ylabel(observable_specs[observable]["x_plot_label"])
+
             # save
+            hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=ax)
             fig.tight_layout()
             fig.savefig(f"{ouptut_dir}/{matrix_name}{suffix}.png")
             fig.savefig(f"{ouptut_dir}/{matrix_name}{suffix}.pdf")
