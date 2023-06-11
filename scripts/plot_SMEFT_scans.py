@@ -87,6 +87,13 @@ def parse_arguments():
         help="Path to the configuration file containing cuts and stuff per POI per category",
     )
 
+    parser.add_argument(
+        "--force-2D-limit",
+        action="store_true",
+        help="Force the x and y limit on 2D scan to be the one from the submodel config file instead of the maximum between the scan and the submodel",
+        default=False,
+    )
+
     parser.add_argument("--debug", action="store_true", help="Print debug messages")
 
     return parser.parse_args()
@@ -315,6 +322,7 @@ def main(args):
                         combination_asimov_scan=expected_combination_scan,
                         output_name=f"2D_{pair[0]}-{pair[1]}_{'_'.join(args.categories)}{subcat_suff}{'_expected_bkg' if args.expected_bkg else ''}",
                         is_asimov=True if "asimov" in subcat_suff else False,
+                        force_limit=args.force_2D_limit,
                     )
                     fig.dump(output_dir)
 

@@ -96,6 +96,11 @@ category_specs = {
         "color": "red",
         "marker": "^",
     },
+    "DeltaPhiJJHggHZZ": {
+        "plot_label": "H $\longrightarrow\\gamma\\gamma$ + H $\longrightarrow$ ZZ",
+        "color": "black",
+        "marker": "o",
+    },
 }
 
 TK_parameters_labels = {
@@ -221,4 +226,3 @@ matrix_bin_names = {
     "r_TauCJ_50_80": "50 - 80",
     "r_TauCJ_GT80": "> 80",
 }
-
