@@ -600,6 +600,7 @@ class TwoDScansPerModel(Figure):
         combination_asimov_scan=None,
         output_name=None,
         is_asimov=False,
+        force_limit=False
     ):
         """
         scan_dict is e.g. {"Hgg": Scan2D}
@@ -607,6 +608,7 @@ class TwoDScansPerModel(Figure):
         model_config: a dictionary of the form {"kappac": (-8, 8), "kappab": (-2, 2)}
         combination_asimov_scan: for the case in which the background has to be expected, 
         use this scan instead of the combination_name one 
+        force_limit: if True, the limit on x and y is forced to be the one from model_config (instead of the max between model_config and the scan)
         """
         super().__init__()
         self.scan_dict = scan_dict
@@ -666,10 +668,11 @@ class TwoDScansPerModel(Figure):
         y_up = np.min(
             [model_config[poi2][1], *[np.max(s.y_int) for s in scan_dict.values()]]
         )
-        # x_left = model_config[poi1][0]
-        # x_right = model_config[poi1][1]
-        # y_down = model_config[poi2][0]
-        # y_up = model_config[poi2][1]
+        if force_limit:
+            x_left = model_config[poi1][0]
+            x_right = model_config[poi1][1]
+            y_down = model_config[poi2][0]
+            y_up = model_config[poi2][1]
         self.ax.set_xlim(x_left, x_right)
         self.ax.set_ylim(y_down, y_up)
         # Miscellanea business that has to be done after
