@@ -15,7 +15,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from differential_combination_postprocess.utils import truncate_colormap
+from differential_combination_postprocess.utils import (
+    truncate_colormap,
+    custom_colormap,
+)
 
 
 class DifferentialSpectrum:
@@ -564,9 +567,7 @@ class Scan2D:
         self.z_int[1] -= self.z_int.min()
 
     def plot_as_heatmap(self, ax):
-        colormap = plt.get_cmap("Oranges")
-        colormap = colormap.reversed()
-        colormap = truncate_colormap(colormap, 0.3, 1.0, 1000)
+        colormap = custom_colormap("Oranges")
         pc = ax.pcolormesh(
             self.x_int,
             self.y_int,
