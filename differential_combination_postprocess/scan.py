@@ -355,7 +355,6 @@ class Scan:
                 [self.minimum[1], self.up68[0][1]],
                 color=color,
                 linestyle="--",
-                label=label,
             )
         # Vertical line passing through down68
         for down68 in self.down68:
@@ -390,13 +389,14 @@ class Scan:
                 linestyle="--",
             )
         # Points where NLL crosses 1
-        for down68, up68 in zip(self.down68, self.up68):
+        for i, (down68, up68) in enumerate(zip(self.down68, self.up68)):
             ax.plot(
                 [down68[0], up68[0]],
                 [down68[1], up68[1]],
                 color=color,
                 linestyle="",
                 marker="o",
+                label=label if i == 0 else None,
             )
         # Points where NLL crosses 4
         for down95, up95 in zip(self.down95, self.up95):
@@ -567,7 +567,7 @@ class Scan2D:
         self.z_int[1] -= self.z_int.min()
 
     def plot_as_heatmap(self, ax):
-        colormap = custom_colormap("Oranges")
+        colormap = custom_colormap("Purples")
         pc = ax.pcolormesh(
             self.x_int,
             self.y_int,

@@ -54,14 +54,14 @@ class Figure:
 
 
 class GenericNLLsPerPOI(Figure):
-    """ 
+    """
     Introduced to plot following NLLS in SMEFT scans:
     fig1:
         - coeff: chg
         - observed
         - NLLS: Hgg HZZ Comb
     But it can probably be used in other contexts
-    
+
     scans is a dictionary like the folliwing:
     {
         "Hgg": Scan,
@@ -349,8 +349,7 @@ class XSNLLsPerPOI_Full(XSNLLsPerPOI):
 
 
 class XSNLLsPerCategory(Figure):
-    """ Plot the NLLs for a given category, one NLL per POI
-    """
+    """Plot the NLLs for a given category, one NLL per POI"""
 
     def __init__(self, differential_spectrum, ylim=8.0, print_best=False):
         self.ds = differential_spectrum
@@ -379,9 +378,9 @@ class XSNLLsPerCategory(Figure):
         # Used just for the case of quick_scan
         if print_best:
             nomstring = f"{differential_spectrum.scans[poi].minimum[0]:.5f}"
-            upstring = f"{differential_spectrum.scans[poi].up68_unc:.5f}"
+            upstring = f"{differential_spectrum.scans[poi].up68_unc[0]:.5f}"
             upstring = "{+" + upstring + "}"
-            downstring = f"{differential_spectrum.scans[poi].down68_unc:.5f}"
+            downstring = f"{differential_spectrum.scans[poi].down68_unc[0]:.5f}"
             downstring = "{-" + downstring + "}"
             self.ax.text(
                 differential_spectrum.scans[poi].minimum[0],
@@ -398,8 +397,7 @@ class XSNLLsPerCategory(Figure):
 
 
 class DiffXSsPerObservable(Figure):
-    """
-    """
+    """ """
 
     def __init__(
         self, output_name, sm_shape, observable_shapes, observable_shapes_systonly=None
@@ -600,14 +598,14 @@ class TwoDScansPerModel(Figure):
         combination_asimov_scan=None,
         output_name=None,
         is_asimov=False,
-        force_limit=False
+        force_limit=False,
     ):
         """
         scan_dict is e.g. {"Hgg": Scan2D}
         combination_name: which one has to be plotted as combination
         model_config: a dictionary of the form {"kappac": (-8, 8), "kappab": (-2, 2)}
-        combination_asimov_scan: for the case in which the background has to be expected, 
-        use this scan instead of the combination_name one 
+        combination_asimov_scan: for the case in which the background has to be expected,
+        use this scan instead of the combination_name one
         force_limit: if True, the limit on x and y is forced to be the one from model_config (instead of the max between model_config and the scan)
         """
         super().__init__()
@@ -623,12 +621,12 @@ class TwoDScansPerModel(Figure):
             try:
                 self.ax = combination_asimov_scan.plot_as_contour(
                     self.ax,
-                    color="maroon",
+                    color="orange",
                     label=f"Exp. {category_specs[combination_asimov_scan.category]['plot_label']}",
                 )
             except:
                 self.ax = combination_asimov_scan.plot_as_contour(
-                    self.ax, color="maroon", label=f"Exp. Combination"
+                    self.ax, color="orange", label=f"Exp. Combination"
                 )
             # self.ax = combination_asimov_scan.plot_as_contourf(self.ax)
         else:

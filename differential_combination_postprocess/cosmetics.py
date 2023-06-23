@@ -91,10 +91,16 @@ category_specs = {
         "marker": "o",
     },
     # SMEFT
+    "PtFullComb": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "PtHgg": {
         "plot_label": "H $\longrightarrow\\gamma\\gamma$",
         "color": "red",
         "marker": "^",
+    },
+    "PtHggHZZ": {
+        "plot_label": "H $\longrightarrow\\gamma\\gamma$ + H $\longrightarrow$ ZZ",
+        "color": "black",
+        "marker": "o",
     },
     "DeltaPhiJJHggHZZ": {
         "plot_label": "H $\longrightarrow\\gamma\\gamma$ + H $\longrightarrow$ ZZ",
