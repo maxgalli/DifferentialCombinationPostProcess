@@ -67,6 +67,10 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--statonly", action="store_true", help="Look for and plot statonly results"
+    )
+
+    parser.add_argument(
         "--expected-bkg",
         action="store_true",
         help="When plotting observed values, plot the expected 2NLL for the combination instead as coloured heatmap",
@@ -100,6 +104,9 @@ def main(args):
     if args.expected:
         subcat = "expected"
         subcat_suff = "_asimov"
+    if args.statonly:
+        subcat += "_statonly"
+        subcat_suff += "_statonly"
 
     logger.info(f"Working with the following categories: {categories}")
     logger.info(f"Will use {combination} as combination category")
@@ -108,7 +115,6 @@ def main(args):
         logger.info("Plotting 1D scans")
         for coeff in pois:
             scans = {}
-            subcat_suff
             for category in args.categories:
                 input_dirs = [
                     os.path.join(input_dir, d)
@@ -142,6 +148,8 @@ def main(args):
     for category in categories:
         if args.expected:
             category += "_asimov"
+        if args.statonly:
+            category += "_statonly"
         input_subdirs = [
             os.path.join(input_dir, d)
             for d in os.listdir(input_dir)
@@ -199,11 +207,14 @@ def main(args):
     output_name = f"{args.model}_{cat_names_string}"
     if args.expected_bkg:
         output_name += "_expected_bkg"
+    combination_name = combination
+    if args.expected_bkg or args.expected:
+        combination_name += "_asimov"
+    if args.statonly:
+        combination_name += "_statonly"
     plot = TwoDScansPerModel(
         scan_dict=scan_dict,
-        combination_name=combination + "_asimov"
-        if args.expected_bkg or args.expected
-        else combination,
+        combination_name=combination_name,
         model_config=models[args.model],
         combination_asimov_scan=expected_combination_scan,
         output_name=output_name,

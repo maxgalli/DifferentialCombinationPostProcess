@@ -537,6 +537,7 @@ class Scan2D:
         )
 
         self.minimum = self.points[:, np.argmin(z)]
+
         if best_fit_file is not None:
             logger.info(f"Using best fit from file {best_fit_file}")
             f = uproot.open(best_fit_file)
@@ -606,10 +607,17 @@ class Scan2D:
             linestyles=["solid", "dashed"],
         )
         # add labels
-        levels = ["68%", "95%"]
-        if label is not None:
-            for i, cl in enumerate(levels):
-                cs.collections[i].set_label(f"{label} {cl}")
+        try:
+            levels = ["68%", "95%"]
+            if label is not None:
+                for i, cl in enumerate(levels):
+                    cs.collections[i].set_label(f"{label} {cl}")
+        except IndexError as e:
+            logger.warning(
+                f"Could not add labels to contour plot because of error {e}."
+            )
+            if label is not None:
+                cs.collections[0].set_label(f"{label} 68%")
 
         # Best value as point
         ax.plot(
