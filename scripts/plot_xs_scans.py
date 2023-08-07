@@ -131,7 +131,7 @@ def parse_arguments():
         "--allow-extrapolation",
         action="store_true",
         default=False,
-        help="Whether or not extrapolating if NLL does not cross 1"
+        help="Whether or not extrapolating if NLL does not cross 1",
     )
 
     return parser.parse_args()
@@ -163,10 +163,13 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
         else:
             mus = np.array([scan.minimum[0] for scan in spectrum.scans.values()])
             mus_up = np.array(
-                [scan.minimum[0] + scan.up68_unc for scan in spectrum.scans.values()]
+                [scan.minimum[0] + scan.up68_unc[0] for scan in spectrum.scans.values()]
             )
             mus_down = np.array(
-                [scan.minimum[0] - scan.down68_unc for scan in spectrum.scans.values()]
+                [
+                    scan.minimum[0] - scan.down68_unc[0]
+                    for scan in spectrum.scans.values()
+                ]
             )
         logging.debug(f"Ordered mus for category {category}: {mus}")
         logging.debug(f"SM rebinned xs: {sm_rebinned_shape.xs}")

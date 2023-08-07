@@ -285,9 +285,9 @@ class XSNLLsPerPOI:
 
             # Add note with minimum and uncertainties
             nomstring = f"{nominal_spectrum.scans[poi].minimum[0]:.3f}"
-            upstring = f"{nominal_spectrum.scans[poi].up68_unc:.3f}"
+            upstring = f"{nominal_spectrum.scans[poi].up68_unc[0]:.3f}"
             upstring = "{+" + upstring + "}"
-            downstring = f"{nominal_spectrum.scans[poi].down68_unc:.3f}"
+            downstring = f"{nominal_spectrum.scans[poi].down68_unc[0]:.3f}"
             downstring = "{-" + downstring + "}"
             ax.text(
                 nominal_spectrum.scans[poi].minimum[0],
