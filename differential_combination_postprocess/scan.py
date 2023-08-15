@@ -20,6 +20,8 @@ from differential_combination_postprocess.utils import (
     custom_colormap,
 )
 
+uproot_main_version = int(uproot.__version__.split(".")[0])
+
 
 class DifferentialSpectrum:
     """Basically a collection of Scan instances, one per POI, for a single category"""
@@ -108,9 +110,25 @@ class Scan:
         ]
         if skip_best:
             to_concatenate = []
-            for batch in uproot.iterate(dirs_template):
-                batch = batch[[self.poi, "deltaNLL"]]
-                to_concatenate.append(batch[1:])
+            # from uproot 5 iterate returns each event as a dict, while before it was a tuple
+            if uproot_main_version > 4:
+                # glob names of all files
+                files = []
+                for dr in dirs_template:
+                    dr = dr.split(":")[0]
+                    files.extend(glob.glob(dr))
+                for f in files:
+                    # open file
+                    f = uproot.open(f)
+                    # get tree
+                    tree = f[self.tree_name]
+                    # get branches
+                    batch = tree.arrays([self.poi, "deltaNLL"])
+                    to_concatenate.append(batch[1:])
+            else:
+                for batch in uproot.iterate(dirs_template):
+                    batch = batch[[self.poi, "deltaNLL"]]
+                    to_concatenate.append(batch[1:])
             branches = ak.concatenate(to_concatenate)
         else:
             branches = uproot.concatenate(
@@ -507,9 +525,20 @@ class Scan2D:
 
         if skip_best:
             to_concatenate = []
-            for batch in uproot.iterate(dirs_template, cut=self.default_cut):
-                batch = batch[[*self.pois, "deltaNLL"]]
-                to_concatenate.append(batch[1:])
+            if uproot_main_version > 4:
+                files = []
+                for dr in dirs_template:
+                    dr = dr.split(":")[0]
+                    files += glob.glob(dr)
+                for f in files:
+                    f = uproot.open(f)
+                    t = f[self.tree_name]
+                    batch = t.arrays([*self.pois, "deltaNLL"])
+                    to_concatenate.append(batch[1:])
+            else:
+                for batch in uproot.iterate(dirs_template, cut=self.default_cut):
+                    batch = batch[[*self.pois, "deltaNLL"]]
+                    to_concatenate.append(batch[1:])
             branches = ak.concatenate(to_concatenate)
             branches = ak.to_numpy(branches)
         else:

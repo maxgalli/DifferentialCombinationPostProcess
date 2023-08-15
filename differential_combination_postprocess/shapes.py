@@ -115,6 +115,8 @@ class ObservableShape:
 
     def merge_bins(self, old_bins, old_edges, new_edges):
         if not all(edge in old_edges for edge in new_edges):
+            print("Old edges: {}".format(old_edges))
+            print("New edges: {}".format(new_edges))
             raise ValueError("New edges are not a subset of old edges")
 
         # Loop over pairs of consecutive edges in new_edges
