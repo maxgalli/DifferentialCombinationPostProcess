@@ -690,6 +690,17 @@ class TwoDScansPerModel(Figure):
         hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
 
 
+class TwoDScanDebug(Figure):
+    def __init__(self, scan, output_name=None):
+        self.output_name = output_name
+        x, y, z = scan.points
+        self.fig, self.ax = plt.subplots(1, 1, figsize=(18, 14))
+        x_mesh, y_mesh = np.meshgrid(x, y)
+        self.ax.pcolormesh(x_mesh, y_mesh, np.tile(z, (len(y), 1)), cmap='viridis')
+        self.ax.set_xlabel(scan.pois[0])
+        self.ax.set_ylabel(scan.pois[1])
+
+
 # Used for quick_scan only
 class NScans(Figure):
     def __init__(self, scan_dict, ylim=8.0):

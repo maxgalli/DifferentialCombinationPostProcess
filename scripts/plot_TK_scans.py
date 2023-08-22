@@ -16,6 +16,7 @@ from differential_combination_postprocess.utils import setup_logging
 from differential_combination_postprocess.figures import (
     TwoDScansPerModel,
     GenericNLLsPerPOI,
+    TwoDScanDebug
 )
 from differential_combination_postprocess.scan import Scan2D, Scan
 from differential_combination_postprocess.physics import TK_models as models
@@ -79,6 +80,8 @@ def parse_arguments():
     parser.add_argument("--twod-only", action="store_true", help="Only plot 2D scans")
 
     parser.add_argument("--debug", action="store_true", help="Print debug messages")
+
+    parser.add_argument("--debug-plots", action="store_true", help="Print debug plots with square points")
 
     return parser.parse_args()
 
@@ -179,6 +182,11 @@ def main(args):
             model_config=models[args.model],
         )
     logger.debug(f"Scan dictionary: {scan_dict}")
+    if args.debug_plots:
+        for category, scan in scan_dict.items():
+            logger.debug(f"Scan for {category}: {scan}")
+            plot = TwoDScanDebug(scan, category)
+            plot.dump(output_dir)
 
     # if we want the expected as bkg, make the scan
     expected_combination_scan = None

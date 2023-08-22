@@ -232,7 +232,7 @@ class Scan:
 
         # If up68 or down68 are 0, it means that NLL does not cross 1.0 at all
         # In this case we repeat the interpolation procedure in a wider range with UnivariateSpline
-        if (self.up68_unc == 0 or self.down68_unc == 0) and self.allow_extrapolation:
+        if (self.up68_unc[0] == 0 or self.down68_unc[0] == 0) and self.allow_extrapolation:
             logger.warning(
                 "NLL does not cross 1.0 at all. Will try to interpolate with a wider range"
             )
@@ -553,6 +553,15 @@ class Scan2D:
         y = branches[pois[1]]
         z = 2 * branches["deltaNLL"]
 
+        # remove values for which z < -100
+        # this was added on 21.08.23 because one of the stupid TK fits was going bananas at the corners
+        # due to two single failed points out of more than 4000
+        # I spotted it was a failed point because the z value was -268435456.000
+        mask = z > -1000
+        x = x[mask]
+        y = y[mask]
+        z = z[mask]
+        
         # Sanity check: min and max of x and y of the found files
         logger.debug(f"Sanity check: min x: {min(x)}, max x: {max(x)}")
         logger.debug(f"Sanity check: min y: {min(y)}, max y: {max(y)}")
