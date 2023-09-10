@@ -238,3 +238,12 @@ matrix_bin_names = {
     "r_TauCJ_50_80": "50 - 80",
     "r_TauCJ_GT80": "> 80",
 }
+
+def get_parameter_label(poi):
+    try:
+        return TK_parameters_labels[poi]
+    except KeyError:
+        try:
+            return SMEFT_parameters_labels[poi]
+        except KeyError:
+            return poi

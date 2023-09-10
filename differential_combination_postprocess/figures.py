@@ -70,7 +70,7 @@ class GenericNLLsPerPOI(Figure):
     """
 
     def __init__(
-        self, poi, scans, subcategory, simple=False, full_range=False, plot_string=False
+        self, poi, scans, subcategory, simple=False, full_range=False, plot_string=False, plot_interval=False
     ):
         self.scans = scans
         self.categories = list(scans.keys())
@@ -117,6 +117,20 @@ class GenericNLLsPerPOI(Figure):
             if plot_string:
                 # also add text with best fit
                 best_fit_string = scan.get_bestfit_string()
+                self.ax.text(
+                    0.5,
+                    start_y_for_text,
+                    best_fit_string,
+                    color=category_specs[scan_name]["color"],
+                    fontsize=20,
+                    ha="center",
+                    va="center",
+                    transform=self.ax.transAxes,
+                )
+                start_y_for_text -= 0.05
+            if plot_interval:
+                # also add text with best fit
+                best_fit_string = scan.get_95interval_string()
                 self.ax.text(
                     0.5,
                     start_y_for_text,
@@ -424,8 +438,10 @@ class DiffXSsPerObservable(Figure):
             ]:
                 large_ratio = True
         if large_ratio:
-            self.ratio_ax.set_ylim(-6, 6)
-            self.ratio_ax.set_yticks([-6, -3, 0, 3, 6])
+            #self.ratio_ax.set_ylim(-6, 6)
+            #self.ratio_ax.set_yticks([-6, -3, 0, 3, 6])
+            self.ratio_ax.set_ylim(0, 2)
+            self.ratio_ax.set_yticks([0, 1, 2])
         else:
             self.ratio_ax.set_ylim(0, 2)
             self.ratio_ax.set_yticks([0, 1, 2])

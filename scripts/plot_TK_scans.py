@@ -136,7 +136,7 @@ def main(args):
                     file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
                 )
             if len(scans) > 0:
-                fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=True)
+                fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=False, plot_string=False, plot_interval=True)
                 fig.dump(output_dir)
                 fig = GenericNLLsPerPOI(
                     coeff, scans, subcat, simple=True, full_range=True

@@ -19,6 +19,9 @@ from differential_combination_postprocess.utils import (
     truncate_colormap,
     custom_colormap,
 )
+from differential_combination_postprocess.cosmetics import (
+    get_parameter_label
+)
 
 uproot_main_version = int(uproot.__version__.split(".")[0])
 
@@ -462,13 +465,22 @@ class Scan:
             upstring = "{+" + upstring + "}"
             downstring = f"{self.down68_unc[0]:.3f}"
             downstring = "{-" + downstring + "}"
-            return f"{self.poi} = ${nomstring}^{upstring}_{downstring}$"
+            poi_string = get_parameter_label(self.poi)
+            return f"{poi_string} = ${nomstring}^{upstring}_{downstring}$"
 
     def get_68interval_string(self):
         if len(self.down68) > 1:
             return ""
         else:
-            return f"{self.poi}: [{self.down68[0]:.3f}, {self.up68[0]:.3f}]"
+            poi_string = get_parameter_label(self.poi)
+            return f"{poi_string}: [{self.down68[0][0]:.3f}, {self.up68[0][0]:.3f}] (68% CL)"
+    
+    def get_95interval_string(self):
+        if len(self.down95) > 1:
+            return ""
+        else:
+            poi_string = get_parameter_label(self.poi)
+            return f"{poi_string}: [{self.down95[0][0]:.3f}, {self.up95[0][0]:.3f}] (95% CL)"
 
 
 class ScanSingles:
