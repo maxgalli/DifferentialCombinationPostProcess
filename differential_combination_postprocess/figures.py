@@ -70,7 +70,14 @@ class GenericNLLsPerPOI(Figure):
     """
 
     def __init__(
-        self, poi, scans, subcategory, simple=False, full_range=False, plot_string=False, plot_interval=False
+        self,
+        poi,
+        scans,
+        subcategory,
+        simple=False,
+        full_range=False,
+        plot_string=False,
+        plot_interval=False,
     ):
         self.scans = scans
         self.categories = list(scans.keys())
@@ -414,7 +421,12 @@ class DiffXSsPerObservable(Figure):
     """ """
 
     def __init__(
-        self, output_name, sm_shape, observable_shapes, observable_shapes_systonly=None
+        self,
+        output_name,
+        sm_shape,
+        observable_shapes,
+        observable_shapes_systonly=None,
+        other_sm_shapes_dicts=None,
     ):
         if observable_shapes_systonly is None:
             observable_shapes_systonly = []
@@ -438,16 +450,16 @@ class DiffXSsPerObservable(Figure):
             ]:
                 large_ratio = True
         if large_ratio:
-            #self.ratio_ax.set_ylim(-6, 6)
-            #self.ratio_ax.set_yticks([-6, -3, 0, 3, 6])
+            # self.ratio_ax.set_ylim(-6, 6)
+            # self.ratio_ax.set_yticks([-6, -3, 0, 3, 6])
             self.ratio_ax.set_ylim(0, 2)
             self.ratio_ax.set_yticks([0, 1, 2])
         else:
             self.ratio_ax.set_ylim(0, 2)
             self.ratio_ax.set_yticks([0, 1, 2])
         if "Njets" in output_name:
-            self.ratio_ax.set_ylim(0, 4)
-            self.ratio_ax.set_yticks([0, 1, 2, 3, 4])
+            self.ratio_ax.set_ylim(0, 2)
+            self.ratio_ax.set_yticks([0, 1, 2])
         if "DEtajj" in output_name:
             self.ratio_ax.set_ylim(-1, 2)
             self.ratio_ax.set_yticks([-1, 0, 1, 2])
@@ -457,7 +469,21 @@ class DiffXSsPerObservable(Figure):
         if "smH_PTJ0" in output_name:
             self.ratio_ax.set_ylim(-1, 3)
             self.ratio_ax.set_yticks([-1, 0, 1, 2, 3])
+
         self.main_ax, self.ratio_ax = sm_shape.plot(self.main_ax, self.ratio_ax)
+
+        # other_sm_shapes has to be a list of dictionaries
+        # {"shape": value, "color": value, "label": value}
+        if other_sm_shapes_dicts is not None:
+            for other_sm_shape_dct in other_sm_shapes_dicts:
+                self.main_ax, self.ratio_ax = other_sm_shape_dct["shape"].plot_other(
+                    self.main_ax,
+                    self.ratio_ax,
+                    color=other_sm_shape_dct["color"],
+                    label=other_sm_shape_dct["label"],
+                    other=sm_shape,
+                    where=other_sm_shape_dct["where"],
+                )
         # in the case of Njets, labels are in the middle of the bins
         if sm_shape.observable in ["Njets"]:
             width = sm_shape.edges[1] - sm_shape.edges[0]
@@ -712,7 +738,7 @@ class TwoDScanDebug(Figure):
         x, y, z = scan.points
         self.fig, self.ax = plt.subplots(1, 1, figsize=(18, 14))
         x_mesh, y_mesh = np.meshgrid(x, y)
-        self.ax.pcolormesh(x_mesh, y_mesh, np.tile(z, (len(y), 1)), cmap='viridis')
+        self.ax.pcolormesh(x_mesh, y_mesh, np.tile(z, (len(y), 1)), cmap="viridis")
         self.ax.set_xlabel(scan.pois[0])
         self.ax.set_ylabel(scan.pois[1])
 

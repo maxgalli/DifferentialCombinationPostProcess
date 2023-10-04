@@ -46,7 +46,7 @@ def get_prediction(arr, mass, weights=None, interPRepl=None, massRepl=None):
 
 # Everything poorly hardcoded, will change later
 
-theor_pred_base_dir = "/work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred"
+theor_pred_base_dir = "/work/gallim/DifferentialCombination_home/DiffCombOrchestrator/DifferentialCombinationRun2/TheoreticalPredictions/231003"
 mass = 125.38
 weights = [1.0, 2.3, 1.0]
 hgg_br = 0.0023
@@ -395,6 +395,8 @@ def make_hgg_theory_pred_array(pickle_central, pickle_uncertainty):
         full_path_unc = os.path.join(theor_pred_base_dir, pickle_uncertainty)
     with open(full_path, "rb") as f:
         obs = pkl.load(f)
+        if obs.shape[1] == 1:
+            obs = np.repeat(obs, 3, axis=1)
         obs = get_prediction(obs, mass, weights=weights)
     obs_xs_dict["central"] = obs
     with open(full_path_unc, "rb") as f:
@@ -411,43 +413,86 @@ def make_hgg_theory_pred_array(pickle_central, pickle_uncertainty):
 
 
 smH_PTH_Hgg_xs = make_hgg_theory_pred_array(
-    "theoryPred_Pt_18_fullPS.pkl", "theoryPred_Pt_18_fullPS_theoryUnc.pkl"
+    "theoryPred_Pt_2018_ggHxH_NNLOPS.pkl", "theoryPred_Pt_2018_ggHxH_NNLOPS_theoryUnc.pkl"
 )
 smH_PTH_MaximumGranularity_xs = make_hgg_theory_pred_array(
     "/work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/TheoreticalPredictions/production_modes/ggH_MoreGranular/theoryPred_Pt_2018_ggHMoreGranular.pkl",
     "/work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/TheoreticalPredictions/production_modes/ggH_MoreGranular/theoryPred_Pt_2018_ggHMoreGranular_theoryUnc.pkl",
 )
 smH_PTH_EvenMoreMaximumGranularity_xs = make_hgg_theory_pred_array(
-    "/work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/TheoreticalPredictions/production_modes/ggH_EvenMoreGranular/theoryPred_Pt_2018_ggHEvenMoreGranular.pkl",
-    "/work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/TheoreticalPredictions/production_modes/ggH_EvenMoreGranular/theoryPred_Pt_2018_ggHEvenMoreGranular_theoryUnc.pkl",
+    "theoryPred_Pt_2018_ggHxH_EvenMoreGranular_NNLOPS.pkl", "theoryPred_Pt_2018_ggHxH_EvenMoreGranular_NNLOPS_theoryUnc.pkl"
 )
 Njets_Hgg_xs = make_hgg_theory_pred_array(
-    "theoryPred_Njets2p5_18_fullPS.pkl", "theoryPred_Njets2p5_18_fullPS_theoryUnc.pkl"
+    "theoryPred_Njets_2018_ggHxH_NNLOPS.pkl", "theoryPred_Njets_2018_ggHxH_NNLOPS_theoryUnc.pkl"
 )
 yH_Hgg_xs = make_hgg_theory_pred_array(
-    "theoryPred_AbsRapidityFine_18_fullPS.pkl",
-    "theoryPred_AbsRapidityFine_18_fullPS_theoryUnc.pkl",
+    "/work/gallim/DifferentialCombination_home/DiffCombOrchestrator/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred/theoryPred_AbsRapidityFine_18_fullPS.pkl",
+    "/work/gallim/DifferentialCombination_home/DiffCombOrchestrator/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred/theoryPred_AbsRapidityFine_18_fullPS_theoryUnc.pkl",
 )
 yH_Granular_xs = make_hgg_theory_pred_array(
-    "/work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred/theoryPred_AbsRapidityFine_18_fullPS_Granular.pkl",
-    "/work/gallim/DifferentialCombination_home/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred/theoryPred_AbsRapidityFine_18_fullPS_Granular_theoryUnc.pkl",
+    "theoryPred_yH_2018_ggHxH_Granular_NNLOPS.pkl", "theoryPred_yH_2018_ggHxH_Granular_NNLOPS_theoryUnc.pkl"
 )
 smH_PTJ0_Hgg_xs = make_hgg_theory_pred_array(
-    "theoryPred_Jet2p5Pt0_18_fullPS.pkl", "theoryPred_Jet2p5Pt0_18_fullPS_theoryUnc.pkl"
+    "/work/gallim/DifferentialCombination_home/DiffCombOrchestrator/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred/theoryPred_Jet2p5Pt0_18_fullPS.pkl", 
+    "/work/gallim/DifferentialCombination_home/DiffCombOrchestrator/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred/theoryPred_Jet2p5Pt0_18_fullPS_theoryUnc.pkl"
 )
 smH_PTJ0_Granular_xs = make_hgg_theory_pred_array(
-    "theoryPred_Jet2p5Pt0_2018_HggHZZHttBoost_fullPS.pkl",
-    "theoryPred_Jet2p5Pt0_2018_HggHZZHttBoost_fullPS_theoryUnc.pkl",
+    "theoryPred_smH_PTJ0_2018_ggHxH_NNLOPS.pkl", "theoryPred_smH_PTJ0_2018_ggHxH_NNLOPS_theoryUnc.pkl"
 )
 mjj_Hgg_xs = make_hgg_theory_pred_array(
-    "theoryPred_Mjj_18_fullPS.pkl", "theoryPred_Mjj_18_fullPS_theoryUnc.pkl"
+    "theoryPred_mjj_2018_ggHxH_NNLOPS.pkl", "theoryPred_mjj_2018_ggHxH_NNLOPS_theoryUnc.pkl"
 )
 DEtajj_Hgg_xs = make_hgg_theory_pred_array(
-    "theoryPred_AbsDeltaEtaJ1J2Jets4p7_UL17_fullPS.pkl",
-    "theoryPred_AbsDeltaEtaJ1J2Jets4p7_UL17_fullPS_theoryUnc.pkl",
+    "theoryPred_Detajj_2018_ggHxH_NNLOPS.pkl", "theoryPred_Detajj_2018_ggHxH_NNLOPS_theoryUnc.pkl"
 )
 TauCJ_Hgg_xs = make_hgg_theory_pred_array(
-    "theoryPred_TauCJets4p7_UL17.pkl", "theoryPred_TauCJets4p7_UL17_theoryUnc.pkl"
+    "theoryPred_TauCJ_2018_ggHxH_NNLOPS.pkl", "theoryPred_TauCJ_2018_ggHxH_NNLOPS_theoryUnc.pkl"
+)
+
+# no NNLOPS
+smH_PTH_EvenMoreMaximumGranularity_xs_noNNLOPS = make_hgg_theory_pred_array(
+    "theoryPred_Pt_2018_ggHxH_EvenMoreGranular.pkl", "theoryPred_Pt_2018_ggHxH_EvenMoreGranular_theoryUnc.pkl"
+)
+Njets_Hgg_xs_noNNLOPS = make_hgg_theory_pred_array(
+    "theoryPred_Njets_2018_ggHxH.pkl", "theoryPred_Njets_2018_ggHxH_theoryUnc.pkl"
+)
+yH_Granular_xs_noNNLOPS = make_hgg_theory_pred_array(
+    "theoryPred_yH_2018_ggHxH_Granular.pkl", "theoryPred_yH_2018_ggHxH_Granular_theoryUnc.pkl"
+)
+smH_PTJ0_Granular_xs_noNNLOPS = make_hgg_theory_pred_array(
+    "theoryPred_smH_PTJ0_2018_ggHxH.pkl", "theoryPred_smH_PTJ0_2018_ggHxH_theoryUnc.pkl"
+)
+mjj_Hgg_xs_noNNLOPS = make_hgg_theory_pred_array(
+    "theoryPred_mjj_2018_ggHxH.pkl", "theoryPred_mjj_2018_ggHxH_theoryUnc.pkl"
+)
+DEtajj_Hgg_xs_noNNLOPS = make_hgg_theory_pred_array(
+    "theoryPred_Detajj_2018_ggHxH.pkl", "theoryPred_Detajj_2018_ggHxH_theoryUnc.pkl"
+)
+TauCJ_Hgg_xs_noNNLOPS = make_hgg_theory_pred_array(
+    "theoryPred_TauCJ_2018_ggHxH.pkl", "theoryPred_TauCJ_2018_ggHxH_theoryUnc.pkl"
+)
+
+# powheg
+smH_PTH_EvenMoreMaximumGranularity_xs_powheg = make_hgg_theory_pred_array(
+    "theoryPred_Pt_2018_ggHxH_EvenMoreGranular_powheg.pkl", "theoryPred_Pt_2018_ggHxH_EvenMoreGranular_powheg_theoryUnc.pkl"
+)
+Njets_Hgg_xs_powheg = make_hgg_theory_pred_array(
+    "theoryPred_Njets_2018_ggHxH_powheg.pkl", "theoryPred_Njets_2018_ggHxH_powheg_theoryUnc.pkl"
+)
+yH_Granular_xs_powheg = make_hgg_theory_pred_array(
+    "theoryPred_yH_2018_ggHxH_Granular_powheg.pkl", "theoryPred_yH_2018_ggHxH_Granular_powheg_theoryUnc.pkl"
+)
+smH_PTJ0_Granular_xs_powheg = make_hgg_theory_pred_array(
+    "theoryPred_smH_PTJ0_2018_ggHxH_powheg.pkl", "theoryPred_smH_PTJ0_2018_ggHxH_powheg_theoryUnc.pkl"
+)
+mjj_Hgg_xs_powheg = make_hgg_theory_pred_array(
+    "theoryPred_mjj_2018_ggHxH_powheg.pkl", "theoryPred_mjj_2018_ggHxH_powheg_theoryUnc.pkl"
+)
+DEtajj_Hgg_xs_powheg = make_hgg_theory_pred_array(
+    "theoryPred_Detajj_2018_ggHxH_powheg.pkl", "theoryPred_Detajj_2018_ggHxH_powheg_theoryUnc.pkl"
+)
+TauCJ_Hgg_xs_powheg = make_hgg_theory_pred_array(
+    "theoryPred_TauCJ_2018_ggHxH_powheg.pkl", "theoryPred_TauCJ_2018_ggHxH_powheg_theoryUnc.pkl"
 )
 
 

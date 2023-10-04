@@ -17,6 +17,20 @@ from .physics import (
     mjj_Hgg_xs,
     DEtajj_Hgg_xs,
     TauCJ_Hgg_xs,
+    smH_PTH_EvenMoreMaximumGranularity_xs_noNNLOPS,
+    Njets_Hgg_xs_noNNLOPS,
+    yH_Granular_xs_noNNLOPS,
+    smH_PTJ0_Granular_xs_noNNLOPS,
+    mjj_Hgg_xs_noNNLOPS,
+    DEtajj_Hgg_xs_noNNLOPS,
+    TauCJ_Hgg_xs_noNNLOPS,
+    smH_PTH_EvenMoreMaximumGranularity_xs_powheg,
+    Njets_Hgg_xs_powheg,
+    yH_Granular_xs_powheg,
+    smH_PTJ0_Granular_xs_powheg,
+    mjj_Hgg_xs_powheg,
+    DEtajj_Hgg_xs_powheg,
+    TauCJ_Hgg_xs_powheg,
     analyses_edges,
 )
 from .cosmetics import markers, category_specs
@@ -198,6 +212,71 @@ class ObservableShapeSM(ObservableShape):
                     hatch="/////",
                     fill=False,
                     color="grey",
+                    linewidth=0,
+                )
+            )
+
+        return ax, rax
+
+    def plot_other(self, ax, rax, color, label, other, where="left"):
+        # plot horizontal lines like in plot function but not stairs
+        ax.hlines(
+            self.xs_over_bin_width,
+            self.fake_edges[:-1],
+            self.fake_edges[1:],
+            color=color,
+            linewidth=1,
+            label=label,
+        )
+
+        rax.hlines(
+            self.xs_over_bin_width / other.xs_over_bin_width,
+            self.fake_edges[:-1],
+            self.fake_edges[1:],
+            color=color,
+            linewidth=1,
+        )
+
+        # patches for uncertainties
+        # if right is chosen, the patch is on the right side of the bin
+        # if left is chosen, the patch is on the left side of the bin
+        xs_up_fraction = self.xs_up / other.xs
+        xs_down_fraction = self.xs_down / other.xs
+        if where == "left":
+            offset = 0
+        elif where == "right":
+            offset = 0.5
+
+        for x, xs_obw, xs_up_obw, xs_down_obw, xs_up_frac, xs_down_frac in zip(
+            self.fake_edges[:-1],
+            self.xs_over_bin_width,
+            self.xs_up_over_bin_width,
+            self.xs_down_over_bin_width,
+            xs_up_fraction,
+            xs_down_fraction,
+        ):
+            # Main plot
+            ax.add_patch(
+                Rectangle(
+                    xy=(x+offset, xs_down_obw),
+                    width=self.fake_bin_width / 2,
+                    height=xs_up_obw - xs_down_obw,
+                    hatch="/////",
+                    fill=False,
+                    color=color,
+                    linewidth=0,
+                )
+            )
+
+            # Ratio plot
+            rax.add_patch(
+                Rectangle(
+                    xy=(x+offset, xs_down_frac),
+                    width=self.fake_bin_width / 2,
+                    height=xs_up_frac - xs_down_frac,
+                    hatch="/////",
+                    fill=False,
+                    color=color,
                     linewidth=0,
                 )
             )
@@ -472,6 +551,145 @@ TauCJ_Hgg_obs_shape = ObservableShapeSM(
     TauCJ_Hgg_xs["down"].to_numpy(),
 )
 
+smH_PTH_EvenMoreMaximumGranularity_obs_shape_noNNLOPS = ObservableShapeSM(
+    "smH_PTH",
+    "HggHZZHWWHttHbbVBF",
+    analyses_edges["smH_PTH"]["EvenMoreMaximumGranularity"],
+    smH_PTH_EvenMoreMaximumGranularity_xs_noNNLOPS["central"].to_numpy(),
+    smH_PTH_EvenMoreMaximumGranularity_xs_noNNLOPS["up"].to_numpy(),
+    smH_PTH_EvenMoreMaximumGranularity_xs_noNNLOPS["down"].to_numpy(),
+)
+smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_noNNLOPS = deepcopy(
+    smH_PTH_EvenMoreMaximumGranularity_obs_shape_noNNLOPS
+)
+smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_noNNLOPS.rebin(
+    analyses_edges["smH_PTH"]["HggHZZHWWHttHbbVBF"]
+)
+
+Njets_Hgg_obs_shape_noNNLOPS = ObservableShapeSM(
+    "Njets",
+    "Hgg",
+    analyses_edges["Njets"]["Hgg"],
+    Njets_Hgg_xs_noNNLOPS["central"].to_numpy(),
+    Njets_Hgg_xs_noNNLOPS["up"].to_numpy(),
+    Njets_Hgg_xs_noNNLOPS["down"].to_numpy(),
+)
+
+yH_Granular_obs_shape_noNNLOPS = ObservableShapeSM(
+    "yH",
+    "Hgg",
+    analyses_edges["yH"]["Granular"],
+    yH_Granular_xs_noNNLOPS["central"].to_numpy(),
+    yH_Granular_xs_noNNLOPS["up"].to_numpy(),
+    yH_Granular_xs_noNNLOPS["down"].to_numpy(),
+    overflow=False,
+)
+
+smH_PTJ0_Granular_obs_shape_noNNLOPS = ObservableShapeSM(
+    "smH_PTJ0",
+    "Hgg",
+    analyses_edges["smH_PTJ0"]["Granular"],
+    smH_PTJ0_Granular_xs_noNNLOPS["central"].to_numpy(),
+    smH_PTJ0_Granular_xs_noNNLOPS["up"].to_numpy(),
+    smH_PTJ0_Granular_xs_noNNLOPS["down"].to_numpy(),
+)
+
+mjj_Hgg_obs_shape_noNNLOPS = ObservableShapeSM(
+    "mjj",
+    "Hgg",
+    analyses_edges["mjj"]["Hgg"],
+    mjj_Hgg_xs_noNNLOPS["central"].to_numpy(),
+    mjj_Hgg_xs_noNNLOPS["up"].to_numpy(),
+    mjj_Hgg_xs_noNNLOPS["down"].to_numpy(),
+)
+
+DEtajj_Hgg_obs_shape_noNNLOPS = ObservableShapeSM(
+    "DEtajj",
+    "Hgg",
+    analyses_edges["DEtajj"]["Hgg"],
+    DEtajj_Hgg_xs_noNNLOPS["central"].to_numpy(),
+    DEtajj_Hgg_xs_noNNLOPS["up"].to_numpy(),
+    DEtajj_Hgg_xs_noNNLOPS["down"].to_numpy(),
+)
+
+TauCJ_Hgg_obs_shape_noNNLOPS = ObservableShapeSM(
+    "TauCJ",
+    "Hgg",
+    analyses_edges["TauCJ"]["Hgg"],
+    TauCJ_Hgg_xs_noNNLOPS["central"].to_numpy(),
+    TauCJ_Hgg_xs_noNNLOPS["up"].to_numpy(),
+    TauCJ_Hgg_xs_noNNLOPS["down"].to_numpy(),
+)
+
+smH_PTH_EvenMoreMaximumGranularity_obs_shape_powheg = ObservableShapeSM(
+    "smH_PTH",
+    "HggHZZHWWHttHbbVBF",
+    analyses_edges["smH_PTH"]["EvenMoreMaximumGranularity"],
+    smH_PTH_EvenMoreMaximumGranularity_xs_powheg["central"].to_numpy(),
+    smH_PTH_EvenMoreMaximumGranularity_xs_powheg["up"].to_numpy(),
+    smH_PTH_EvenMoreMaximumGranularity_xs_powheg["down"].to_numpy(),
+)
+smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_powheg = deepcopy(
+    smH_PTH_EvenMoreMaximumGranularity_obs_shape_powheg
+)
+smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_powheg.rebin(
+    analyses_edges["smH_PTH"]["HggHZZHWWHttHbbVBF"]
+)
+
+Njets_Hgg_obs_shape_powheg = ObservableShapeSM(
+    "Njets",
+    "Hgg",
+    analyses_edges["Njets"]["Hgg"],
+    Njets_Hgg_xs_powheg["central"].to_numpy(),
+    Njets_Hgg_xs_powheg["up"].to_numpy(),
+    Njets_Hgg_xs_powheg["down"].to_numpy(),
+)
+
+yH_Granular_obs_shape_powheg = ObservableShapeSM(
+    "yH",
+    "Hgg",
+    analyses_edges["yH"]["Granular"],
+    yH_Granular_xs_powheg["central"].to_numpy(),
+    yH_Granular_xs_powheg["up"].to_numpy(),
+    yH_Granular_xs_powheg["down"].to_numpy(),
+    overflow=False,
+)
+
+smH_PTJ0_Granular_obs_shape_powheg = ObservableShapeSM(
+    "smH_PTJ0",
+    "Hgg",
+    analyses_edges["smH_PTJ0"]["Granular"],
+    smH_PTJ0_Granular_xs_powheg["central"].to_numpy(),
+    smH_PTJ0_Granular_xs_powheg["up"].to_numpy(),
+    smH_PTJ0_Granular_xs_powheg["down"].to_numpy(),
+)
+
+mjj_Hgg_obs_shape_powheg = ObservableShapeSM(
+    "mjj",
+    "Hgg",
+    analyses_edges["mjj"]["Hgg"],
+    mjj_Hgg_xs_powheg["central"].to_numpy(),
+    mjj_Hgg_xs_powheg["up"].to_numpy(),
+    mjj_Hgg_xs_powheg["down"].to_numpy(),
+)
+
+DEtajj_Hgg_obs_shape_powheg = ObservableShapeSM(
+    "DEtajj",
+    "Hgg",
+    analyses_edges["DEtajj"]["Hgg"],
+    DEtajj_Hgg_xs_powheg["central"].to_numpy(),
+    DEtajj_Hgg_xs_powheg["up"].to_numpy(),
+    DEtajj_Hgg_xs_powheg["down"].to_numpy(),
+)
+
+TauCJ_Hgg_obs_shape_powheg = ObservableShapeSM(
+    "TauCJ",
+    "Hgg",
+    analyses_edges["TauCJ"]["Hgg"],
+    TauCJ_Hgg_xs_powheg["central"].to_numpy(),
+    TauCJ_Hgg_xs_powheg["up"].to_numpy(),
+    TauCJ_Hgg_xs_powheg["down"].to_numpy(),
+)
 
 # It is assumed that the SM shapes are the ones with the finest binning, i.e. Hgg
 # if something different will come up, we'll change it
@@ -485,3 +703,22 @@ sm_shapes = {
     "TauCJ": TauCJ_Hgg_obs_shape,
 }
 
+sm_shapes_noNNLOPS = {
+    "smH_PTH": smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_noNNLOPS,
+    "Njets": Njets_Hgg_obs_shape_noNNLOPS,
+    "yH": yH_Granular_obs_shape_noNNLOPS,
+    "smH_PTJ0": smH_PTJ0_Granular_obs_shape_noNNLOPS,
+    "mjj": mjj_Hgg_obs_shape_noNNLOPS,
+    "DEtajj": DEtajj_Hgg_obs_shape_noNNLOPS,
+    "TauCJ": TauCJ_Hgg_obs_shape_noNNLOPS,
+}
+
+sm_shapes_powheg = {
+    "smH_PTH": smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_powheg,
+    "Njets": Njets_Hgg_obs_shape_powheg,
+    "yH": yH_Granular_obs_shape_powheg,
+    "smH_PTJ0": smH_PTJ0_Granular_obs_shape_powheg,
+    "mjj": mjj_Hgg_obs_shape_powheg,
+    "DEtajj": DEtajj_Hgg_obs_shape_powheg,
+    "TauCJ": TauCJ_Hgg_obs_shape_powheg,
+}

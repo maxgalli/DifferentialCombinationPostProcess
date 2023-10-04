@@ -29,6 +29,8 @@ from differential_combination_postprocess.figures import (
 from differential_combination_postprocess.shapes import (
     ObservableShapeFitted,
     sm_shapes,
+    sm_shapes_noNNLOPS,
+    sm_shapes_powheg,
     smH_PTH_EvenMoreMaximumGranularity_obs_shape,
     yH_Granular_obs_shape,
 )
@@ -359,6 +361,25 @@ def main(args):
                     logger.debug(f"Systematic shape: \n{shape}")
 
             if not args.no_final:
+                other_sm_shapes_dicts = None
+                if len(categories) == 1:
+                    logger.info(
+                        f"Will also plot the SM shapes for other generators"
+                    )
+                    other_sm_shapes_dicts = [
+                        {
+                            "shape": sm_shapes_noNNLOPS[observable],
+                            "label": "aMC@NLO",
+                            "color": "lightcoral",
+                            "where": "left"
+                        },
+                        {
+                            "shape": sm_shapes_powheg[observable],
+                            "label": "Powheg",
+                            "color": "lightseagreen",
+                            "where": "right"
+                        },
+                    ]
                 final_plot_output_name = (
                     f"Final{'Asimov' if i == 1 else ''}-{observable}-"
                     + "_".join(categories + singles)
@@ -368,6 +389,7 @@ def main(args):
                     sm_shapes[observable],
                     shapes,
                     shapes_systonly,
+                    other_sm_shapes_dicts=other_sm_shapes_dicts,
                 )
                 final_plot.dump(output_dir)
 
