@@ -78,6 +78,7 @@ class GenericNLLsPerPOI(Figure):
         full_range=False,
         plot_string=False,
         plot_interval=False,
+        minimum_vertical_line=True
     ):
         self.scans = scans
         self.categories = list(scans.keys())
@@ -120,6 +121,7 @@ class GenericNLLsPerPOI(Figure):
                     color=category_specs[scan_name]["color"],
                     label=category_specs[scan_name]["plot_label"],
                     ylim=1000000 if full_range else 8.0,
+                    minimum_vertical_line=minimum_vertical_line
                 )
             if plot_string:
                 # also add text with best fit

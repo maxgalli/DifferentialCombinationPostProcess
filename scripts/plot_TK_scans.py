@@ -9,6 +9,7 @@ import os
 # _tkinter.TclError: couldn't connect to display "localhost:12.0"
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
 
 matplotlib.use("AGG")
 
@@ -86,6 +87,24 @@ def parse_arguments():
     return parser.parse_args()
 
 
+oned_extra_selections = {
+    "yukawa_coupdep_HggHZZHtt_asimov": {
+        "kappab": lambda pois_values_original: ~np.logical_or(
+            np.logical_and(pois_values_original > -0.3, pois_values_original < -0.2),
+            np.logical_and(pois_values_original > 0.8, pois_values_original < 0.9)
+        ),
+        "kappac": lambda pois_values_original: ~np.logical_and(pois_values_original > -2., pois_values_original < -1.5)
+    },
+    "yukawa_floatingBR_HggHZZHtt_asimov": {
+        "kappac": lambda pois_values_original: ~np.logical_and(pois_values_original > -1., pois_values_original < 1.),
+        "kappab": lambda pois_values_original: ~np.logical_or(
+            np.logical_and(pois_values_original > -0.1, pois_values_original < 0.3),
+            np.logical_and(pois_values_original > 0.9, pois_values_original < 1.2)
+        )
+    },
+}
+
+
 def main(args):
     if args.debug:
         logger = setup_logging(level="DEBUG")
@@ -124,6 +143,11 @@ def main(args):
                     for d in os.listdir(input_dir)
                     if d.startswith(f"{category}{subcat_suff}-")
                 ]
+                # get extra selections if present
+                extra_selection = None
+                if "{}_{}{}".format(args.model, category, subcat_suff) in oned_extra_selections:
+                    if coeff in oned_extra_selections["{}_{}{}".format(args.model, category, subcat_suff)]:
+                        extra_selection = oned_extra_selections["{}_{}{}".format(args.model, category, subcat_suff)][coeff]
                 if len(input_dirs) == 0:
                     logger.warning(
                         f"No input directories found for {category}{subcat_suff}"
@@ -134,9 +158,10 @@ def main(args):
                     input_dirs,
                     skip_best=True,
                     file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
+                    extra_selections=extra_selection,
                 )
             if len(scans) > 0:
-                fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=False, plot_string=False, plot_interval=True)
+                fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=False, plot_string=False, plot_interval=True, minimum_vertical_line=False)
                 fig.dump(output_dir)
                 fig = GenericNLLsPerPOI(
                     coeff, scans, subcat, simple=True, full_range=True

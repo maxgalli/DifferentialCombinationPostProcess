@@ -427,13 +427,22 @@ class ObservableShapeFitted(ObservableShape):
         if self.observable != other.observable or self.edges != other.edges:
             raise ValueError("Shapes are not compatible")
 
+        # subtract relative uncertainties in quadrature
+        rel_unc_up = np.abs(self.xs_up - self.xs) / self.xs
+        rel_unc_down = np.abs(self.xs_down - self.xs) / self.xs
+        rel_unc_up_other = np.abs(other.xs_up - other.xs) / other.xs
+        rel_unc_down_other = np.abs(other.xs_down - other.xs) / other.xs
+        
+        new_xs_up = np.sqrt(rel_unc_up ** 2 - rel_unc_up_other ** 2) * self.xs
+        new_xs_down = np.sqrt(rel_unc_down ** 2 - rel_unc_down_other ** 2) * self.xs
+
         return ObservableShapeFitted(
             self.observable,
             self.category,
             self.edges,
             self.xs,
-            self.xs + np.abs(self.xs_up - other.xs_up),
-            self.xs - np.abs(self.xs_down - other.xs_down),
+            self.xs + new_xs_up,
+            self.xs - new_xs_down, 
             self.overflow,
         )
 

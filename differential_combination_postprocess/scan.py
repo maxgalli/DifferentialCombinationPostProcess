@@ -85,6 +85,7 @@ class Scan:
         input_dirs,
         skip_best=False,
         file_name_tmpl=None,
+        extra_selections=None,
         cut_strings=None,
         allow_extrapolation=True,
     ):
@@ -173,6 +174,18 @@ class Scan:
 
         poi_values_original = branches_np[0]
         two_dnll_original = 2 * branches_np[1]
+
+        # Apply extra selections if present
+        mask = np.ones(len(poi_values_original), dtype=bool)
+        if extra_selections is not None:
+            logger.info(
+                "Applying extra selections for POI {}: {}".format(
+                    poi, extra_selections(poi_values_original)
+                )
+            )
+            mask = extra_selections(poi_values_original)
+        poi_values_original = poi_values_original[mask]
+        two_dnll_original = two_dnll_original[mask]
 
         # Points will be arranged in a 2xN_Points numpy array
         self.original_points = np.array([poi_values_original, two_dnll_original])
@@ -361,7 +374,7 @@ class Scan:
                     :, self.original_points[1] < thr
                 ]
 
-    def plot(self, ax, color=None, label=None, ylim=8.0):
+    def plot(self, ax, color=None, label=None, ylim=8.0, minimum_vertical_line=True):
         if label is None:
             label = self.poi
         # Restrict the plotted values to a dnll less than ylim
@@ -370,7 +383,7 @@ class Scan:
         ax.plot(x, y, color="k")
         # Vertical line passing through the minimum
         # Only plot in the case of single minimum
-        if len(self.down68) == 1:
+        if len(self.down68) == 1 and minimum_vertical_line:
             ax.plot(
                 [self.minimum[0], self.minimum[0]],
                 [self.minimum[1], self.up68[0][1]],
@@ -573,7 +586,7 @@ class Scan2D:
         x = x[mask]
         y = y[mask]
         z = z[mask]
-        
+       
         # Sanity check: min and max of x and y of the found files
         logger.debug(f"Sanity check: min x: {min(x)}, max x: {max(x)}")
         logger.debug(f"Sanity check: min y: {min(y)}, max y: {max(y)}")

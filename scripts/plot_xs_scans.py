@@ -7,6 +7,7 @@ import os
 import re
 import numpy as np
 from copy import deepcopy
+import pickle as pkl
 
 # Needed to fix the fucking
 # _tkinter.TclError: couldn't connect to display "localhost:12.0"
@@ -297,6 +298,7 @@ def main(args):
                 else None,
                 allow_extrapolation=args.allow_extrapolation,
             )
+
             sub_cat_spectra[sub_cat] = diff_spectrum
             if sub_cat == category:
                 differential_spectra[sub_cat] = diff_spectrum
@@ -355,7 +357,21 @@ def main(args):
                         shape.category == shape_statonly.category
                         and shape.observable == shape_statonly.observable
                     ):
-                        shapes_systonly.append(shape - shape_statonly)
+                        #shapes_systonly.append(np.sqrt(shape**2 - shape_statonly**2))
+                        shape_syst = shape - shape_statonly
+                        shapes_systonly.append(shape_syst)
+            if len(shapes) < 2:
+                for name, shapes_list in zip(["", "_statonly", "_systonly"], [shapes, shapes_statonly, shapes_systonly]):
+                    for shape in shapes_list:
+                        to_dump = {
+                            "pois": pois,
+                            "shape": shape
+                        }
+                        output_name = f"{output_dir}/{observable}_{shape.category}{'_asimov' if i == 1 else ''}{name}.pkl"
+                        logger.info(f"Dumping shape for category {shape.category} to {output_name}")
+                        with open(output_name, "wb") as f:
+                            pkl.dump(to_dump, f)
+                       
             if args.debug:
                 for shape in shapes_systonly:
                     logger.debug(f"Systematic shape: \n{shape}")
