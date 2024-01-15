@@ -10,6 +10,7 @@ from scipy.interpolate import UnivariateSpline
 import matplotlib.pyplot as plt
 from warnings import warn
 from copy import deepcopy
+from scipy.ndimage.filters import gaussian_filter
 
 import logging
 
@@ -629,6 +630,9 @@ class Scan2D:
 
         self.z_int[0] -= self.z_int.min()
         self.z_int[1] -= self.z_int.min()
+
+        # smooth the z_int
+        self.z_int = gaussian_filter(self.z_int, sigma=5.0)
 
     def plot_as_heatmap(self, ax):
         colormap = custom_colormap("Purples")
