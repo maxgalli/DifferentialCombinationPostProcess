@@ -205,6 +205,7 @@ def main(args):
             skip_best=True,
             best_fit_file=best_fit_file,
             model_config=models[args.model],
+            specs_name=f"{args.model}_{category}",
         )
     logger.debug(f"Scan dictionary: {scan_dict}")
     if args.debug_plots:

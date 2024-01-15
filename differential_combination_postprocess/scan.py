@@ -533,6 +533,7 @@ class Scan2D:
         skip_best=False,
         best_fit_file=None,
         model_config=None,
+        specs_name=None,
     ):
         if pois is None:
             raise ValueError("pois must be a list of strings")
@@ -587,6 +588,17 @@ class Scan2D:
         x = x[mask]
         y = y[mask]
         z = z[mask]
+
+        # apply extra selections via specs_name if present
+        if specs_name == "top_floatingBR_ctcg_HggHZZHttHttBoostHbbVBF_asimov":
+            logger.info("Applying extra selections for top_floatingBR_ctcg_HggHZZHttHttBoostHbbVBF_asimov")
+            # remove points  inside a square with x in [2.4, 2.8] and y in [0.11, 0.14]
+            mask = ~np.logical_and(
+                np.logical_and(x > 2.4, x < 2.8), np.logical_and(y > 0.11, y < 0.14)
+            )
+            x = x[mask]
+            y = y[mask]
+            z = z[mask]
        
         # Sanity check: min and max of x and y of the found files
         logger.debug(f"Sanity check: min x: {min(x)}, max x: {max(x)}")
