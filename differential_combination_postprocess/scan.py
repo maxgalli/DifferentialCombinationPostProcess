@@ -608,6 +608,13 @@ class Scan2D:
         # Remove nans
         self.points = self.points[:, ~np.isnan(self.points).any(axis=0)]
 
+        x, y, z = self.points
+        # dump points to debug
+        import pickle
+        output_file = "/work/gallim/DifferentialCombination_home/DiffCombOrchestrator/tries/debug_plot2D/points.pkl"
+        with open(output_file, "wb") as f:
+            pickle.dump(self.points, f)
+
         logger.debug(
             f"Points:\nx: {list(self.points[0])}\ny: {list(self.points[1])}\nz: {list(self.points[2])}"
         )
@@ -635,16 +642,26 @@ class Scan2D:
         logger.debug(f"Interpolating points between {x_min} and {x_max} for {pois[0]}")
         logger.debug(f"Interpolating points between {y_min} and {y_max} for {pois[1]}")
         # self.y_int, self.x_int = np.mgrid[y_min:y_max:1000j, x_min:x_max:1000j]
+        
         self.y_int, self.x_int = np.mgrid[y_min:y_max:500j, x_min:x_max:500j]
         self.z_int = griddata(
             (x, y), z, (self.x_int, self.y_int), method="cubic", fill_value=10.0
         )
+        #self.x_int, self.y_int, self.z_int = np.meshgrid(
+        #    x, y, z
+        #)
+        #self.x_int = self.x_int[:, :, 0]
+        #self.y_int = self.y_int[:, :, 0]
+        #self.z_int = self.z_int[:, :, 0]
+        #print(self.x_int.shape)
+        #print(self.y_int.shape)
+        #print(self.z_int.shape)
 
         self.z_int[0] -= self.z_int.min()
         self.z_int[1] -= self.z_int.min()
 
         # smooth the z_int
-        self.z_int = gaussian_filter(self.z_int, sigma=5.0)
+        #self.z_int = gaussian_filter(self.z_int, sigma=5.0)
 
     def plot_as_heatmap(self, ax):
         colormap = custom_colormap("Purples")

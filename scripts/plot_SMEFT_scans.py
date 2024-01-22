@@ -17,6 +17,7 @@ from differential_combination_postprocess.scan import Scan, Scan2D
 from differential_combination_postprocess.figures import (
     GenericNLLsPerPOI,
     TwoDScansPerModel,
+    SMEFTSummaryPlot
 )
 from differential_combination_postprocess.matrix import MatricesExtractor
 
@@ -91,6 +92,13 @@ def parse_arguments():
         "--force-2D-limit",
         action="store_true",
         help="Force the x and y limit on 2D scan to be the one from the submodel config file instead of the maximum between the scan and the submodel",
+        default=False,
+    )
+
+    parser.add_argument(
+        "--summary-plot",
+        action="store_true",
+        help="Produce a summary plot with all the 1D scans",
         default=False,
     )
 
@@ -208,6 +216,7 @@ def main(args):
         # matrix_extractor.dump(output_dir)
 
         # first, one figure per wilson coefficient per subcategory with all the decay channels
+        wc_scans = {}
         for coeff in submodel_pois:
             scans = {}
             for category in args.categories:
@@ -248,6 +257,17 @@ def main(args):
                 logger.debug("Dumping original points")
                 for scan_name, scan in scans.items():
                     plot_original_points(coeff, scan_name, scan, subcat, output_dir)
+            wc_scans[coeff] = scans
+        if args.summary_plot:
+            logger.info("Will now produce the summary plot for combination category")
+            wc_scans_comb = {}
+            for coeff in wc_scans:
+                wc_scans_comb[coeff] = wc_scans[coeff][combination]
+            summary_plot = SMEFTSummaryPlot(
+                wc_scans_comb,
+                combination,
+            )
+            summary_plot.dump(output_dir)
 
         # then, 2D plots
         if not args.skip_2d and args.coefficients is None:

@@ -772,3 +772,103 @@ class NScans(Figure):
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
         hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+
+
+class SMEFTSummaryPlot(Figure):
+    def __init__(self, wc_scans, combination_name):
+        """
+        Plot a summary of the SMEFT results.
+        wc_scans is e.g.: {"chg": Scan1D}
+        """
+        self.fig, self.ax = plt.subplots(
+            figsize=(10, 20)
+        )
+        self.output_name = "SMEFT_summary" + "_".join(wc_scans.keys())
+
+        # vertical line at 0
+        self.ax.axvline(0.0, color="k", linestyle="-")
+
+        # assign each WC to an order of magnitude based on scan.up95
+        wc_orders = {}
+        for wc, scan in wc_scans.items():
+            x_up95 = scan.up95[0][0]
+            wc_orders[wc] = np.floor(np.log10(np.abs(x_up95)))
+        
+        # no need of this since with PCA they are already ordered
+        #orders = np.unique(list(wc_orders.values()))
+        #orders = np.sort(orders)
+        #orders_dict = {}
+        #for order in orders:
+        #    orders_dict[order] = []
+        #for wc in wc_orders:
+        #    orders_dict[wc_orders[wc]].append(wc)
+
+        # length of vertical axis will be the number of WCs + 2 (in order to have some space at the top and bottom)
+        y_min = 0
+        y_max = len(wc_scans) + 1
+        
+        # tick labels will be the WCs
+        tick_labels = []
+
+        for y_pos_diff, (wc, order) in enumerate(wc_orders.items()):
+            y_pos = y_max - y_pos_diff - 1
+            scan = wc_scans[wc]
+            denominator = 10 ** order
+            centre = scan.minimum[0]
+            extrema_95 = scan.down95[0][0] / denominator, wc_scans[wc].up95[0][0] / denominator
+            extrema_68 = scan.down68[0][0] / denominator, wc_scans[wc].up68[0][0] / denominator
+
+            self.ax.plot(
+                extrema_95,
+                [y_pos, y_pos],
+                color="purple",
+                linestyle="--",
+                linewidth=2,
+                label="95% CL" if y_pos_diff == 0 else "",
+            )
+            self.ax.plot(
+                extrema_68,
+                [y_pos, y_pos],
+                color="purple",
+                linestyle="-",
+                linewidth=3,
+                label="68% CL" if y_pos_diff == 0 else "",
+            )
+            self.ax.plot(
+                centre,
+                y_pos,
+                color="purple",
+                marker="o",
+                markersize=10,
+                linestyle="",
+                label="Best fit" if y_pos_diff == 0 else "",
+            )
+
+            label = bsm_parameters_labels[wc]
+            if order not in [0, 1]:
+                label += " " + r"$\times$" + f"$10^{{{order}}}$"
+            elif order == 1:
+                label += " " + r"$\times$" + f"$10$"
+            tick_labels.append(label)
+
+        # set limits on y
+        self.ax.set_ylim(y_min, y_max)
+        
+        # revert the order of the tick labels and set them
+        tick_labels = tick_labels[::-1]
+        self.ax.set_yticks(np.arange(y_min + 1, y_max))
+        self.ax.set_yticklabels(tick_labels, fontsize=20)
+        # now that we put the labels, do not show the ticks
+        self.ax.tick_params(axis="y", which="both", length=0)
+        
+        # set limits on x
+        x_min = -10
+        x_max = 10
+        self.ax.set_xlim(x_min, x_max)
+        # set x label
+        self.ax.set_xlabel("Parameter value", fontsize=20, horizontalalignment="center")
+        
+        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+
+        # legend
+        self.ax.legend(loc="upper right", prop={"size": 20}, ncol=1)
