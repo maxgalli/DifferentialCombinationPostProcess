@@ -17,6 +17,7 @@ from .physics import (
     mjj_Hgg_xs,
     DEtajj_Hgg_xs,
     TauCJ_Hgg_xs,
+    smH_PTH_Hgg_xs_noNNLOPS,
     smH_PTH_EvenMoreMaximumGranularity_xs_noNNLOPS,
     Njets_Hgg_xs_noNNLOPS,
     yH_Granular_xs_noNNLOPS,
@@ -24,6 +25,7 @@ from .physics import (
     mjj_Hgg_xs_noNNLOPS,
     DEtajj_Hgg_xs_noNNLOPS,
     TauCJ_Hgg_xs_noNNLOPS,
+    smH_PTH_Hgg_xs_powheg, 
     smH_PTH_EvenMoreMaximumGranularity_xs_powheg,
     Njets_Hgg_xs_powheg,
     yH_Granular_xs_powheg,
@@ -486,6 +488,11 @@ smH_PTH_HggHZZHWWHttHbbVBF_obs_shape.rebin(
     analyses_edges["smH_PTH"]["HggHZZHWWHttHbbVBF"]
 )
 
+smH_PTH_FinalComb_obs_shape = deepcopy(smH_PTH_Hgg_obs_shape)
+smH_PTH_FinalComb_obs_shape.category = "FinalComb"
+smH_PTH_FinalComb_obs_shape.rebin(analyses_edges["smH_PTH"]["FinalComb"])
+
+
 Njets_Hgg_obs_shape = ObservableShapeSM(
     "Njets",
     "Hgg",
@@ -560,6 +567,15 @@ TauCJ_Hgg_obs_shape = ObservableShapeSM(
     TauCJ_Hgg_xs["down"].to_numpy(),
 )
 
+smH_PTH_Hgg_obs_shape_noNNLOPS = ObservableShapeSM(
+    "smH_PTH",
+    "Hgg",
+    analyses_edges["smH_PTH"]["Hgg"],
+    smH_PTH_Hgg_xs_noNNLOPS["central"].to_numpy(),
+    smH_PTH_Hgg_xs_noNNLOPS["up"].to_numpy(),
+    smH_PTH_Hgg_xs_noNNLOPS["down"].to_numpy(),
+) 
+
 smH_PTH_EvenMoreMaximumGranularity_obs_shape_noNNLOPS = ObservableShapeSM(
     "smH_PTH",
     "HggHZZHWWHttHbbVBF",
@@ -628,6 +644,15 @@ TauCJ_Hgg_obs_shape_noNNLOPS = ObservableShapeSM(
     TauCJ_Hgg_xs_noNNLOPS["central"].to_numpy(),
     TauCJ_Hgg_xs_noNNLOPS["up"].to_numpy(),
     TauCJ_Hgg_xs_noNNLOPS["down"].to_numpy(),
+)
+
+smH_PTH_Hgg_obs_shape_powheg = ObservableShapeSM(
+    "smH_PTH",
+    "Hgg",
+    analyses_edges["smH_PTH"]["Hgg"],
+    smH_PTH_Hgg_xs_powheg["central"].to_numpy(),
+    smH_PTH_Hgg_xs_powheg["up"].to_numpy(),
+    smH_PTH_Hgg_xs_powheg["down"].to_numpy(),
 )
 
 smH_PTH_EvenMoreMaximumGranularity_obs_shape_powheg = ObservableShapeSM(
@@ -704,6 +729,7 @@ TauCJ_Hgg_obs_shape_powheg = ObservableShapeSM(
 # if something different will come up, we'll change it
 sm_shapes = {
     "smH_PTH": smH_PTH_HggHZZHWWHttHbbVBF_obs_shape,
+    #"smH_PTH": smH_PTH_Hgg_obs_shape,
     "Njets": Njets_Hgg_obs_shape,
     "yH": yH_Granular_obs_shape,
     "smH_PTJ0": smH_PTJ0_Granular_obs_shape,
@@ -714,6 +740,7 @@ sm_shapes = {
 
 sm_shapes_noNNLOPS = {
     "smH_PTH": smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_noNNLOPS,
+    #"smH_PTH": smH_PTH_Hgg_obs_shape_noNNLOPS,
     "Njets": Njets_Hgg_obs_shape_noNNLOPS,
     "yH": yH_Granular_obs_shape_noNNLOPS,
     "smH_PTJ0": smH_PTJ0_Granular_obs_shape_noNNLOPS,
@@ -724,6 +751,7 @@ sm_shapes_noNNLOPS = {
 
 sm_shapes_powheg = {
     "smH_PTH": smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_powheg,
+    #"smH_PTH": smH_PTH_Hgg_obs_shape_powheg,
     "Njets": Njets_Hgg_obs_shape_powheg,
     "yH": yH_Granular_obs_shape_powheg,
     "smH_PTJ0": smH_PTJ0_Granular_obs_shape_powheg,

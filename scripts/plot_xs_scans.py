@@ -212,6 +212,13 @@ def main(args):
     metadata_dir = args.metadata_dir
     output_dir = args.output_dir
     categories = args.categories
+    if len(categories) == 1 and categories[0] == "FinalComb":
+        logger.info("Updating SM shapes since the only category is FinalComb")
+        from differential_combination_postprocess.shapes import smH_PTH_Hgg_obs_shape, smH_PTH_Hgg_obs_shape_noNNLOPS, smH_PTH_Hgg_obs_shape_powheg
+        sm_shapes["smH_PTH"] = smH_PTH_Hgg_obs_shape
+        sm_shapes_noNNLOPS["smH_PTH"] = smH_PTH_Hgg_obs_shape_noNNLOPS
+        sm_shapes_powheg["smH_PTH"] = smH_PTH_Hgg_obs_shape_powheg
+         
     singles = args.singles
     if len(categories + singles) == 0:
         raise ValueError("Please specify at least one category or singles")

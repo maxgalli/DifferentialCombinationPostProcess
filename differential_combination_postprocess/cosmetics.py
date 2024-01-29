@@ -95,6 +95,11 @@ category_specs = {
         "color": "black",
         "marker": "o",
     },
+    "FinalComb": {
+        "plot_label": "Combination",
+        "color": "black",
+        "marker": "o",
+    },
     # SMEFT
     "PtFullComb": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "ChanObs4": {"plot_label": "Combination", "color": "black", "marker": "o"},

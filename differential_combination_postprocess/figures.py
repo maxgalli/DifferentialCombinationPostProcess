@@ -104,7 +104,7 @@ class GenericNLLsPerPOI(Figure):
         # Draw horizontal line at 1 and 4
         if not full_range:
             self.ax.axhline(1.0, color="k", linestyle="--")
-            self.ax.axhline(4.0, color="k", linestyle="--")
+            self.ax.axhline(3.84, color="k", linestyle="--")
 
         start_y_for_text = 0.6
         for scan_name, scan in scans.items():
@@ -185,7 +185,7 @@ class TwoScans(Figure):
 
         # Draw horizontal line at 1 and 4
         self.ax.axhline(1.0, color="k", linestyle="--")
-        self.ax.axhline(4.0, color="k", linestyle="--")
+        self.ax.axhline(3.84, color="k", linestyle="--")
 
         self.ax = scan1.plot_simple(self.ax, "k", label=label1, ylim=8.0)
         self.ax = scan2.plot_simple(
@@ -239,7 +239,7 @@ class ScanChiSquare(Figure):
 
         # Draw horizontal line at 1 and 4
         self.ax.axhline(1.0, color="k", linestyle="--")
-        self.ax.axhline(4.0, color="k", linestyle="--")
+        self.ax.axhline(3.84, color="k", linestyle="--")
 
         self.ax = scan.plot_simple(self.ax, "k", label="Scan", ylim=8.0)
 
@@ -296,7 +296,7 @@ class XSNLLsPerPOI:
             ax.axhline(1.0, color="k", linestyle="--")
 
             # Draw horizontal line at 4
-            ax.axhline(4.0, color="k", linestyle="--")
+            ax.axhline(3.84, color="k", linestyle="--")
 
             # Draw all the NLLs with different colors
             for scan_tpl, color in zip(scans, fit_type_colors):
@@ -388,7 +388,7 @@ class XSNLLsPerCategory(Figure):
 
         # Draw horizontal line at 1 and 4
         self.ax.axhline(1.0, color="k", linestyle="--")
-        self.ax.axhline(4.0, color="k", linestyle="--")
+        self.ax.axhline(3.84, color="k", linestyle="--")
 
         # Draw all the NLLs on the ax
         logger.debug(differential_spectrum.scans)
@@ -531,6 +531,7 @@ class DiffXSsPerObservable(Figure):
                 "HggHZZHWWHttHbb": 0,
                 "HggHZZHWWHttHbbVBF": 0,
                 "HggHZZHWWHttHbbVBFHttBoost": 0,
+                "FinalComb": 0,
                 "Hgg": 0.2,
                 "HZZ": -0.2,
                 "HWW": 0,
@@ -631,6 +632,30 @@ class DiffXSsPerObservable(Figure):
         self.main_ax.legend(loc=location, prop=prop)
 
         hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.main_ax)
+
+        
+class EasyTwoDScan(Figure):
+    def __init__(
+        self,
+        scan_dict,
+        output_name,
+    ):
+        super().__init__()
+        self.scan_dict = scan_dict
+        self.output_name = output_name
+        
+        self.fig, self.ax = plt.subplots(1, 1, figsize=(18, 14))
+        colors = ["red", "blue", "green", "orange", "purple", "brown", "pink", "gray", "olive", "cyan"]
+        
+        pois = list(scan_dict.values())[0].pois
+
+        for (name, scan), color in zip(scan_dict.items(), colors):
+            self.ax = scan.plot_as_contour(self.ax, color=color, label=name)
+
+        self.ax.set_xlabel(bsm_parameters_labels[pois[0]])
+        self.ax.set_ylabel(bsm_parameters_labels[pois[1]]) 
+        self.ax.legend(loc="upper left")
+        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
 
 
 class TwoDScansPerModel(Figure):
@@ -767,7 +792,7 @@ class NScans(Figure):
 
         # Draw horizontal line at 1 and 4
         self.ax.axhline(1.0, color="k", linestyle="--")
-        self.ax.axhline(4.0, color="k", linestyle="--")
+        self.ax.axhline(3.84, color="k", linestyle="--")
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
@@ -846,7 +871,7 @@ class SMEFTSummaryPlot(Figure):
 
             label = bsm_parameters_labels[wc]
             if order not in [0, 1]:
-                label += " " + r"$\times$" + f"$10^{{{order}}}$"
+                label += " " + r"$\times$" + f"$10^{{{int(order)}}}$"
             elif order == 1:
                 label += " " + r"$\times$" + f"$10$"
             tick_labels.append(label)

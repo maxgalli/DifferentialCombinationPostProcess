@@ -73,7 +73,7 @@ analyses_edges = {
             250,
             350,
             450,
-            # 1000,
+            #1000,
             1200,
         ],
         "HZZ": [
@@ -86,7 +86,7 @@ analyses_edges = {
             80,
             120,
             200,
-            # 1000,
+            #1000,
             1200,
         ],  # because we merged last three bins
         "HWW": [0, 30, 45, 80, 120, 200, 1200],
@@ -299,6 +299,30 @@ analyses_edges = {
             800,
             1200,
         ],
+        "FinalComb": [
+            0,
+            5,
+            10,
+            15,
+            20,
+            25,
+            30,
+            35,
+            45,
+            60,
+            80,
+            100,
+            120,
+            140,
+            170,
+            200,
+            250,
+            350,
+            450,
+            #1000,
+            1200
+        ],
+
     },
     "Njets": {
         "Hgg": [0, 1, 2, 3, 4, 5],
@@ -450,6 +474,9 @@ TauCJ_Hgg_xs = make_hgg_theory_pred_array(
 )
 
 # no NNLOPS
+smH_PTH_Hgg_xs_noNNLOPS = make_hgg_theory_pred_array(
+    "theoryPred_Pt_2018_ggHxH.pkl", "theoryPred_Pt_2018_ggHxH_theoryUnc.pkl"
+)
 smH_PTH_EvenMoreMaximumGranularity_xs_noNNLOPS = make_hgg_theory_pred_array(
     "theoryPred_Pt_2018_ggHxH_EvenMoreGranular.pkl", "theoryPred_Pt_2018_ggHxH_EvenMoreGranular_theoryUnc.pkl"
 )
@@ -473,6 +500,9 @@ TauCJ_Hgg_xs_noNNLOPS = make_hgg_theory_pred_array(
 )
 
 # powheg
+smH_PTH_Hgg_xs_powheg = make_hgg_theory_pred_array(
+    "theoryPred_Pt_2018_ggHxH_powheg.pkl", "theoryPred_Pt_2018_ggHxH_powheg_theoryUnc.pkl"
+)
 smH_PTH_EvenMoreMaximumGranularity_xs_powheg = make_hgg_theory_pred_array(
     "theoryPred_Pt_2018_ggHxH_EvenMoreGranular_powheg.pkl", "theoryPred_Pt_2018_ggHxH_EvenMoreGranular_powheg_theoryUnc.pkl"
 )

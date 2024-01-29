@@ -302,7 +302,7 @@ class Scan:
             self.up95,
             self.down95_unc,
             self.up95_unc,
-        ) = self.compute_uncertainties(4.0)
+        ) = self.compute_uncertainties(3.84)
         logger.info(
             "Down uncertainty 1sigma: {}, up uncertainty 1sigma: {}".format(
                 self.down68_unc, self.up68_unc
