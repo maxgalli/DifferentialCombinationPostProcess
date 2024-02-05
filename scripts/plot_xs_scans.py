@@ -218,6 +218,11 @@ def main(args):
         sm_shapes["smH_PTH"] = smH_PTH_Hgg_obs_shape
         sm_shapes_noNNLOPS["smH_PTH"] = smH_PTH_Hgg_obs_shape_noNNLOPS
         sm_shapes_powheg["smH_PTH"] = smH_PTH_Hgg_obs_shape_powheg
+
+        from differential_combination_postprocess.shapes import smH_PTJ0_Hgg_obs_shape, smH_PTJ0_Hgg_obs_shape_noNNLOPS, smH_PTJ0_Hgg_obs_shape_powheg
+        sm_shapes["smH_PTJ0"] = smH_PTJ0_Hgg_obs_shape
+        sm_shapes_noNNLOPS["smH_PTJ0"] = smH_PTJ0_Hgg_obs_shape_noNNLOPS
+        sm_shapes_powheg["smH_PTJ0"] = smH_PTJ0_Hgg_obs_shape_powheg
          
     singles = args.singles
     if len(categories + singles) == 0:
@@ -407,6 +412,7 @@ def main(args):
                     f"Final{'Asimov' if i == 1 else ''}-{observable}-"
                     + "_".join(categories + singles)
                 )
+                logger.info(f"Final plot output name: {final_plot_output_name}")
                 final_plot = DiffXSsPerObservable(
                     final_plot_output_name,
                     sm_shapes[observable],

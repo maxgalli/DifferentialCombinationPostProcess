@@ -21,6 +21,7 @@ from .physics import (
     smH_PTH_EvenMoreMaximumGranularity_xs_noNNLOPS,
     Njets_Hgg_xs_noNNLOPS,
     yH_Granular_xs_noNNLOPS,
+    smH_PTJ0_Hgg_xs_noNNLOPS,
     smH_PTJ0_Granular_xs_noNNLOPS,
     mjj_Hgg_xs_noNNLOPS,
     DEtajj_Hgg_xs_noNNLOPS,
@@ -29,6 +30,7 @@ from .physics import (
     smH_PTH_EvenMoreMaximumGranularity_xs_powheg,
     Njets_Hgg_xs_powheg,
     yH_Granular_xs_powheg,
+    smH_PTJ0_Hgg_xs_powheg,
     smH_PTJ0_Granular_xs_powheg,
     mjj_Hgg_xs_powheg,
     DEtajj_Hgg_xs_powheg,
@@ -610,6 +612,15 @@ yH_Granular_obs_shape_noNNLOPS = ObservableShapeSM(
     overflow=False,
 )
 
+smH_PTJ0_Hgg_obs_shape_noNNLOPS = ObservableShapeSM(
+    "smH_PTJ0",
+    "Hgg",
+    analyses_edges["smH_PTJ0"]["Hgg"],
+    smH_PTJ0_Hgg_xs_noNNLOPS["central"].to_numpy(),
+    smH_PTJ0_Hgg_xs_noNNLOPS["up"].to_numpy(),
+    smH_PTJ0_Hgg_xs_noNNLOPS["down"].to_numpy(),
+) 
+
 smH_PTJ0_Granular_obs_shape_noNNLOPS = ObservableShapeSM(
     "smH_PTJ0",
     "Hgg",
@@ -687,6 +698,15 @@ yH_Granular_obs_shape_powheg = ObservableShapeSM(
     yH_Granular_xs_powheg["up"].to_numpy(),
     yH_Granular_xs_powheg["down"].to_numpy(),
     overflow=False,
+)
+
+smH_PTJ0_Hgg_obs_shape_powheg = ObservableShapeSM(
+    "smH_PTJ0",
+    "Hgg",
+    analyses_edges["smH_PTJ0"]["Hgg"],
+    smH_PTJ0_Hgg_xs_powheg["central"].to_numpy(),
+    smH_PTJ0_Hgg_xs_powheg["up"].to_numpy(),
+    smH_PTJ0_Hgg_xs_powheg["down"].to_numpy(),
 )
 
 smH_PTJ0_Granular_obs_shape_powheg = ObservableShapeSM(

@@ -95,6 +95,16 @@ oned_extra_selections = {
         ),
         "kappac": lambda pois_values_original: ~np.logical_and(pois_values_original > -2., pois_values_original < -1.5)
     },
+    "yukawa_coupdep_HggHZZHtt": {
+        "kappab": lambda pois_values_original: ~np.logical_or(
+            np.logical_and(pois_values_original > -1.4, pois_values_original < -1.15),
+            np.logical_and(pois_values_original > 1.15, pois_values_original < 1.3)
+        ),
+        "kappac": lambda pois_values_original: ~np.logical_or(
+            np.logical_and(pois_values_original > -4, pois_values_original < -3.5),
+            np.logical_and(pois_values_original > 3.5, pois_values_original < 4)
+        ),
+    },
     "yukawa_floatingBR_HggHZZHtt_asimov": {
         "kappac": lambda pois_values_original: ~np.logical_and(pois_values_original > -1., pois_values_original < 1.),
         "kappab": lambda pois_values_original: ~np.logical_or(

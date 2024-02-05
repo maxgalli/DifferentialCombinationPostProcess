@@ -343,6 +343,7 @@ analyses_edges = {
         "Hgg": [0.0, 30.0, 40.0, 55.0, 75.0, 95.0, 120.0, 150.0, 200.0, 10000.0],
         "HZZ": [0.0, 30.0, 55.0, 95.0, 200.0, 10000.0],
         "HttBoost": [450.0, 600.0, 10000.0],
+        "FinalComb": [0.0, 30.0, 40.0, 55.0, 75.0, 95.0, 120.0, 150.0, 200.0, 10000.0],
         "HggHZZHttBoost": [
             0.0,
             30.0,
@@ -457,8 +458,9 @@ yH_Granular_xs = make_hgg_theory_pred_array(
     "theoryPred_yH_2018_ggHxH_Granular_NNLOPS.pkl", "theoryPred_yH_2018_ggHxH_Granular_NNLOPS_theoryUnc.pkl"
 )
 smH_PTJ0_Hgg_xs = make_hgg_theory_pred_array(
-    "/work/gallim/DifferentialCombination_home/DiffCombOrchestrator/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred/theoryPred_Jet2p5Pt0_18_fullPS.pkl", 
-    "/work/gallim/DifferentialCombination_home/DiffCombOrchestrator/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred/theoryPred_Jet2p5Pt0_18_fullPS_theoryUnc.pkl"
+    #"/work/gallim/DifferentialCombination_home/DiffCombOrchestrator/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred/theoryPred_Jet2p5Pt0_18_fullPS.pkl", 
+    #"/work/gallim/DifferentialCombination_home/DiffCombOrchestrator/DifferentialCombinationRun2/TheoreticalPredictions/fullPSPred/theoryPred_Jet2p5Pt0_18_fullPS_theoryUnc.pkl"
+    "theoryPred_smH_PTJ0_fineBinning_2018_ggHxH_NNLOPS.pkl", "theoryPred_smH_PTJ0_fineBinning_2018_ggHxH_NNLOPS_theoryUnc.pkl"
 )
 smH_PTJ0_Granular_xs = make_hgg_theory_pred_array(
     "theoryPred_smH_PTJ0_2018_ggHxH_NNLOPS.pkl", "theoryPred_smH_PTJ0_2018_ggHxH_NNLOPS_theoryUnc.pkl"
@@ -486,6 +488,9 @@ Njets_Hgg_xs_noNNLOPS = make_hgg_theory_pred_array(
 yH_Granular_xs_noNNLOPS = make_hgg_theory_pred_array(
     "theoryPred_yH_2018_ggHxH_Granular.pkl", "theoryPred_yH_2018_ggHxH_Granular_theoryUnc.pkl"
 )
+smH_PTJ0_Hgg_xs_noNNLOPS = make_hgg_theory_pred_array(
+    "theoryPred_smH_PTJ0_fineBinning_2018_ggHxH.pkl", "theoryPred_smH_PTJ0_fineBinning_2018_ggHxH_theoryUnc.pkl"
+)
 smH_PTJ0_Granular_xs_noNNLOPS = make_hgg_theory_pred_array(
     "theoryPred_smH_PTJ0_2018_ggHxH.pkl", "theoryPred_smH_PTJ0_2018_ggHxH_theoryUnc.pkl"
 )
@@ -512,6 +517,9 @@ Njets_Hgg_xs_powheg = make_hgg_theory_pred_array(
 yH_Granular_xs_powheg = make_hgg_theory_pred_array(
     "theoryPred_yH_2018_ggHxH_Granular_powheg.pkl", "theoryPred_yH_2018_ggHxH_Granular_powheg_theoryUnc.pkl"
 )
+smH_PTJ0_Hgg_xs_powheg = make_hgg_theory_pred_array(
+    "theoryPred_smH_PTJ0_fineBinning_2018_ggHxH_powheg.pkl", "theoryPred_smH_PTJ0_fineBinning_2018_ggHxH_powheg_theoryUnc.pkl"
+)
 smH_PTJ0_Granular_xs_powheg = make_hgg_theory_pred_array(
     "theoryPred_smH_PTJ0_2018_ggHxH_powheg.pkl", "theoryPred_smH_PTJ0_2018_ggHxH_powheg_theoryUnc.pkl"
 )
@@ -531,7 +539,8 @@ TauCJ_Hgg_xs_powheg = make_hgg_theory_pred_array(
 TK_models = {
     "yukawa_coupdep": {"kappac": (-8, 8), "kappab": (-2, 2)},
     "yukawa_floatingBR": {"kappac": (-30, 30), "kappab": (-20, 20)},
-    "top_coupdep_ctcg": {"ct": (0.0, 2.0), "cg": (-0.06, 0.08)},
+    #"top_coupdep_ctcg": {"ct": (0.0, 2.0), "cg": (-0.06, 0.08)},
+    "top_coupdep_ctcg": {"ct": (0.0, 3.5), "cg": (-0.2, 0.08)},
     "top_floatingBR_ctcg": {"ct": (-3, 3), "cg": (-0.15, 0.15)},
     "top_coupdep_ctcb": {"ct": (-3, 4), "cb": (-2.5, 2.5)},
     "top_floatingBR_ctcb": {"ct": (-3, 3), "cb": (-12, 12)},

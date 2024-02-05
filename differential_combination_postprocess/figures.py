@@ -108,18 +108,24 @@ class GenericNLLsPerPOI(Figure):
 
         start_y_for_text = 0.6
         for scan_name, scan in scans.items():
+            try:
+                color = category_specs[scan_name]["color"]
+                label = category_specs[scan_name]["plot_label"]
+            except KeyError:
+                color = "purple"
+                label = scan_name
             if simple:
                 self.ax = scan.plot_simple(
                     self.ax,
-                    color=category_specs[scan_name]["color"],
-                    label=category_specs[scan_name]["plot_label"],
+                    color=color,
+                    label=label,
                     ylim=1000000 if full_range else 8.0,
                 )
             else:
                 self.ax = scan.plot(
                     self.ax,
-                    color=category_specs[scan_name]["color"],
-                    label=category_specs[scan_name]["plot_label"],
+                    color=color,
+                    label=label,
                     ylim=1000000 if full_range else 8.0,
                     minimum_vertical_line=minimum_vertical_line
                 )
@@ -130,7 +136,7 @@ class GenericNLLsPerPOI(Figure):
                     0.5,
                     start_y_for_text,
                     best_fit_string,
-                    color=category_specs[scan_name]["color"],
+                    color=color,
                     fontsize=20,
                     ha="center",
                     va="center",
@@ -144,7 +150,7 @@ class GenericNLLsPerPOI(Figure):
                     0.5,
                     start_y_for_text,
                     best_fit_string,
-                    color=category_specs[scan_name]["color"],
+                    color=color,
                     fontsize=20,
                     ha="center",
                     va="center",
@@ -550,7 +556,7 @@ class DiffXSsPerObservable(Figure):
                 "Htt": -0.4,
             },
             "yH": {"HggHZZ": 0, "HggHZZHWW": 0, "Hgg": 0.2, "HZZ": -0.2, "HWW": 0},
-            "smH_PTJ0": {"HggHZZHttBoost": 0, "Hgg": 0.2, "HZZ": -0.2, "HttBoost": 0.2},
+            "smH_PTJ0": {"HggHZZHttBoost": 0, "FinalComb": 0, "Hgg": 0.2, "HZZ": -0.2, "HttBoost": 0.2},
             "mjj": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
             "DEtajj": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
             "TauCJ": {"HggHZZ": 0, "Hgg": 0.2, "HZZ": -0.2},
