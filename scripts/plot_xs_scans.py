@@ -19,6 +19,7 @@ matplotlib.use("AGG")
 from differential_combination_postprocess.utils import (
     setup_logging,
     extract_from_yaml_file,
+    TK_parser,
 )
 from differential_combination_postprocess.scan import Scan, DifferentialSpectrum
 from differential_combination_postprocess.figures import (
@@ -34,6 +35,7 @@ from differential_combination_postprocess.shapes import (
     sm_shapes_powheg,
     smH_PTH_EvenMoreMaximumGranularity_obs_shape,
     yH_Granular_obs_shape,
+    ObservableShapeKappa,
 )
 from differential_combination_postprocess.physics import analyses_edges, overflows
 
@@ -135,6 +137,13 @@ def parse_arguments():
         action="store_true",
         default=False,
         help="Whether or not extrapolating if NLL does not cross 1",
+    )
+
+    parser.add_argument(
+        "--kappa-prediction",
+        type=str,
+        required=False,
+        help="Path to a TK-style kappa prediction file",
     )
 
     return parser.parse_args()
@@ -413,12 +422,25 @@ def main(args):
                     + "_".join(categories + singles)
                 )
                 logger.info(f"Final plot output name: {final_plot_output_name}")
+
+                kappa_spectrum = None
+                if args.kappa_prediction:
+                    kappa_dct = TK_parser(args.kappa_prediction)
+                    kappa_spectrum = ObservableShapeKappa(
+                        parameters=kappa_dct["parameters"],
+                        edges=kappa_dct["edges"],
+                        nominal_values=kappa_dct["crosssection"],
+                        ratio_to_sm=kappa_dct["ratio"],
+                    )
+                    logger.info(f"Kappa prediction: {kappa_dct}")
+                    final_plot_output_name += "_kappa"
                 final_plot = DiffXSsPerObservable(
                     final_plot_output_name,
                     sm_shapes[observable],
                     shapes,
                     shapes_systonly,
                     other_sm_shapes_dicts=other_sm_shapes_dicts,
+                    kappa_prediction=kappa_spectrum,
                 )
                 final_plot.dump(output_dir)
 

@@ -435,10 +435,12 @@ class DiffXSsPerObservable(Figure):
         observable_shapes,
         observable_shapes_systonly=None,
         other_sm_shapes_dicts=None,
+        kappa_prediction=None
     ):
         if observable_shapes_systonly is None:
             observable_shapes_systonly = []
         self.output_name = output_name
+
         # Set up figure and axes
         self.fig, (self.main_ax, self.ratio_ax) = plt.subplots(
             nrows=2, ncols=1, gridspec_kw={"height_ratios": (3, 1)}, sharex=True
@@ -524,6 +526,11 @@ class DiffXSsPerObservable(Figure):
         self.ratio_ax.grid(which="both", axis="y")
         self.main_ax.grid(which="major", axis="x", linestyle="-", alpha=0.3)
         self.ratio_ax.grid(which="major", axis="x", linestyle="-", alpha=0.3)
+
+        # if kappa_prediction is there, fake_rebin it based on sm_shape and plot it
+        if kappa_prediction is not None:
+            kappa_prediction.fake_rebin(sm_shape)
+            self.main_ax, self.ratio_ax = kappa_prediction.plot(self.main_ax, self.ratio_ax)
 
         # Horrible way to somehow move the points away from each other and not have them superimposed
         # displacements = [0, 0.2, -0.2, 0.4, -0.4, 0.6, -0.6]

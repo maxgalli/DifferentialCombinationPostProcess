@@ -37,7 +37,7 @@ from .physics import (
     TauCJ_Hgg_xs_powheg,
     analyses_edges,
 )
-from .cosmetics import markers, category_specs
+from .cosmetics import markers, category_specs, TK_parameters_labels
 
 import logging
 
@@ -449,6 +449,62 @@ class ObservableShapeFitted(ObservableShape):
             self.xs - new_xs_down, 
             self.overflow,
         )
+
+
+class ObservableShapeKappa():
+    """ A shape with no up and down variation, with ratio to SM already calculated
+        and a redefinition of fake_rebin since the fake range can be squeezed instead of stretched
+    """
+    def __init__(
+        self,
+        parameters,
+        edges,
+        nominal_values,
+        ratio_to_sm, 
+    ):
+        self.parameters = parameters
+        self.edges = edges
+        self.xs = nominal_values
+        self.ratio_to_sm = ratio_to_sm
+        self.fake_edges = np.arange(0, len(self.edges), 1)
+        self.fake_centers = (self.fake_edges[1:] + self.fake_edges[:-1]) / 2
+
+    def map_positions(self, arr, ref):
+        mapped_positions = []
+        for element in arr:
+            closest_index = min(range(len(ref)), key=lambda i: abs(ref[i] - element))
+            if closest_index == len(ref) - 1:
+                mapped_positions.append(closest_index)
+            else:
+                mapped_positions.append(closest_index + (element - ref[closest_index]) / (ref[closest_index + 1] - ref[closest_index]))
+        return mapped_positions
+
+    def fake_rebin(self, other_shape):
+        logger.debug("Now fake_rebinning for kappa")
+        logger.debug(f"Edges: {self.edges}")
+        logger.debug(f"Current fake edges: {self.fake_edges}")
+        logger.debug(f"Other edges: {other_shape.edges}")
+        logger.debug(f"Other fake edges: {other_shape.fake_edges}")
+        self.fake_edges = []
+
+        self.fake_edges = self.map_positions(self.edges, other_shape.edges)
+
+        self.fake_edges = np.array(self.fake_edges)
+        self.fake_centers = (self.fake_edges[1:] + self.fake_edges[:-1]) / 2
+        logger.debug(f"New fake edges: {self.fake_edges}")
+
+    def plot(self, ax, rax):
+        color = "purple"
+
+        lbl = ""
+        for par, val in self.parameters.items():
+            lbl += "{} = {}".format(TK_parameters_labels[par], val)
+            # only add comma if it's not the last element
+            if par != list(self.parameters.keys())[-1]:
+                lbl += ", "
+        ax.plot(self.fake_centers, self.xs, "o-", label=lbl, color=color)
+        rax.plot(self.fake_centers, self.ratio_to_sm, "o-", color=color)
+        return ax, rax
 
 
 smH_PTH_Hgg_obs_shape = ObservableShapeSM(
