@@ -465,6 +465,7 @@ class ObservableShapeKappa():
         self.parameters = parameters
         self.edges = edges
         self.xs = nominal_values
+        self.xs_over_bin_width = self.xs / np.diff(self.edges)
         self.ratio_to_sm = ratio_to_sm
         self.fake_edges = np.arange(0, len(self.edges), 1)
         self.fake_centers = (self.fake_edges[1:] + self.fake_edges[:-1]) / 2
@@ -502,7 +503,7 @@ class ObservableShapeKappa():
             # only add comma if it's not the last element
             if par != list(self.parameters.keys())[-1]:
                 lbl += ", "
-        ax.plot(self.fake_centers, self.xs, "o-", label=lbl, color=color)
+        ax.plot(self.fake_centers, self.xs_over_bin_width, "o-", label=lbl, color=color)
         rax.plot(self.fake_centers, self.ratio_to_sm, "o-", color=color)
         return ax, rax
 
