@@ -1,4 +1,5 @@
 import argparse
+import numpy as np
 import os
 from itertools import combinations
 
@@ -118,6 +119,14 @@ def plot_original_points(poi, scan_name, scan, subcategory, output_dir):
     plt.close(fig)
 
 
+oned_extra_selections = {
+    "220926Atlas_ChbScen_PtFullComb": {
+        "chb": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.03, pois_values_original < 0.05)
+    }
+}
+    
+
+
 def main(args):
     if args.debug:
         logger = setup_logging(level="DEBUG")
@@ -230,11 +239,16 @@ def main(args):
                         f"No input directories found for {category}{subcat_suff}"
                     )
                     continue
+                extra_selection = None
+                if "{}_{}_{}{}".format(args.model, submodel_name, category, subcat_suff) in oned_extra_selections:
+                    if coeff in oned_extra_selections["{}_{}_{}{}".format(args.model, submodel_name, category, subcat_suff)]:
+                        extra_selection = oned_extra_selections["{}_{}_{}{}".format(args.model, submodel_name, category, subcat_suff)][coeff]
                 scans[category] = Scan(
                     coeff,
                     input_dirs,
                     skip_best=True,
                     file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
+                    extra_selections=extra_selection,
                     cut_strings=cfg[model_plus_submodel_name][
                         f"{category}{subcat_suff}"
                     ][coeff]["cut_strings"]
