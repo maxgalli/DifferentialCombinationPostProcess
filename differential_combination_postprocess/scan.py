@@ -618,6 +618,9 @@ class Scan2D:
         logger.debug(
             f"Points:\nx: {list(self.points[0])}\ny: {list(self.points[1])}\nz: {list(self.points[2])}"
         )
+        
+        z -= z.min()
+        logger.debug("z after subtracting minimum: {}".format(list(z)))
 
         self.minimum = self.points[:, np.argmin(z)]
 
