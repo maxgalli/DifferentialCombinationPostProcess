@@ -649,6 +649,7 @@ class Scan2D:
         self.y_int, self.x_int = np.mgrid[y_min:y_max:500j, x_min:x_max:500j]
         self.z_int = griddata(
             (x, y), z, (self.x_int, self.y_int), method="cubic", fill_value=10.0
+            #(x, y), z, (self.x_int, self.y_int), method="cubic", fill_value=20.0
         )
         #self.x_int, self.y_int, self.z_int = np.meshgrid(
         #    x, y, z
@@ -704,10 +705,16 @@ class Scan2D:
             colors=[color, color],
             linewidths=[2.2, 2.2],
             linestyles=["solid", "dashed"],
+            #levels=[2.295748928898636, 6.180074306244173, 11.829158081900795, 19.333908611934685],
+            #colors=[color, color, color, color],
+            #linewidths=[2.2, 2.2, 2.2, 2.2],
+            #linestyles=["solid", "dashed", "dashed", "dashed"],
+
         )
         # add labels
         try:
             levels = ["68%", "95%"]
+            #levels = ["68%", "95%", "99.7%", "99.9%"]
             if label is not None:
                 for i, cl in enumerate(levels):
                     cs.collections[i].set_label(f"{label} {cl}")
