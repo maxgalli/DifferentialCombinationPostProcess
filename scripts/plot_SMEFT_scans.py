@@ -122,9 +122,13 @@ def plot_original_points(poi, scan_name, scan, subcategory, output_dir):
 oned_extra_selections = {
     "220926Atlas_ChbScen_PtFullComb": {
         "chb": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.03, pois_values_original < 0.05)
+    },
+    "230620PruneNoCPEVPtFullCombLinearised_230620PruneNoCPEVPtFullCombLinearised_PtFullComb": {
+        "EV3": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.5, pois_values_original < 0.8),
+        #"EV7": lambda pois_values_original: ~np.logical_and(pois_values_original > -15, pois_values_original < 10),
+        #"EV8": lambda pois_values_original: ~np.logical_and(pois_values_original > 24, pois_values_original < 35),
     }
 }
-    
 
 
 def main(args):
@@ -259,6 +263,31 @@ def main(args):
                     else None,
                     allow_extrapolation=False,
                 )
+            if args.expected_bkg:
+                logger.info(
+                    "We will now look for the expected of args.combination, since we run with --expected-bkg"
+                )
+                cat = f"{combination}_asimov"
+                input_subdirs = [
+                    os.path.join(input_dir, d)
+                    for d in os.listdir(input_dir)
+                    if d.startswith(f"{cat}-")
+                ]
+                extra_selection = None
+                if "{}_{}_{}".format(args.model, submodel_name, cat) in oned_extra_selections:
+                    if coeff in oned_extra_selections["{}_{}_{}".format(args.model, submodel_name, cat)]:
+                        extra_selection = oned_extra_selections["{}_{}_{}".format(args.model, submodel_name, cat)][coeff]
+                scans[cat] = Scan(
+                    coeff,
+                    input_subdirs,
+                    skip_best=True,
+                    file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
+                    extra_selections=extra_selection,
+                    cut_strings = cfg[model_plus_submodel_name][
+                        f"{cat}"
+                    ][coeff]["cut_strings"] if model_plus_submodel_name in cfg and f"{cat}" in cfg[model_plus_submodel_name] and coeff in cfg[model_plus_submodel_name][f"{cat}"] else None,
+                    allow_extrapolation=False,
+                )
             if len(scans) > 0:
                 fig = GenericNLLsPerPOI(
                     coeff, scans, subcat, simple=False, plot_string=True
@@ -280,6 +309,7 @@ def main(args):
             summary_plot = SMEFTSummaryPlot(
                 wc_scans_comb,
                 combination,
+                subcat, 
             )
             summary_plot.dump(output_dir)
 
