@@ -78,7 +78,8 @@ class GenericNLLsPerPOI(Figure):
         full_range=False,
         plot_string=False,
         plot_interval=False,
-        minimum_vertical_line=True
+        minimum_vertical_line=True,
+        logy=False,
     ):
         self.scans = scans
         self.categories = list(scans.keys())
@@ -98,8 +99,12 @@ class GenericNLLsPerPOI(Figure):
         self.ax.set_ylabel("-2$\Delta$lnL")
 
         # Set limits
-        if not full_range:
+        if not full_range and not logy:
             self.ax.set_ylim(0.0, 8.0)
+
+        # log scale
+        if logy:
+            self.ax.set_yscale("log")
 
         # Draw horizontal line at 1 and 4
         if not full_range:
@@ -681,6 +686,7 @@ class TwoDScansPerModel(Figure):
         output_name=None,
         is_asimov=False,
         force_limit=False,
+        legend_conf={"loc": "upper left", "prop": {"size": 14}}
     ):
         """
         scan_dict is e.g. {"Hgg": Scan2D}
@@ -703,12 +709,12 @@ class TwoDScansPerModel(Figure):
             try:
                 self.ax = combination_asimov_scan.plot_as_contour(
                     self.ax,
-                    color="orange",
+                    color="yellow",
                     label=f"Exp. {category_specs[combination_asimov_scan.category]['plot_label']}",
                 )
             except:
                 self.ax = combination_asimov_scan.plot_as_contour(
-                    self.ax, color="orange", label=f"Exp. Combination"
+                    self.ax, color="yellow", label=f"Exp. Combination"
                 )
             # self.ax = combination_asimov_scan.plot_as_contourf(self.ax)
         else:
@@ -764,10 +770,14 @@ class TwoDScansPerModel(Figure):
                 bsm_parameters_labels[scan_dict[combination_name].pois[1]]
             )
         except KeyError:
-            self.ax.set_xlabel(bsm_parameters_labels[combination_asimov_scan.pois[0]])
-            self.ax.set_ylabel(bsm_parameters_labels[combination_asimov_scan.pois[1]])
+            try:
+                self.ax.set_xlabel(bsm_parameters_labels[combination_asimov_scan.pois[0]])
+                self.ax.set_ylabel(bsm_parameters_labels[combination_asimov_scan.pois[1]])
+            except AttributeError:
+                self.ax.set_xlabel(poi1)
+                self.ax.set_ylabel(poi2)
         # self.colormap.ax.set_ylabel("-2$\Delta$lnL")
-        self.ax.legend(loc="upper left")
+        self.ax.legend(**legend_conf)
 
         hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
 
@@ -813,34 +823,30 @@ class NScans(Figure):
 
 
 class SMEFTSummaryPlot(Figure):
-    def __init__(self, wc_scans, combination_name):
+    def __init__(self, wc_scans):
         """
         Plot a summary of the SMEFT results.
-        wc_scans is e.g.: {"chg": Scan1D}
+        wc_scans is e.g.: {"chg": {"PtFullComb": Scan1D, "PtFullComb_asimov": Scan1D}}
         """
         self.fig, self.ax = plt.subplots(
             figsize=(10, 20)
         )
-        self.output_name = "SMEFT_summary" + "_".join(wc_scans.keys())
+        # get first key of the dictionary
+        fk = list(wc_scans.keys())[0]
+        categories = list(wc_scans[fk].keys())
+        
+        self.output_name = "SMEFT_summary_" + "_".join(wc_scans.keys()) + "_{}".format("-".join(categories))
 
         # vertical line at 0
         self.ax.axvline(0.0, color="k", linestyle="-")
 
-        # assign each WC to an order of magnitude based on scan.up95
+        # assign each WC to an order of magnitude
+        wc_scans_first = {wc: wc_scans[wc][categories[0]] for wc in wc_scans}
         wc_orders = {}
-        for wc, scan in wc_scans.items():
-            x_up95 = scan.up95[0][0]
-            wc_orders[wc] = np.floor(np.log10(np.abs(x_up95)))
+        for wc, scan in wc_scans_first.items():
+            rng = np.abs(scan.up95_unc)
+            wc_orders[wc] = np.floor(np.log10(rng))
         
-        # no need of this since with PCA they are already ordered
-        #orders = np.unique(list(wc_orders.values()))
-        #orders = np.sort(orders)
-        #orders_dict = {}
-        #for order in orders:
-        #    orders_dict[order] = []
-        #for wc in wc_orders:
-        #    orders_dict[wc_orders[wc]].append(wc)
-
         # length of vertical axis will be the number of WCs + 2 (in order to have some space at the top and bottom)
         y_min = 0
         y_max = len(wc_scans) + 1
@@ -848,46 +854,57 @@ class SMEFTSummaryPlot(Figure):
         # tick labels will be the WCs
         tick_labels = []
 
+        colors = ["black", "red"]
         for y_pos_diff, (wc, order) in enumerate(wc_orders.items()):
-            y_pos = y_max - y_pos_diff - 1
-            scan = wc_scans[wc]
-            denominator = 10 ** order
-            centre = scan.minimum[0]
-            extrema_95 = scan.down95[0][0] / denominator, wc_scans[wc].up95[0][0] / denominator
-            extrema_68 = scan.down68[0][0] / denominator, wc_scans[wc].up68[0][0] / denominator
+            col_index = 0
+            for cat_displace, cat in enumerate(categories):
+                try:
+                    cat_label = category_specs[cat]["plot_label"]
+                except KeyError:
+                    cat_label = cat
+                cat_displace = cat_displace * 0.1
+                color = colors[col_index]
+                y_pos = y_max - y_pos_diff - 1 + cat_displace
+                scan = wc_scans[wc][cat]
+                denominator = 10 ** order
+                centre = scan.minimum[0] / denominator
+                extrema_95 = scan.down95[0][0] / denominator, scan.up95[0][0] / denominator
+                extrema_68 = scan.down68[0][0] / denominator, scan.up68[0][0] / denominator
 
-            self.ax.plot(
-                extrema_95,
-                [y_pos, y_pos],
-                color="purple",
-                linestyle="--",
-                linewidth=2,
-                label="95% CL" if y_pos_diff == 0 else "",
-            )
-            self.ax.plot(
-                extrema_68,
-                [y_pos, y_pos],
-                color="purple",
-                linestyle="-",
-                linewidth=3,
-                label="68% CL" if y_pos_diff == 0 else "",
-            )
-            self.ax.plot(
-                centre,
-                y_pos,
-                color="purple",
-                marker="o",
-                markersize=10,
-                linestyle="",
-                label="Best fit" if y_pos_diff == 0 else "",
-            )
+                self.ax.plot(
+                    extrema_95,
+                    [y_pos, y_pos],
+                    color=color,
+                    linestyle="--",
+                    linewidth=2,
+                    label=f"{cat_label} 95% CL" if y_pos_diff == 0 else "",
+                )
+                self.ax.plot(
+                    extrema_68,
+                    [y_pos, y_pos],
+                    color=color,
+                    linestyle="-",
+                    linewidth=3,
+                    label=f"{cat_label} 68% CL" if y_pos_diff == 0 else "",
+                )
+                self.ax.plot(
+                    centre,
+                    y_pos,
+                    color=color,
+                    marker="o",
+                    markersize=10,
+                    linestyle="",
+                    label=f"{cat_label} Best fit" if y_pos_diff == 0 else "",
+                )
 
-            label = bsm_parameters_labels[wc]
-            if order not in [0, 1]:
-                label += " " + r"$\times$" + f"$10^{{{int(order)}}}$"
-            elif order == 1:
-                label += " " + r"$\times$" + f"$10$"
-            tick_labels.append(label)
+                label = bsm_parameters_labels[wc]
+                if order not in [0, 1]:
+                    label += " " + r"$\times$" + f"$10^{{{int(order)}}}$"
+                elif order == 1:
+                    label += " " + r"$\times$" + f"$10$"
+                if cat_displace == 0:
+                    tick_labels.append(label)
+                col_index += 1
 
         # set limits on y
         self.ax.set_ylim(y_min, y_max)
@@ -900,8 +917,8 @@ class SMEFTSummaryPlot(Figure):
         self.ax.tick_params(axis="y", which="both", length=0)
         
         # set limits on x
-        x_min = -10
-        x_max = 10
+        x_min = -15
+        x_max = 15
         self.ax.set_xlim(x_min, x_max)
         # set x label
         self.ax.set_xlabel("Parameter value", fontsize=20, horizontalalignment="center")
@@ -909,4 +926,4 @@ class SMEFTSummaryPlot(Figure):
         hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
 
         # legend
-        self.ax.legend(loc="upper right", prop={"size": 20}, ncol=1)
+        self.ax.legend(loc="upper left", prop={"size": 12}, ncol=1)

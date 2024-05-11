@@ -48,7 +48,7 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--scenario", type=str, choices=list(TK_models.keys()), help="Scenario to plot"
+        "--scenario", type=str, help="Scenario to plot"
     )
 
     parser.add_argument(
@@ -166,8 +166,9 @@ def main(args):
         tmpl = "higgsCombine_SCAN_*"
         scans = {}
         scans["test"] = Scan2D(
-            args.pois, tmpl, args.input_dir, skip_best=args.skip_best
+            args.pois, tmpl, args.input_dirs, skip_best=args.skip_best
         )
+        TK_models["custom"] = {"r_ggH": (0.5, 2.5), "r_VBF": (-1, 2)}
         plot = TwoDScansPerModel(
             scans, "test", model_config=TK_models[args.scenario], output_name="test"
         )

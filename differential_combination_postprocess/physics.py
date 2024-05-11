@@ -539,10 +539,10 @@ TauCJ_Hgg_xs_powheg = make_hgg_theory_pred_array(
 TK_models = {
     "yukawa_coupdep": {"kappac": (-8, 8), "kappab": (-2, 2)},
     "yukawa_floatingBR": {"kappac": (-30, 30), "kappab": (-20, 20)},
-    #"top_coupdep_ctcg": {"ct": (0.0, 2.0), "cg": (-0.06, 0.08)},
-    "top_coupdep_ctcg": {"ct": (0.0, 3.5), "cg": (-0.2, 0.08)},
+    "top_coupdep_ctcg": {"ct": (0.0, 2.0), "cg": (-0.06, 0.08)},
+    #"top_coupdep_ctcg": {"ct": (0.0, 3.5), "cg": (-0.2, 0.08)},
     "top_floatingBR_ctcg": {"ct": (-3, 3), "cg": (-0.15, 0.15)},
-    "top_coupdep_ctcb": {"ct": (-3, 4), "cb": (-2.5, 2.5)},
+    "top_coupdep_ctcb": {"ct": (-1, 2), "cb": (-2.0, 2.0)},
     "top_floatingBR_ctcb": {"ct": (-3, 3), "cb": (-12, 12)},
 }
 

@@ -100,8 +100,24 @@ category_specs = {
         "color": "black",
         "marker": "o",
     },
+    "comb": {
+        "plot_label": "Combination",
+        "color": "black",
+        "marker": "o",
+    },
+    "comb_asimov": {
+        "plot_label": "Combination Expected",
+        "color": "orange",
+        "marker": "o",
+    },
+    "HggHZZHtt_asimov": {
+        "plot_label": "Combination Expected",
+        "color": "red",
+        "marker": "o",
+    },
     # SMEFT
     "PtFullComb": {"plot_label": "Combination", "color": "black", "marker": "o"},
+    "PtFullComb_asimov": {"plot_label": "Combination expected", "color": "red", "marker": "o"},
     "ChanObs4": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "PtHgg": {
         "plot_label": "H $\longrightarrow\\gamma\\gamma$",
@@ -126,6 +142,7 @@ TK_parameters_labels = {
     "ct": "$\kappa_{t}$",
     "cg": "$c_{g}$",
     "cb": "$\kappa_{b}$",
+    "kappa_lambda": "$\kappa_{\lambda}$",
 }
 
 SMEFT_parameters_labels = {
@@ -195,6 +212,7 @@ matrix_bin_names = {
     "r_smH_PTH_600_675": "600 - 675",
     "r_smH_PTH_675_800": "675 - 800",
     "r_smH_PTH_800_1200": "> 800",
+    "r_smH_PTH_GT450": "> 450",
     "r_smH_PTJ0_0_30": "0 - 30",
     "r_smH_PTJ0_30_40": "30 - 40",
     "r_smH_PTJ0_40_55": "40 - 55",
@@ -206,6 +224,7 @@ matrix_bin_names = {
     "r_smH_PTJ0_200_450": "200 - 450",
     "r_smH_PTJ0_450_600": "450 - 600",
     "r_smH_PTJ0_GT600": "> 600",
+    "r_smH_PTJ0_GT200": "> 200",
     "r_Njets_0": "0",
     "r_Njets_1": "1",
     "r_Njets_2": "2",

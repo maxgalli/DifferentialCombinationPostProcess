@@ -290,7 +290,7 @@ def main(args):
                 )
             if len(scans) > 0:
                 fig = GenericNLLsPerPOI(
-                    coeff, scans, subcat, simple=False, plot_string=True
+                    coeff, scans, subcat, simple=True, plot_string=True
                 )
                 fig.dump(output_dir)
                 fig = GenericNLLsPerPOI(
@@ -302,14 +302,9 @@ def main(args):
                     plot_original_points(coeff, scan_name, scan, subcat, output_dir)
             wc_scans[coeff] = scans
         if args.summary_plot:
-            logger.info("Will now produce the summary plot for combination category")
-            wc_scans_comb = {}
-            for coeff in wc_scans:
-                wc_scans_comb[coeff] = wc_scans[coeff][combination]
+            logger.info("Will now produce the summary plot")
             summary_plot = SMEFTSummaryPlot(
-                wc_scans_comb,
-                combination,
-                subcat, 
+                wc_scans,
             )
             summary_plot.dump(output_dir)
 

@@ -90,8 +90,10 @@ def parse_arguments():
 oned_extra_selections = {
     "yukawa_coupdep_HggHZZHtt_asimov": {
         "kappab": lambda pois_values_original: ~np.logical_or(
-            np.logical_and(pois_values_original > -0.3, pois_values_original < -0.2),
-            np.logical_and(pois_values_original > 0.8, pois_values_original < 0.9)
+            #np.logical_and(pois_values_original > -0.35, pois_values_original < -0.15),
+            np.logical_and(pois_values_original > -0.7, pois_values_original < -0.15),
+            np.logical_and(pois_values_original > 0.2, pois_values_original < 0.4),
+            #np.logical_and(pois_values_original > 0.8, pois_values_original < 0.9)
         ),
         "kappac": lambda pois_values_original: ~np.logical_and(pois_values_original > -2., pois_values_original < -1.5)
     },
@@ -170,8 +172,33 @@ def main(args):
                     file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
                     extra_selections=extra_selection,
                 )
+                # All this should beput together smartly with the part before
+                if args.expected_bkg:
+                    logger.info("Plotting expected bkg for 1D scans")
+                    category += "_asimov"
+                    extra_selection = None
+                    if "{}_{}{}".format(args.model, category, subcat_suff) in oned_extra_selections:
+                        if coeff in oned_extra_selections["{}_{}{}".format(args.model, category, subcat_suff)]:
+                            extra_selection = oned_extra_selections["{}_{}{}".format(args.model, category, subcat_suff)][coeff]
+                    input_dirs = [
+                        os.path.join(input_dir, d)
+                        for d in os.listdir(input_dir)
+                        if d.startswith(f"{category}-")
+                    ]
+                    if len(input_dirs) == 0:
+                        logger.warning(
+                            f"No input directories found for {category}"
+                        )
+                        continue
+                    scans[category] = Scan(
+                        coeff,
+                        input_dirs,
+                        skip_best=True,
+                        file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
+                        extra_selections=extra_selection,
+                    )
             if len(scans) > 0:
-                fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=False, plot_string=False, plot_interval=True, minimum_vertical_line=False)
+                fig = GenericNLLsPerPOI(coeff, scans, subcat, simple=True, plot_string=False, plot_interval=True, minimum_vertical_line=False)
                 fig.dump(output_dir)
                 fig = GenericNLLsPerPOI(
                     coeff, scans, subcat, simple=True, full_range=True
@@ -228,6 +255,8 @@ def main(args):
     expected_combination_scan = None
     if args.expected_bkg:
         category = f"{combination}_asimov"
+        if args.statonly:
+            category += "_statonly"
         input_subdirs = [
             os.path.join(input_dir, d)
             for d in os.listdir(input_dir)
@@ -256,6 +285,15 @@ def main(args):
         combination_name += "_asimov"
     if args.statonly:
         combination_name += "_statonly"
+    legend_conf = {
+        "loc": "upper left", 
+        "prop": {"size": 18}
+    }
+    if args.model == "top_coupdep_ctcg":
+        legend_conf = {
+            "loc": "upper right",
+            "prop": {"size": 14},
+        }
     plot = TwoDScansPerModel(
         scan_dict=scan_dict,
         combination_name=combination_name,
@@ -263,6 +301,7 @@ def main(args):
         combination_asimov_scan=expected_combination_scan,
         output_name=output_name,
         is_asimov=args.expected,
+        legend_conf=legend_conf
     )
     plot.dump(output_dir)
 

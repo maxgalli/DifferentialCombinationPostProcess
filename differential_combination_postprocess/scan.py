@@ -453,7 +453,7 @@ class Scan:
         y = self.interpolated_points[1][self.interpolated_points[1] < ylim]
         logger.debug(f"min x: {x[0]}, max x: {x[-1]}")
         logger.debug(f"min y {min(y)}, max y {max(y)}")
-        ax.plot(x, y, color=color, label=label, linewidth=3, linestyle=linestyle)
+        ax.plot(x, y, color=color, label=label, linewidth=2, linestyle=linestyle)
 
         return ax
 
@@ -590,11 +590,27 @@ class Scan2D:
         z = z[mask]
 
         # apply extra selections via specs_name if present
-        if specs_name == "top_floatingBR_ctcg_HggHZZHttHttBoostHbbVBF_asimov":
-            logger.info("Applying extra selections for top_floatingBR_ctcg_HggHZZHttHttBoostHbbVBF_asimov")
-            # remove points  inside a square with x in [2.4, 2.8] and y in [0.11, 0.14]
+        #if specs_name == "top_floatingBR_ctcg_HggHZZHttHttBoostHbbVBF_asimov":
+        #    logger.info("Applying extra selections for top_floatingBR_ctcg_HggHZZHttHttBoostHbbVBF_asimov")
+        #    # remove points  inside a square with x in [2.4, 2.8] and y in [0.11, 0.14]
+        #    mask = ~np.logical_and(
+        #        np.logical_and(x > 2.4, x < 2.8), np.logical_and(y > 0.11, y < 0.14)
+        #    )
+        #    x = x[mask]
+        #    y = y[mask]
+        #    z = z[mask]
+        #if specs_name == "top_floatingBR_ctcg_HggHZZHttHttBoostHbbVBF":
+
+        if specs_name == "top_floatingBR_ctcb_HggHZZHttHttBoostHbbVBF":
+            logger.info("Applying extra selections for top_floatingBR_ctcb_HggHZZHttHttBoostHbbVBF")
             mask = ~np.logical_and(
-                np.logical_and(x > 2.4, x < 2.8), np.logical_and(y > 0.11, y < 0.14)
+                np.logical_and(x > 0.7, x < 1.2), np.logical_and(y > -7, y < -5.2)
+            )
+            x = x[mask]
+            y = y[mask]
+            z = z[mask]
+            mask = ~np.logical_and(
+                np.logical_and(x > -2.2, x < -1.2), np.logical_and(y > -11, y < -7)
             )
             x = x[mask]
             y = y[mask]
@@ -603,6 +619,7 @@ class Scan2D:
         # Sanity check: min and max of x and y of the found files
         logger.debug(f"Sanity check: min x: {min(x)}, max x: {max(x)}")
         logger.debug(f"Sanity check: min y: {min(y)}, max y: {max(y)}")
+        logger.debug(f"Sanity check: min z: {min(z)}, max z: {max(z)}")
 
         self.points = np.array([x, y, z])
         # Remove nans
@@ -619,7 +636,7 @@ class Scan2D:
             f"Points:\nx: {list(self.points[0])}\ny: {list(self.points[1])}\nz: {list(self.points[2])}"
         )
         
-        z -= z.min()
+        #z -= z.min()
         logger.debug("z after subtracting minimum: {}".format(list(z)))
 
         self.minimum = self.points[:, np.argmin(z)]
@@ -665,7 +682,7 @@ class Scan2D:
         self.z_int[1] -= self.z_int.min()
 
         # smooth the z_int
-        #self.z_int = gaussian_filter(self.z_int, sigma=5.0)
+        self.z_int = gaussian_filter(self.z_int, sigma=5.0)
 
     def plot_as_heatmap(self, ax):
         colormap = custom_colormap("Purples")
