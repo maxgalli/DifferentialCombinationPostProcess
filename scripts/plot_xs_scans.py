@@ -184,6 +184,8 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
                 ]
             )
         logging.debug(f"Ordered mus for category {category}: {mus}")
+        logging.debug(f"Ordered mus up for category {category}: {mus_up}")
+        logging.debug(f"Ordered mus down for category {category}: {mus_down}")
         logging.debug(f"SM rebinned xs: {sm_rebinned_shape.xs}")
         logging.debug(
             f"SM rebinned xs_over_binwidth: {sm_rebinned_shape.xs_over_bin_width}"

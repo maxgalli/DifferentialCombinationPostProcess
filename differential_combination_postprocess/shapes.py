@@ -431,6 +431,14 @@ class ObservableShapeFitted(ObservableShape):
         if self.observable != other.observable or self.edges != other.edges:
             raise ValueError("Shapes are not compatible")
 
+        # fix for smH_PTH bin 0-5
+        # for the observed of this observable, the minima between full and statonly are slightly misaligned
+        # we thus need to set the xs of the statonly to the xs of the full
+        #if self.observable == "smH_PTH" and self.category == "FinalComb":
+        #    logger.warning("Fixing smH_PTH bin 0-5 PORCODDIOOOOOO")
+        #    other.xs[0] = self.xs[0]
+        #    other.xs[5] = self.xs[0]
+
         # subtract relative uncertainties in quadrature
         rel_unc_up = np.abs(self.xs_up - self.xs) / self.xs
         rel_unc_down = np.abs(self.xs_down - self.xs) / self.xs
@@ -438,7 +446,11 @@ class ObservableShapeFitted(ObservableShape):
         rel_unc_down_other = np.abs(other.xs_down - other.xs) / other.xs
         
         new_xs_up = np.sqrt(rel_unc_up ** 2 - rel_unc_up_other ** 2) * self.xs
+        # assign 0 where nan
+        new_xs_up = np.nan_to_num(new_xs_up)
         new_xs_down = np.sqrt(rel_unc_down ** 2 - rel_unc_down_other ** 2) * self.xs
+        # assign 0 where nan
+        new_xs_down = np.nan_to_num(new_xs_down)
 
         return ObservableShapeFitted(
             self.observable,

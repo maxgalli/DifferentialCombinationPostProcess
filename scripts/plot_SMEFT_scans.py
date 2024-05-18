@@ -187,6 +187,27 @@ def main(args):
                 scans[category] = Scan(
                     coeff, input_dirs, skip_best=True, allow_extrapolation=False
                 )
+                if args.expected_bkg:
+                    logger.info(
+                        "We will now look for the expected of args.combination, since we run with --expected-bkg"
+                    )
+                    cat = f"{combination}_asimov"
+                    input_subdirs = [
+                        os.path.join(input_dir_l, d)
+                        for d in os.listdir(input_dir_l)
+                        if d.startswith(f"{cat}-")
+                    ]
+                    #extra_selection = None
+                    #if "{}_{}_{}".format(args.model, submodel_name, cat) in oned_extra_selections:
+                    #    if coeff in oned_extra_selections["{}_{}_{}".format(args.model, submodel_name, cat)]:
+                    #        extra_selection = oned_extra_selections["{}_{}_{}".format(args.model, submodel_name, cat)][coeff]
+                    scans[cat] = Scan(
+                        coeff,
+                        input_subdirs,
+                        skip_best=True,
+                        allow_extrapolation=True,
+                    )
+
             if len(scans) > 0:
                 fig = GenericNLLsPerPOI(
                     coeff, scans, subcat, simple=True, plot_string=False

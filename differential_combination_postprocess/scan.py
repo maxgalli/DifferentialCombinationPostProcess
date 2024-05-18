@@ -249,7 +249,8 @@ class Scan:
 
         # If up68 or down68 are 0, it means that NLL does not cross 1.0 at all
         # In this case we repeat the interpolation procedure in a wider range with UnivariateSpline
-        if (self.up68_unc[0] == 0 or self.down68_unc[0] == 0) and self.allow_extrapolation:
+        #if (self.up68_unc[0] == 0 or self.down68_unc[0] == 0) and self.allow_extrapolation:
+        if (self.up95_unc[0] == 0 or self.down95_unc[0] == 0) and self.allow_extrapolation:
             logger.warning(
                 "NLL does not cross 1.0 at all. Will try to interpolate with a wider range"
             )
