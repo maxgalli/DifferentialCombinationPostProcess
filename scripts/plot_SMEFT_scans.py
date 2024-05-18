@@ -127,6 +127,38 @@ oned_extra_selections = {
         "EV3": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.5, pois_values_original < 0.8),
         #"EV7": lambda pois_values_original: ~np.logical_and(pois_values_original > -15, pois_values_original < 10),
         #"EV8": lambda pois_values_original: ~np.logical_and(pois_values_original > 24, pois_values_original < 35),
+    },
+    "230620PruneNoCP_PtFullComb": {
+        "cbwim": lambda pois_values_original: ~np.logical_or(
+            np.logical_and(pois_values_original > -3.5, pois_values_original < -2),
+            np.logical_and(pois_values_original > 1.6, pois_values_original < 2.5)
+        ),
+        "cbwre": lambda pois_values_original: ~np.logical_or(
+            np.logical_and(pois_values_original > -5, pois_values_original < -4),
+            np.logical_and(pois_values_original > 4.8, pois_values_original < 6.5)
+        ),
+        "cehim": lambda pois_values_original: ~np.logical_and(pois_values_original > 4.7, pois_values_original < 5.5),
+        "chbox": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.3, pois_values_original < 0.7),
+        "chbq": lambda pois_values_original: ~np.logical_or(
+            np.logical_and(pois_values_original > -2, pois_values_original < -1),
+            np.logical_and(pois_values_original > 10, pois_values_original < 12)
+        ),
+        "chd": lambda pois_values_original: ~np.logical_or(
+            np.logical_and(pois_values_original > -0.3, pois_values_original < -0.2),
+            np.logical_and(pois_values_original > -0.05, pois_values_original < 0.1)
+        ),
+        "chg": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.0035, pois_values_original < 0.0065),
+        "chl3": lambda pois_values_original: ~np.logical_and(pois_values_original > -0.35, pois_values_original < -0.18),
+        "chq3": lambda pois_values_original: ~np.logical_and(pois_values_original > -2, pois_values_original < -1.3),
+        "cht": lambda pois_values_original: ~np.logical_or(
+            np.logical_and(pois_values_original > -80, pois_values_original < -60),
+            np.logical_and(pois_values_original > 20, pois_values_original < 40)
+        ),
+        "chw": lambda pois_values_original: ~np.logical_and(pois_values_original > -0.007, pois_values_original < -0.003),
+        "chwb": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.003, pois_values_original < 0.006),
+        "cll1": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.1, pois_values_original < 0.5),
+        "ctgre": lambda pois_values_original: ~np.logical_and(pois_values_original > -0.1, pois_values_original < -0.05),
+        "cuhre": lambda pois_values_original: ~np.logical_and(pois_values_original > 6, pois_values_original < 15),
     }
 }
 
@@ -184,8 +216,13 @@ def main(args):
                         f"No input directories found for {category}{subcat_suff}"
                     )
                     continue
+                extra_selection = None
+                if "{}_{}{}".format(args.model, category, subcat_suff) in oned_extra_selections:
+                    if coeff in oned_extra_selections["{}_{}{}".format(args.model, category, subcat_suff)]:
+                        extra_selection = oned_extra_selections["{}_{}{}".format(args.model, category, subcat_suff)][coeff]
+
                 scans[category] = Scan(
-                    coeff, input_dirs, skip_best=True, allow_extrapolation=False
+                    coeff, input_dirs, skip_best=True, allow_extrapolation=False, extra_selections=extra_selection
                 )
                 if args.expected_bkg:
                     logger.info(
