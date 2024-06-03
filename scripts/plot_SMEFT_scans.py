@@ -95,6 +95,8 @@ def parse_arguments():
         help="Force the x and y limit on 2D scan to be the one from the submodel config file instead of the maximum between the scan and the submodel",
         default=False,
     )
+    
+    parser.add_argument("--twod-only", action="store_true", help="Only plot 2D scans")
 
     parser.add_argument(
         "--summary-plot",
@@ -287,84 +289,85 @@ def main(args):
         # matrix_extractor.dump(output_dir)
 
         # first, one figure per wilson coefficient per subcategory with all the decay channels
-        wc_scans = {}
-        for coeff in submodel_pois:
-            scans = {}
-            for category in args.categories:
-                input_dirs = [
-                    os.path.join(input_dir, d)
-                    for d in os.listdir(input_dir)
-                    if d.startswith(f"{category}{subcat_suff}-")
-                ]
-                if len(input_dirs) == 0:
-                    logger.warning(
-                        f"No input directories found for {category}{subcat_suff}"
+        if not args.twod_only:
+            wc_scans = {}
+            for coeff in submodel_pois:
+                scans = {}
+                for category in args.categories:
+                    input_dirs = [
+                        os.path.join(input_dir, d)
+                        for d in os.listdir(input_dir)
+                        if d.startswith(f"{category}{subcat_suff}-")
+                    ]
+                    if len(input_dirs) == 0:
+                        logger.warning(
+                            f"No input directories found for {category}{subcat_suff}"
+                        )
+                        continue
+                    extra_selection = None
+                    if "{}_{}_{}{}".format(args.model, submodel_name, category, subcat_suff) in oned_extra_selections:
+                        if coeff in oned_extra_selections["{}_{}_{}{}".format(args.model, submodel_name, category, subcat_suff)]:
+                            extra_selection = oned_extra_selections["{}_{}_{}{}".format(args.model, submodel_name, category, subcat_suff)][coeff]
+                    scans[category] = Scan(
+                        coeff,
+                        input_dirs,
+                        skip_best=True,
+                        file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
+                        extra_selections=extra_selection,
+                        cut_strings=cfg[model_plus_submodel_name][
+                            f"{category}{subcat_suff}"
+                        ][coeff]["cut_strings"]
+                        if model_plus_submodel_name in cfg
+                        and f"{category}{subcat_suff}" in cfg[model_plus_submodel_name]
+                        and coeff
+                        in cfg[model_plus_submodel_name][f"{category}{subcat_suff}"]
+                        else None,
+                        allow_extrapolation=False,
                     )
-                    continue
-                extra_selection = None
-                if "{}_{}_{}{}".format(args.model, submodel_name, category, subcat_suff) in oned_extra_selections:
-                    if coeff in oned_extra_selections["{}_{}_{}{}".format(args.model, submodel_name, category, subcat_suff)]:
-                        extra_selection = oned_extra_selections["{}_{}_{}{}".format(args.model, submodel_name, category, subcat_suff)][coeff]
-                scans[category] = Scan(
-                    coeff,
-                    input_dirs,
-                    skip_best=True,
-                    file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
-                    extra_selections=extra_selection,
-                    cut_strings=cfg[model_plus_submodel_name][
-                        f"{category}{subcat_suff}"
-                    ][coeff]["cut_strings"]
-                    if model_plus_submodel_name in cfg
-                    and f"{category}{subcat_suff}" in cfg[model_plus_submodel_name]
-                    and coeff
-                    in cfg[model_plus_submodel_name][f"{category}{subcat_suff}"]
-                    else None,
-                    allow_extrapolation=False,
+                if args.expected_bkg:
+                    logger.info(
+                        "We will now look for the expected of args.combination, since we run with --expected-bkg"
+                    )
+                    cat = f"{combination}_asimov"
+                    input_subdirs = [
+                        os.path.join(input_dir, d)
+                        for d in os.listdir(input_dir)
+                        if d.startswith(f"{cat}-")
+                    ]
+                    extra_selection = None
+                    if "{}_{}_{}".format(args.model, submodel_name, cat) in oned_extra_selections:
+                        if coeff in oned_extra_selections["{}_{}_{}".format(args.model, submodel_name, cat)]:
+                            extra_selection = oned_extra_selections["{}_{}_{}".format(args.model, submodel_name, cat)][coeff]
+                    scans[cat] = Scan(
+                        coeff,
+                        input_subdirs,
+                        skip_best=True,
+                        file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
+                        extra_selections=extra_selection,
+                        cut_strings = cfg[model_plus_submodel_name][
+                            f"{cat}"
+                        ][coeff]["cut_strings"] if model_plus_submodel_name in cfg and f"{cat}" in cfg[model_plus_submodel_name] and coeff in cfg[model_plus_submodel_name][f"{cat}"] else None,
+                        allow_extrapolation=False,
+                    )
+                if len(scans) > 0:
+                    fig = GenericNLLsPerPOI(
+                        coeff, scans, subcat, simple=True, plot_string=True
+                    )
+                    fig.dump(output_dir)
+                    fig = GenericNLLsPerPOI(
+                        coeff, scans, subcat, simple=True, full_range=True
+                    )
+                    fig.dump(output_dir)
+                    logger.debug("Dumping original points")
+                    for scan_name, scan in scans.items():
+                        plot_original_points(coeff, scan_name, scan, subcat, output_dir)
+                wc_scans[coeff] = scans
+            if args.summary_plot:
+                logger.info("Will now produce the summary plot")
+                summary_plot = SMEFTSummaryPlot(
+                    wc_scans,
                 )
-            if args.expected_bkg:
-                logger.info(
-                    "We will now look for the expected of args.combination, since we run with --expected-bkg"
-                )
-                cat = f"{combination}_asimov"
-                input_subdirs = [
-                    os.path.join(input_dir, d)
-                    for d in os.listdir(input_dir)
-                    if d.startswith(f"{cat}-")
-                ]
-                extra_selection = None
-                if "{}_{}_{}".format(args.model, submodel_name, cat) in oned_extra_selections:
-                    if coeff in oned_extra_selections["{}_{}_{}".format(args.model, submodel_name, cat)]:
-                        extra_selection = oned_extra_selections["{}_{}_{}".format(args.model, submodel_name, cat)][coeff]
-                scans[cat] = Scan(
-                    coeff,
-                    input_subdirs,
-                    skip_best=True,
-                    file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
-                    extra_selections=extra_selection,
-                    cut_strings = cfg[model_plus_submodel_name][
-                        f"{cat}"
-                    ][coeff]["cut_strings"] if model_plus_submodel_name in cfg and f"{cat}" in cfg[model_plus_submodel_name] and coeff in cfg[model_plus_submodel_name][f"{cat}"] else None,
-                    allow_extrapolation=False,
-                )
-            if len(scans) > 0:
-                fig = GenericNLLsPerPOI(
-                    coeff, scans, subcat, simple=True, plot_string=True
-                )
-                fig.dump(output_dir)
-                fig = GenericNLLsPerPOI(
-                    coeff, scans, subcat, simple=True, full_range=True
-                )
-                fig.dump(output_dir)
-                logger.debug("Dumping original points")
-                for scan_name, scan in scans.items():
-                    plot_original_points(coeff, scan_name, scan, subcat, output_dir)
-            wc_scans[coeff] = scans
-        if args.summary_plot:
-            logger.info("Will now produce the summary plot")
-            summary_plot = SMEFTSummaryPlot(
-                wc_scans,
-            )
-            summary_plot.dump(output_dir)
+                summary_plot.dump(output_dir)
 
         # then, 2D plots
         if not args.skip_2d and args.coefficients is None:

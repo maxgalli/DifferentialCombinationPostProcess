@@ -554,6 +554,7 @@ class DiffXSsPerObservable(Figure):
                 "HZZ": -0.2,
                 "HWW": 0,
                 "Htt": -0.4,
+                "HttOriginal": -0.4,
                 "Hbb": -0.2,
                 "HbbVBF": 0.2,
                 "HttBoost": -0.2,

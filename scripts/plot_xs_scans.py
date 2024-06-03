@@ -140,6 +140,13 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--align-statonly",
+        action="store_true",
+        default=False,
+        help="Whether or not aligning the statonly scans to the nominal one",
+    )
+
+    parser.add_argument(
         "--kappa-prediction",
         type=str,
         required=False,
@@ -210,6 +217,12 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
         logging.debug(f"Just appended shape {shapes[-1]}")
 
     return shapes
+
+oned_extra_selection = {
+    "smH_PTH_FinalComb_statonly": {
+        "r_smH_PTH_20_25": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.3, pois_values_original < 0.55)
+    }
+}
 
 
 def main(args):
@@ -305,6 +318,28 @@ def main(args):
                 f"{input_dir}/{directory}" for directory in categories_numbers
             ]
 
+            spectrum_align_to = None
+            pois_align_to = None
+            if args.align_statonly and "statonly" in sub_cat:
+                if "asimov" in sub_cat:
+                    align_to = asimov_cat
+                else:
+                    align_to = category
+                spectrum_align_to = sub_cat_spectra[align_to]
+                pois_align_to = pois
+            if "align_to" in cfg[sub_cat] and "statonly" in sub_cat:
+                if "asimov" in sub_cat:
+                    align_to = asimov_cat
+                else:
+                    align_to = category
+                spectrum_align_to = sub_cat_spectra[align_to]
+                pois_align_to = cfg[sub_cat]["align_to"]
+
+            extra_selections = None
+            key = f"{observable}_{sub_cat}"
+            if key in oned_extra_selection:
+                extra_selections = oned_extra_selection[key]
+
             diff_spectrum = DifferentialSpectrum(
                 observable,
                 sub_cat,
@@ -320,6 +355,8 @@ def main(args):
                 if sub_cat in cfg
                 else None,
                 allow_extrapolation=args.allow_extrapolation,
+                align_to=(spectrum_align_to, pois_align_to),
+                extra_selections=extra_selections,
             )
 
             sub_cat_spectra[sub_cat] = diff_spectrum

@@ -41,6 +41,8 @@ class DifferentialSpectrum:
         file_name_tmpl=None,
         cut_strings=None,
         allow_extrapolation=True,
+        align_to=(None, None),
+        extra_selections=None,
     ):
         logger.info(
             "Building a DifferentialSpectrum for variable {} and category {} with the following POIs {}".format(
@@ -52,18 +54,32 @@ class DifferentialSpectrum:
         self.category = category
         self.scans = {}
         self.from_singles = from_singles
+        align_to, pois_align_to = align_to
         if cut_strings is None:
             cut_strings = {}
         for poi in pois:
             try:
+                align_to_scan = None
+                if align_to is not None:
+                    if poi in pois_align_to:
+                        align_to_scan = align_to.scans[poi]
+                es = None
+                if extra_selections is not None:
+                    if poi in extra_selections:
+                        logger.info(
+                            f"Extra selections for POI {poi}: {extra_selections[poi]}"
+                        )
+                        es = extra_selections[poi]
                 which_scan = ScanSingles if from_singles else Scan
                 self.scans[poi] = which_scan(
                     poi,
                     input_dirs,
                     skip_best=skip_best,
                     file_name_tmpl=file_name_tmpl,
+                    extra_selections=es,
                     cut_strings=cut_strings[poi] if poi in cut_strings else None,
                     allow_extrapolation=allow_extrapolation,
+                    align_to=align_to_scan,
                 )
             # this is the case in which there are no scans for poi in input_dir, but we are looking
             # for them anyways because the list of pois is taken from the metadata
@@ -89,6 +105,7 @@ class Scan:
         extra_selections=None,
         cut_strings=None,
         allow_extrapolation=True,
+        align_to=None,
     ):
         if cut_strings is None:
             cut_strings = []
@@ -247,10 +264,19 @@ class Scan:
 
         self.check_points_and_compute_all_uncertainties()
 
+        if align_to is not None:
+            logger.info(
+                f"Aligning {self.poi} scan to {align_to.poi} scan with minimum at {align_to.minimum[0]}"
+            )
+            dff = align_to.minimum[0] - self.minimum[0]
+            self.original_points[0] += dff
+            self.interpolated_points[0] += dff
+            self.check_points_and_compute_all_uncertainties()
+
         # If up68 or down68 are 0, it means that NLL does not cross 1.0 at all
         # In this case we repeat the interpolation procedure in a wider range with UnivariateSpline
-        #if (self.up68_unc[0] == 0 or self.down68_unc[0] == 0) and self.allow_extrapolation:
-        if (self.up95_unc[0] == 0 or self.down95_unc[0] == 0) and self.allow_extrapolation:
+        if (self.up68_unc[0] == 0 or self.down68_unc[0] == 0) and self.allow_extrapolation:
+        #if (self.up95_unc[0] == 0 or self.down95_unc[0] == 0) and self.allow_extrapolation:
             logger.warning(
                 "NLL does not cross 1.0 at all. Will try to interpolate with a wider range"
             )
@@ -505,8 +531,10 @@ class ScanSingles:
         input_dirs,
         skip_best=False,
         file_name_tmpl=None,
+        extra_selections=None,
         cut_strings=None,
         allow_extrapolation=True,
+        align_to=None,
     ):  # skip_best is useless here, but to keep the interface the same
         self.file_name_tmpl = "higgsCombine_SINGLES_{}".format(poi)
         self.tree_name = "limit"
@@ -612,6 +640,12 @@ class Scan2D:
             z = z[mask]
             mask = ~np.logical_and(
                 np.logical_and(x > -2.2, x < -1.2), np.logical_and(y > -11, y < -7)
+            )
+            x = x[mask]
+            y = y[mask]
+            z = z[mask]
+            mask = ~np.logical_and(
+                np.logical_and(x > -3, x < -2), np.logical_and(y > 0, y < 4)
             )
             x = x[mask]
             y = y[mask]
