@@ -327,13 +327,14 @@ def main(args):
                     align_to = category
                 spectrum_align_to = sub_cat_spectra[align_to]
                 pois_align_to = pois
-            if "align_to" in cfg[sub_cat] and "statonly" in sub_cat:
-                if "asimov" in sub_cat:
-                    align_to = asimov_cat
-                else:
-                    align_to = category
-                spectrum_align_to = sub_cat_spectra[align_to]
-                pois_align_to = cfg[sub_cat]["align_to"]
+            if sub_cat in cfg:
+                if "align_to" in cfg[sub_cat] and "statonly" in sub_cat:
+                    if "asimov" in sub_cat:
+                        align_to = asimov_cat
+                    else:
+                        align_to = category
+                    spectrum_align_to = sub_cat_spectra[align_to]
+                    pois_align_to = cfg[sub_cat]["align_to"]
 
             extra_selections = None
             key = f"{observable}_{sub_cat}"
