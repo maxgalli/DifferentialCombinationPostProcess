@@ -161,6 +161,29 @@ class ObservableShape:
 
         return string
 
+    def get_ratio_shapes(self, other):
+        if self.observable != other.observable or self.edges != other.edges:
+            raise ValueError("Shapes are not compatible")
+
+        self_unc_up = np.abs(self.xs_up_over_bin_width - self.xs_over_bin_width)
+        self_unc_down = np.abs(self.xs_down_over_bin_width - self.xs_over_bin_width)
+        other_unc_up = np.abs(other.xs_up_over_bin_width - other.xs_over_bin_width)
+        other_unc_down = np.abs(other.xs_down_over_bin_width - other.xs_over_bin_width)
+
+        ratio = self.xs_over_bin_width / other.xs_over_bin_width
+        ratio_unc_up = np.sqrt(
+            (self_unc_up / self.xs_over_bin_width) ** 2
+            + (other_unc_up / other.xs_over_bin_width) ** 2
+        ) * ratio
+        ratio_up = ratio + ratio_unc_up
+        ratio_unc_down = np.sqrt(
+            (self_unc_down / self.xs_over_bin_width) ** 2
+            + (other_unc_down / other.xs_over_bin_width) ** 2
+        ) * ratio
+        ratio_down = ratio - ratio_unc_down
+
+        return ratio, ratio_up, ratio_down
+
 
 class ObservableShapeSM(ObservableShape):
     """
@@ -313,15 +336,16 @@ class ObservableShapeFitted(ObservableShape):
             label=category_specs[self.category]["plot_label"],
         )
 
-        ratio_xs_over_bin_width = (
-            self.xs_over_bin_width / prediction_shape.xs_over_bin_width
-        )
-        ratio_xs_up_over_bin_width = (
-            self.xs_up_over_bin_width / prediction_shape.xs_up_over_bin_width
-        )
-        ratio_xs_down_over_bin_width = (
-            self.xs_down_over_bin_width / prediction_shape.xs_down_over_bin_width
-        )
+        #ratio_xs_over_bin_width = (
+        #    self.xs_over_bin_width / prediction_shape.xs_over_bin_width
+        #)
+        #ratio_xs_up_over_bin_width = (
+        #    self.xs_up_over_bin_width / prediction_shape.xs_up_over_bin_width
+        #)
+        #ratio_xs_down_over_bin_width = (
+        #    self.xs_down_over_bin_width / prediction_shape.xs_down_over_bin_width
+        #)
+        ratio_xs_over_bin_width, ratio_xs_up_over_bin_width, ratio_xs_down_over_bin_width = self.get_ratio_shapes(prediction_shape)
         rax.errorbar(
             self.fake_maybe_moved_centers,
             ratio_xs_over_bin_width,
@@ -387,15 +411,16 @@ class ObservableShapeFitted(ObservableShape):
         # Ratio plot
         # This needs to be understood: in the case of up and down, should I divide by the nominal prediction
         # or by the nominal prediction + the up and down variations?
-        ratio_xs_over_bin_width = (
-            self.xs_over_bin_width / prediction_shape.xs_over_bin_width
-        )
-        ratio_xs_up_over_bin_width = (
-            self.xs_up_over_bin_width / prediction_shape.xs_over_bin_width
-        )
-        ratio_xs_down_over_bin_width = (
-            self.xs_down_over_bin_width / prediction_shape.xs_over_bin_width
-        )
+        #ratio_xs_over_bin_width = (
+        #    self.xs_over_bin_width / prediction_shape.xs_over_bin_width
+        #)
+        #ratio_xs_up_over_bin_width = (
+        #    self.xs_up_over_bin_width / prediction_shape.xs_over_bin_width
+        #)
+        #ratio_xs_down_over_bin_width = (
+        #    self.xs_down_over_bin_width / prediction_shape.xs_over_bin_width
+        #)
+        ratio_xs_over_bin_width, ratio_xs_up_over_bin_width, ratio_xs_down_over_bin_width = self.get_ratio_shapes(prediction_shape)
 
         if any(ratio_xs_down_over_bin_width > ratio_xs_over_bin_width):
             logger.warning("Ratio down is larger than ratio nominal!")
