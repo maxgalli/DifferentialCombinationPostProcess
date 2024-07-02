@@ -465,25 +465,26 @@ class ObservableShapeFitted(ObservableShape):
         #    other.xs[5] = self.xs[0]
 
         # subtract relative uncertainties in quadrature
-        rel_unc_up = np.abs(self.xs_up - self.xs) / self.xs
-        rel_unc_down = np.abs(self.xs_down - self.xs) / self.xs
-        rel_unc_up_other = np.abs(other.xs_up - other.xs) / other.xs
-        rel_unc_down_other = np.abs(other.xs_down - other.xs) / other.xs
+        abs_unc_up = np.abs(self.xs_up - self.xs)
+        abs_unc_down = np.abs(self.xs_down - self.xs)
+        abs_unc_up_other = np.abs(other.xs_up - other.xs)
+        abs_unc_down_other = np.abs(other.xs_down - other.xs)
         
-        new_xs_up = np.sqrt(rel_unc_up ** 2 - rel_unc_up_other ** 2) * self.xs
+        #new_xs_up = np.sqrt(rel_unc_up ** 2 - rel_unc_up_other ** 2) * self.xs
+        new_xs_unc_up = np.sqrt(abs_unc_up ** 2 - abs_unc_up_other ** 2)
         # assign 0 where nan
-        new_xs_up = np.nan_to_num(new_xs_up)
-        new_xs_down = np.sqrt(rel_unc_down ** 2 - rel_unc_down_other ** 2) * self.xs
+        new_xs_unc_up = np.nan_to_num(new_xs_unc_up)
+        new_xs_unc_down = np.sqrt(abs_unc_down ** 2 - abs_unc_down_other ** 2)
         # assign 0 where nan
-        new_xs_down = np.nan_to_num(new_xs_down)
+        new_xs_unc_down = np.nan_to_num(new_xs_unc_down)
 
         return ObservableShapeFitted(
             self.observable,
             self.category,
             self.edges,
             self.xs,
-            self.xs + new_xs_up,
-            self.xs - new_xs_down, 
+            self.xs + new_xs_unc_up,
+            self.xs - new_xs_unc_down, 
             self.overflow,
         )
 
@@ -587,6 +588,9 @@ smH_PTH_HggHZZHWWHttHbbVBF_obs_shape.rebin(
 smH_PTH_FinalComb_obs_shape = deepcopy(smH_PTH_Hgg_obs_shape)
 smH_PTH_FinalComb_obs_shape.category = "FinalComb"
 smH_PTH_FinalComb_obs_shape.rebin(analyses_edges["smH_PTH"]["FinalComb"])
+smH_PTH_FinalComb2_obs_shape = deepcopy(smH_PTH_Hgg_obs_shape)
+smH_PTH_FinalComb2_obs_shape.category = "FinalComb2"
+smH_PTH_FinalComb2_obs_shape.rebin(analyses_edges["smH_PTH"]["FinalComb2"])
 
 
 Njets_Hgg_obs_shape = ObservableShapeSM(
