@@ -220,7 +220,16 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
 
 oned_extra_selection = {
     "smH_PTH_FinalComb_statonly": {
+        #"r_smH_PTH_0_5": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.1, pois_values_original < 0.4),
         "r_smH_PTH_20_25": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.3, pois_values_original < 0.55)
+    },
+    "smH_PTH_FinalComb2": {
+        #"r_smH_PTH_0_5": lambda pois_values_original: ~np.logical_and(pois_values_original > 0., pois_values_original < 0.4),
+        #"r_smH_PTH_20_25": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.3, pois_values_original < 0.55)
+    },
+    "smH_PTH_FinalComb2_statonly": {
+        #"r_smH_PTH_0_5": lambda pois_values_original: ~np.logical_and(pois_values_original > 0., pois_values_original < 0.4),
+        #"r_smH_PTH_20_25": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.3, pois_values_original < 0.55)
     }
 }
 
@@ -236,8 +245,8 @@ def main(args):
     metadata_dir = args.metadata_dir
     output_dir = args.output_dir
     categories = args.categories
-    if len(categories) == 1 and categories[0] == "FinalComb":
-        logger.info("Updating SM shapes since the only category is FinalComb")
+    if len(categories) == 1 and categories[0] in ["FinalComb", "FinalComb2"]:
+        logger.info("Updating SM shapes since the only category is FinalComb or FinalComb2")
         from differential_combination_postprocess.shapes import smH_PTH_Hgg_obs_shape, smH_PTH_Hgg_obs_shape_noNNLOPS, smH_PTH_Hgg_obs_shape_powheg
         sm_shapes["smH_PTH"] = smH_PTH_Hgg_obs_shape
         sm_shapes_noNNLOPS["smH_PTH"] = smH_PTH_Hgg_obs_shape_noNNLOPS

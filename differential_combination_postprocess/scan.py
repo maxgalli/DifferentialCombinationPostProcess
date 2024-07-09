@@ -650,7 +650,27 @@ class Scan2D:
             x = x[mask]
             y = y[mask]
             z = z[mask]
-       
+        if specs_name == "top_floatingBR_ctcb_HggHZZHttHttBoost":
+            logger.info("Applying extra selections for top_floatingBR_ctcb_HggHZZHttHttBoost")
+            mask = ~np.logical_and(
+                np.logical_and(x > -4, x < -2), np.logical_and(y > 3, y < 7)
+            )
+            x = x[mask]
+            y = y[mask]
+            z = z[mask]
+            mask = ~np.logical_and(
+                np.logical_and(x > 1, x < 3), np.logical_and(y > -3, y < 0)
+            )
+            x = x[mask]
+            y = y[mask]
+            z = z[mask]
+            mask = ~np.logical_and(
+                np.logical_and(x > -2.2, x < 1.4), np.logical_and(y > 11, y < 12)
+            )
+            x = x[mask]
+            y = y[mask]
+            z = z[mask]
+     
         # Sanity check: min and max of x and y of the found files
         logger.debug(f"Sanity check: min x: {min(x)}, max x: {max(x)}")
         logger.debug(f"Sanity check: min y: {min(y)}, max y: {max(y)}")
@@ -717,7 +737,9 @@ class Scan2D:
         self.z_int[1] -= self.z_int.min()
 
         # smooth the z_int
-        self.z_int = gaussian_filter(self.z_int, sigma=5.0)
+        if specs_name in ["top_floatingBR_ctcb_HggHZZHttHttBoost", "top_floatingBR_ctcg_HggHZZHttHttBoost"]:
+            logger.info("Smoothing the z_int as requested by specs_name {}".format(specs_name))
+            self.z_int = gaussian_filter(self.z_int, sigma=5.0)
 
     def plot_as_heatmap(self, ax):
         colormap = custom_colormap("Purples")

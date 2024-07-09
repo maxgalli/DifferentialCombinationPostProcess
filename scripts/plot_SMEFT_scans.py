@@ -161,6 +161,22 @@ oned_extra_selections = {
         "cll1": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.1, pois_values_original < 0.5),
         "ctgre": lambda pois_values_original: ~np.logical_and(pois_values_original > -0.1, pois_values_original < -0.05),
         "cuhre": lambda pois_values_original: ~np.logical_and(pois_values_original > 6, pois_values_original < 15),
+    },
+    "230620PruneNoCP_PtFullComb2": {
+        "cbwre": lambda pois_values_original: ~np.logical_or(
+            #np.logical_and(pois_values_original > -5, pois_values_original < -4),
+            np.logical_and(pois_values_original > -5, pois_values_original < -1.5),
+            np.logical_and(pois_values_original > 0.5, pois_values_original < 2.5)
+        ),
+        "cehim": lambda pois_values_original: ~np.logical_and(pois_values_original > 5, pois_values_original < 7),
+        "chbox": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.3, pois_values_original < 0.7),
+        "cht": lambda pois_values_original: ~np.logical_and(pois_values_original > 40, pois_values_original < 80),
+        "chw": lambda pois_values_original: ~np.logical_and(pois_values_original > -0.009, pois_values_original < -0.003),
+        "chwb": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.001, pois_values_original < 0.006),
+        "ctgre": lambda pois_values_original: ~np.logical_and(pois_values_original > -0.1, pois_values_original < -0.05),
+        "chg": lambda pois_values_original: ~np.logical_and(pois_values_original > 0.0035, pois_values_original < 0.0065),
+        "chl3": lambda pois_values_original: ~np.logical_and(pois_values_original > -0.35, pois_values_original < -0.05),
+        "chq1": lambda pois_values_original: ~np.logical_and(pois_values_original > 3, pois_values_original < 5),
     }
 }
 

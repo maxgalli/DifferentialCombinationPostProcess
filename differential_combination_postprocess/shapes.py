@@ -585,6 +585,14 @@ smH_PTH_HggHZZHWWHttHbbVBF_obs_shape.rebin(
     analyses_edges["smH_PTH"]["HggHZZHWWHttHbbVBF"]
 )
 
+smH_PTH_EvenMoreMaximumGranularity4Bkg_obs_shape = deepcopy(
+    smH_PTH_EvenMoreMaximumGranularity_obs_shape
+)
+smH_PTH_EvenMoreMaximumGranularity4Bkg_obs_shape.category = "EvenMoreMaximumGranularity4Bkg"
+smH_PTH_EvenMoreMaximumGranularity4Bkg_obs_shape.rebin(
+    analyses_edges["smH_PTH"]["EvenMoreMaximumGranularity4Bkg"]
+)
+
 smH_PTH_FinalComb_obs_shape = deepcopy(smH_PTH_Hgg_obs_shape)
 smH_PTH_FinalComb_obs_shape.category = "FinalComb"
 smH_PTH_FinalComb_obs_shape.rebin(analyses_edges["smH_PTH"]["FinalComb"])
@@ -691,6 +699,13 @@ smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_noNNLOPS.rebin(
     analyses_edges["smH_PTH"]["HggHZZHWWHttHbbVBF"]
 )
 
+smH_PTH_EvenMoreMaximumGranularity4Bkg_obs_shape_noNNLOPS = deepcopy(
+    smH_PTH_EvenMoreMaximumGranularity_obs_shape_noNNLOPS
+)
+smH_PTH_EvenMoreMaximumGranularity4Bkg_obs_shape_noNNLOPS.rebin(
+    analyses_edges["smH_PTH"]["EvenMoreMaximumGranularity4Bkg"]
+)
+
 Njets_Hgg_obs_shape_noNNLOPS = ObservableShapeSM(
     "Njets",
     "Hgg",
@@ -778,6 +793,12 @@ smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_powheg = deepcopy(
 smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_powheg.rebin(
     analyses_edges["smH_PTH"]["HggHZZHWWHttHbbVBF"]
 )
+smH_PTH_EvenMoreMaximumGranularity4Bkg_obs_shape_powheg = deepcopy(
+    smH_PTH_EvenMoreMaximumGranularity_obs_shape_powheg
+)
+smH_PTH_EvenMoreMaximumGranularity4Bkg_obs_shape_powheg.rebin(
+    analyses_edges["smH_PTH"]["EvenMoreMaximumGranularity4Bkg"]
+)
 
 Njets_Hgg_obs_shape_powheg = ObservableShapeSM(
     "Njets",
@@ -846,7 +867,7 @@ TauCJ_Hgg_obs_shape_powheg = ObservableShapeSM(
 # It is assumed that the SM shapes are the ones with the finest binning, i.e. Hgg
 # if something different will come up, we'll change it
 sm_shapes = {
-    "smH_PTH": smH_PTH_HggHZZHWWHttHbbVBF_obs_shape,
+    "smH_PTH": smH_PTH_EvenMoreMaximumGranularity4Bkg_obs_shape,
     #"smH_PTH": smH_PTH_Hgg_obs_shape,
     "Njets": Njets_Hgg_obs_shape,
     "yH": yH_Granular_obs_shape,
@@ -857,7 +878,7 @@ sm_shapes = {
 }
 
 sm_shapes_noNNLOPS = {
-    "smH_PTH": smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_noNNLOPS,
+    "smH_PTH": smH_PTH_EvenMoreMaximumGranularity4Bkg_obs_shape_noNNLOPS,
     #"smH_PTH": smH_PTH_Hgg_obs_shape_noNNLOPS,
     "Njets": Njets_Hgg_obs_shape_noNNLOPS,
     "yH": yH_Granular_obs_shape_noNNLOPS,
@@ -868,7 +889,7 @@ sm_shapes_noNNLOPS = {
 }
 
 sm_shapes_powheg = {
-    "smH_PTH": smH_PTH_HggHZZHWWHttHbbVBF_obs_shape_powheg,
+    "smH_PTH": smH_PTH_EvenMoreMaximumGranularity4Bkg_obs_shape_powheg,
     #"smH_PTH": smH_PTH_Hgg_obs_shape_powheg,
     "Njets": Njets_Hgg_obs_shape_powheg,
     "yH": yH_Granular_obs_shape_powheg,

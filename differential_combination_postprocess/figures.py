@@ -550,6 +550,7 @@ class DiffXSsPerObservable(Figure):
                 "HggHZZHWWHttHbbVBF": 0,
                 "HggHZZHWWHttHbbVBFHttBoost": 0,
                 "FinalComb": 0,
+                "FinalComb2": 0,
                 "Hgg": 0.2,
                 "HZZ": -0.2,
                 "HWW": 0,

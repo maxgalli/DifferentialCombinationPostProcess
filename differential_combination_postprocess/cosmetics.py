@@ -95,12 +95,22 @@ category_specs = {
         "color": "black",
         "marker": "o",
     },
+    "HggHZZHttHttBoost": {
+        "plot_label": "Combination",
+        "color": "black",
+        "marker": "o",
+    },
     "HggHZZHWWHttHbbVBFHttBoost": {
         "plot_label": "Combination",
         "color": "black",
         "marker": "o",
     },
     "FinalComb": {
+        "plot_label": "Combination",
+        "color": "black",
+        "marker": "o",
+    },
+    "FinalComb2": {
         "plot_label": "Combination",
         "color": "black",
         "marker": "o",
@@ -123,6 +133,8 @@ category_specs = {
     # SMEFT
     "PtFullComb": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "PtFullComb_asimov": {"plot_label": "Combination expected", "color": "red", "marker": "o"},
+    "PtFullComb2": {"plot_label": "Combination", "color": "black", "marker": "o"},
+    "PtFullComb2_asimov": {"plot_label": "Combination expected", "color": "red", "marker": "o"},
     "ChanObs4": {"plot_label": "Combination", "color": "black", "marker": "o"},
     "PtHgg": {
         "plot_label": "H $\longrightarrow\\gamma\\gamma$",
