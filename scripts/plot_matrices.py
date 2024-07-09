@@ -38,6 +38,8 @@ def parse_arguments():
         help="Observable, mostly used for signal strength measurements; plot the observable name on the y axis",
     )
 
+    parser.add_argument("--exclude", nargs="+", type=str, default=[], help="")
+
     parser.add_argument("--debug", action="store_true", help="Print debug messages")
 
     return parser.parse_args()
@@ -59,6 +61,7 @@ def main(args):
         me.extract_from_roofitresult(args.rfr_file, "fit_mdf")
     if args.robusthesse_file:
         me.extract_from_robusthesse(args.robusthesse_file)
+    me.exclude(args.exclude)
     me.dump(args.output_dir, args.suffix, observable=args.observable)
 
 

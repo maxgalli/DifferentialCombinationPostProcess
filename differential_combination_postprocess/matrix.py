@@ -26,6 +26,20 @@ class MatricesExtractor:
         self.rfr_coefficients_indices = {}
         self.hessian_coefficients_indices = {}
 
+    def exclude(self, coefficients_to_exclude):
+        logger.info(f"Excluding coefficients: {coefficients_to_exclude}")
+        to_exclude_indices = [
+            self.coefficients.index(c) for c in coefficients_to_exclude
+        ]
+        self.coefficients = [
+            c for c in self.coefficients if c not in coefficients_to_exclude
+        ]
+        for matrix_name, matrix in self.matrices.items():
+            self.matrices[matrix_name] = np.delete(matrix, to_exclude_indices, axis=0)
+            self.matrices[matrix_name] = np.delete(
+                self.matrices[matrix_name], to_exclude_indices, axis=1
+            )
+
     def root_to_numpy_matrix(self, root_matrix, indices):
         list_of_lists = []
         for i in indices:
