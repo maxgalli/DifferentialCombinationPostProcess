@@ -14,32 +14,32 @@ fit_type_colors = ["red", "green", "blue", "purple"]
 
 observable_specs = {
     "smH_PTH": {
-        "x_plot_label": "$p_{T}^{H}$ [GeV]",
-        "y_plot_label": "$\\Delta\\sigma\ / \Delta p_{T}^{H}$ [fb/GeV]",
+        "x_plot_label": "$p_{T}^{H}$ (GeV)",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta p_{T}^{H}$ (fb/GeV)",
     },
     "Njets": {
         "x_plot_label": "$N_{jets}$",
-        "y_plot_label": "$\\Delta\\sigma\ / \Delta N_{jets}$ [fb]",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta N_{jets}$ (fb)",
     },
     "yH": {
         "x_plot_label": "$y_{H}$",
-        "y_plot_label": "$\\Delta\\sigma\ / \Delta y_{H}$ [fb]",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta y_{H}$ (fb)",
     },
     "smH_PTJ0": {
-        "x_plot_label": "$p_{T}^{jet}$ [GeV]",
-        "y_plot_label": "$\\Delta\\sigma\ / \Delta p_{T}^{jet}$ [fb/GeV]",
+        "x_plot_label": "$p_{T}^{jet}$ (GeV)",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta p_{T}^{jet}$ (fb/GeV)",
     },
     "mjj": {
-        "x_plot_label": "$m_{jj}$ [GeV]",
-        "y_plot_label": "$\\Delta\\sigma\ / \Delta m_{jj}$ [fb/GeV]",
+        "x_plot_label": "$m_{jj}$ (GeV)",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta m_{jj}$ (fb/GeV)",
     },
     "DEtajj": {
         "x_plot_label": "$\\Delta\\eta_{jj}$",
-        "y_plot_label": "$\\Delta\\sigma\ / \\Delta\\eta_{jj}$ [fb]",
+        "y_plot_label": "$\\Delta\\sigma\ / \\Delta\\eta_{jj}$ (fb)",
     },
     "TauCJ": {
-        "x_plot_label": "$\\tau_{C}^{j}$ [GeV]",
-        "y_plot_label": "$\\Delta\\sigma\ / \Delta \\tau_{C}^{j}$ [fb/GeV]",
+        "x_plot_label": "$\\tau_{C}^{j}$ (GeV)",
+        "y_plot_label": "$\\Delta\\sigma\ / \Delta \\tau_{C}^{j}$ (fb/GeV)",
     },
 }
 
