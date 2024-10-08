@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 import os
 from itertools import combinations
+import pickle as pkl
 
 # Needed to fix the fucking
 # _tkinter.TclError: couldn't connect to display "localhost:12.0"
@@ -18,7 +19,9 @@ from differential_combination_postprocess.scan import Scan, Scan2D
 from differential_combination_postprocess.figures import (
     GenericNLLsPerPOI,
     TwoDScansPerModel,
-    SMEFTSummaryPlot
+    SMEFTSummaryPlot,
+    SMEFTSummaryPlotLambda,
+    SMEFTSummaryPlotLambdaAlone
 )
 from differential_combination_postprocess.matrix import MatricesExtractor
 
@@ -103,6 +106,20 @@ def parse_arguments():
         action="store_true",
         help="Produce a summary plot with all the 1D scans",
         default=False,
+    )
+
+    parser.add_argument(
+        "--save-pkl",
+        action="store_true",
+        default=False,
+        help="Save the scans in a pkl file",
+    )
+
+    parser.add_argument(
+        "--freezeothers-lambda-plot",
+        action="store_true",
+        default=False,
+        help="Make the weird plot asked by Maurizio for individual scans and energy scale",
     )
 
     parser.add_argument("--debug", action="store_true", help="Print debug messages")
@@ -192,6 +209,48 @@ def main(args):
     input_dir = os.path.join(args.input_dir, args.model)
     output_dir = os.path.join(args.output_dir, args.model)
 
+    if args.freezeothers_lambda_plot:
+        output_dir = os.path.join(output_dir, "freezeothers")
+        os.makedirs(output_dir, exist_ok=True)
+        logger.info("Will run the freezeothers lambda plot from a file called scans.pkl")
+        with open("scans.pkl", "rb") as f:
+            scans = pkl.load(f)
+        for wc, dct in scans.items():
+            for cat, scan in dct.items():
+                if wc == "cbwim" and cat == "PtFullComb2":
+                    scan.check_points_and_compute_all_uncertainties(np.array([-6.0, 0.0]))
+                if wc == "cbhre" and cat == "PtFullComb2_asimov":
+                    scan.check_points_and_compute_all_uncertainties(np.array([0.0, 0.0]))
+                if wc == "ctbre" and cat == "PtFullComb2_asimov":
+                    scan.check_points_and_compute_all_uncertainties(np.array([0.0, 0.0]))
+                if wc == "chb" and cat == "PtFullComb2":
+                    scan.check_points_and_compute_all_uncertainties(np.array([0.0, 0.0]))
+                if wc == "cw":
+                    scan.check_points_and_compute_all_uncertainties(np.array([0.0, 0.0]))
+                if wc == "cehim":
+                    #scan.minimum[0] = 0
+                    scan.check_points_and_compute_all_uncertainties(np.array([0.0, 0.0]))
+                    scan.down95[0][0] = -9
+                    scan.down95_unc = [-9]
+                    scan.up95[0][0] = 9
+                    scan.up95_unc = [9]
+                if wc == "cbwim" and cat == "PtFullComb2":
+                    #scan.minimum[0] = 0
+                    #scan.up95[0][0] = 8.4
+                    scan.check_points_and_compute_all_uncertainties(np.array([-5.5, 0.0]))
+                    scan.minimum[0] = -5.5
+                    scan.up95[0][0] = 7.5
+                    scan.up95_unc = [14]
+                scans[wc][cat] = scan
+        fig = SMEFTSummaryPlotLambdaAlone(scans, order_by_order=True)
+        fig.dump(output_dir)
+        fig = SMEFTSummaryPlot(scans, order_by_order=True)
+        fig.dump(output_dir)
+        fig = SMEFTSummaryPlotLambda(scans, order_by_order=True)
+        fig.dump(output_dir)
+        # exit
+        return
+
     subcat = "observed"
     subcat_suff = ""
     if args.expected:
@@ -219,9 +278,19 @@ def main(args):
         logger.info(
             f"Will plot 1D scans for the following Wilson coefficients: {wilson_coefficients}"
         )
+        
+        # open pickle file
+        scans_to_save = {}
+        if args.save_pkl:
+            try:
+                with open("scans.pkl", "rb") as f:
+                    scans_to_save = pkl.load(f)
+            except FileNotFoundError:
+                logger.warning("No scans.pkl file found, will create a new one")
 
         for coeff in wilson_coefficients:
             input_dir_l = os.path.join(input_dir, f"FreezeOthers_{coeff}")
+            
             scans = {}
             for category in args.categories:
                 input_dirs = [
@@ -262,6 +331,11 @@ def main(args):
                         skip_best=True,
                         allow_extrapolation=True,
                     )
+                scans_to_save[coeff] = scans
+
+            if args.save_pkl:
+                with open("scans.pkl", "wb") as f:
+                    pkl.dump(scans_to_save, f)
 
             if len(scans) > 0:
                 fig = GenericNLLsPerPOI(
@@ -384,6 +458,14 @@ def main(args):
                     wc_scans,
                 )
                 summary_plot.dump(output_dir)
+                summary_plot_lambda_alone = SMEFTSummaryPlotLambdaAlone(
+                    wc_scans,
+                )
+                summary_plot_lambda_alone.dump(output_dir)
+                summary_plot_lambda = SMEFTSummaryPlotLambda(
+                    wc_scans,
+                )
+                summary_plot_lambda.dump(output_dir) 
 
         # then, 2D plots
         if not args.skip_2d and args.coefficients is None:
@@ -449,6 +531,10 @@ def main(args):
                         )
                         expected_combination_scan.category = combination
 
+                    legend_conf = {
+                        "loc": "upper left", 
+                        "prop": {"size": 20}
+                    }
                     fig = TwoDScansPerModel(
                         scan_dict=scans,
                         combination_name=f"{combination}_asimov"
@@ -459,6 +545,8 @@ def main(args):
                         output_name=f"2D_{pair[0]}-{pair[1]}_{'_'.join(args.categories)}{subcat_suff}{'_expected_bkg' if args.expected_bkg else ''}",
                         is_asimov=True if "asimov" in subcat_suff else False,
                         force_limit=args.force_2D_limit,
+                        legend_conf=legend_conf,
+                        heatmap_style=False
                     )
                     fig.dump(output_dir)
 

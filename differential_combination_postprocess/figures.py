@@ -1,9 +1,17 @@
 from matplotlib import figure
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import mplhep as hep
 
+# for the stupid label ROOT style
+hep.cms.style.CMS["legend.fancybox"] = True
+hep.cms.style.CMS["legend.facecolor"] = "white"
+hep.cms.style.CMS["legend.edgecolor"] = "black"
+hep.cms.style.CMS["legend.framealpha"] = 1
+hep.cms.style.CMS["legend.frameon"] = True
 hep.style.use("CMS")
+
 from itertools import cycle
 from copy import deepcopy
 
@@ -165,7 +173,7 @@ class GenericNLLsPerPOI(Figure):
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 16}, ncol=4)
-        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.ax)
 
 
 class TwoScans(Figure):
@@ -230,7 +238,7 @@ class TwoScans(Figure):
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 16}, ncol=4)
-        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.ax)
 
 
 class ScanChiSquare(Figure):
@@ -271,7 +279,7 @@ class ScanChiSquare(Figure):
         # Legend
         self.ax.legend(loc="upper left", prop={"size": 16}, ncol=4)
         self.ax2.legend(loc="upper right", prop={"size": 16}, ncol=4)
-        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.ax)
 
 
 class XSNLLsPerPOI:
@@ -334,7 +342,7 @@ class XSNLLsPerPOI:
 
             # Legend
             ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-            hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=ax)
+            hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=ax)
 
             self.figures.append((fig, ax, output_name))
 
@@ -377,7 +385,7 @@ class XSNLLsPerPOI_Full(XSNLLsPerPOI):
 
             # Legend
             ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-            hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=ax)
+            hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=ax)
 
             self.figures.append((fig, ax, output_name))
 
@@ -427,7 +435,7 @@ class XSNLLsPerCategory(Figure):
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.ax)
 
 
 class DiffXSsPerObservable(Figure):
@@ -440,7 +448,9 @@ class DiffXSsPerObservable(Figure):
         observable_shapes,
         observable_shapes_systonly=None,
         other_sm_shapes_dicts=None,
-        kappa_prediction=None
+        kappa_prediction=None,
+        smeft_shapes=None,
+        smeft_extra_label=None,
     ):
         if observable_shapes_systonly is None:
             observable_shapes_systonly = []
@@ -517,12 +527,14 @@ class DiffXSsPerObservable(Figure):
         else:
             self.ratio_ax.set_xticks(sm_shape.fake_edges)
             tick_labels = deepcopy(sm_shape.edges)
+            if sm_shape.observable in ["smH_PTJ0", "mjj", "TauCJ"]:
+                tick_labels = [f"{int(tick)}" for tick in tick_labels]
             if sm_shape.overflow:
                 tick_labels[-1] = r"$\infty$"
             self.ratio_ax.set_xticklabels(
                 tick_labels, rotation=45 if sm_shape.observable == "smH_PTH" else 0
             )
-        self.ratio_ax.tick_params(axis="x", which="major", labelsize=13)
+        self.ratio_ax.tick_params(axis="x", which="major", labelsize=15)
         self.main_ax.tick_params(axis="x", which="minor", bottom=False, top=False)
         self.ratio_ax.tick_params(axis="x", which="minor", bottom=False, top=False)
         self.ratio_ax.set_xlabel(observable_specs[sm_shape.observable]["x_plot_label"])
@@ -536,6 +548,17 @@ class DiffXSsPerObservable(Figure):
         if kappa_prediction is not None:
             kappa_prediction.fake_rebin(sm_shape)
             self.main_ax, self.ratio_ax = kappa_prediction.plot(self.main_ax, self.ratio_ax)
+
+        # if smeft_shapes is there, plot them
+        if smeft_shapes is not None:
+            passed_sm_shape = sm_shape
+            for smeft_shape in smeft_shapes:
+                sm_shape = passed_sm_shape
+                smeft_shape.fake_rebin(sm_shape)
+                prediction = deepcopy(sm_shape)
+                prediction.rebin(smeft_shape.edges)
+                self.main_ax, self.ratio_ax = smeft_shape.plot_as_histo_no_bands(self.main_ax, self.ratio_ax, prediction, smeft_extra_label if smeft_extra_label is not None else "")
+            sm_shape = passed_sm_shape
 
         # Horrible way to somehow move the points away from each other and not have them superimposed
         # displacements = [0, 0.2, -0.2, 0.4, -0.4, 0.6, -0.6]
@@ -649,9 +672,20 @@ class DiffXSsPerObservable(Figure):
         if sm_shape.observable == "Njets":
             location = "upper right"
             prop = {"size": 12}
-        self.main_ax.legend(loc=location, prop=prop)
+        
+        # get the handles and labels for the legend
+        handles, labels = self.main_ax.get_legend_handles_labels()
+        # order: SM, other SM, Combination, SystOnly, everything else
+        # The following labels, if present, have to be in the following order
+        # ["aMC@NLO, NNLOPS", "aMC@NLO", "Powheg", "Combination", "Combination, Syst. unc."]
+        # then the rest
+        order = ["aMC@NLO, NNLOPS", "aMC@NLO", "Powheg", "Combination", "Combination, Syst. unc.", category_specs["Hgg"]["plot_label"], category_specs["HZZ"]["plot_label"], category_specs["HWW"]["plot_label"], category_specs["Htt"]["plot_label"], category_specs["Hbb"]["plot_label"], category_specs["HbbVBF"]["plot_label"], category_specs["HttBoost"]["plot_label"]] 
+        order += [label for label in labels if label not in order]
+        handles = [h for _, h in sorted(zip(labels, handles), key=lambda pair: order.index(pair[0]))]
+        labels = sorted(labels, key=lambda x: order.index(x))
+        self.main_ax.legend(handles, labels, loc=location, prop=prop)
 
-        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.main_ax)
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.main_ax)
 
         
 class EasyTwoDScan(Figure):
@@ -675,7 +709,7 @@ class EasyTwoDScan(Figure):
         self.ax.set_xlabel(bsm_parameters_labels[pois[0]])
         self.ax.set_ylabel(bsm_parameters_labels[pois[1]]) 
         self.ax.legend(loc="upper left")
-        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.ax)
 
 
 class TwoDScansPerModel(Figure):
@@ -688,7 +722,8 @@ class TwoDScansPerModel(Figure):
         output_name=None,
         is_asimov=False,
         force_limit=False,
-        legend_conf={"loc": "upper left", "prop": {"size": 14}}
+        legend_conf={"loc": "upper left", "prop": {"size": 14}},
+        heatmap_style=True
     ):
         """
         scan_dict is e.g. {"Hgg": Scan2D}
@@ -704,30 +739,54 @@ class TwoDScansPerModel(Figure):
         self.fig, self.ax = plt.subplots(1, 1, figsize=(18, 14))
         # Plot the combination one
         if combination_asimov_scan is not None:
-            self.ax, self.colormap, self.pc = combination_asimov_scan.plot_as_heatmap(
-                self.ax
-            )
-            # this is because we assign an attribute category to the scan only in the SMEFT case!! (for now)
-            try:
-                self.ax = combination_asimov_scan.plot_as_contour(
-                    self.ax,
-                    color="yellow",
-                    label=f"Exp. {category_specs[combination_asimov_scan.category]['plot_label']}",
-                )
-            except:
-                self.ax = combination_asimov_scan.plot_as_contour(
-                    self.ax, color="yellow", label=f"Exp. Combination"
-                )
-            # self.ax = combination_asimov_scan.plot_as_contourf(self.ax)
+            if heatmap_style:
+                try:
+                    self.ax, self.colormap, self.pc = combination_asimov_scan.plot_as_heatmap(
+                        self.ax, color="red", label=f"Exp. {category_specs[combination_asimov_scan.category]['plot_label']}"
+                    )
+                except:
+                    self.ax, self.colormap, self.pc = combination_asimov_scan.plot_as_heatmap(
+                        self.ax, color="red", label=f"Exp. Combination"
+                    )
+                # this is because we assign an attribute category to the scan only in the SMEFT case!! (for now)
+                #try:
+                #    self.ax = combination_asimov_scan.plot_as_contour(
+                #        self.ax,
+                #        color="navy",
+                #        label=f"Exp. {category_specs[combination_asimov_scan.category]['plot_label']}",
+                #    )
+                #except:
+                #    self.ax = combination_asimov_scan.plot_as_contour(
+                #        self.ax, color="navy", label=f"Exp. Combination"
+                #    )
+            else:
+                try:
+                    self.ax, rectangles, cf_labels = combination_asimov_scan.plot_as_contourf(self.ax, color="red", label=f"Exp. {category_specs[combination_asimov_scan.category]['plot_label']}")
+                except:
+                    self.ax, rectangles, cf_labels = combination_asimov_scan.plot_as_contourf(self.ax, color="red", label=f"Exp. Combination")
         else:
-            self.ax, self.colormap, self.pc = self.scan_dict[
-                combination_name
-            ].plot_as_heatmap(self.ax)
-            # self.ax = self.scan_dict[combination_name].plot_as_contourf(self.ax)
-        self.fig.colorbar(self.pc, ax=self.ax, label="-2$\Delta$lnL")
+            if heatmap_style:
+                self.ax, self.colormap, self.pc = self.scan_dict[
+                    combination_name
+                ].plot_as_heatmap(self.ax, color="red", label=combination_name)
+            else:
+                self.ax, rectangles, cf_labels = self.scan_dict[combination_name].plot_as_contourf(self.ax, color="red", label=combination_name)
+        if heatmap_style:
+            cm_label = "-2$\Delta$lnL"
+            if combination_asimov_scan is not None:
+                try:
+                    cm_label = f"Exp. {category_specs[combination_asimov_scan.category]['plot_label']} -2$\Delta$lnL"
+                except:
+                    cm_label = f"Exp. Combination -2$\Delta$lnL"
+            else:
+                cm_label = f"{category_specs[combination_name.split('_')[0]]['plot_label']} -2$\Delta$lnL"
+            self.fig.colorbar(self.pc, ax=self.ax, label=cm_label)
 
         # Combination + others as countour
         for category, scan in scan_dict.items():
+            #if combination_asimov_scan is not None and scan == combination_asimov_scan:
+            #    logger.debug("Skipping combination_asimov_scan")
+            #    continue
             try:
                 self.ax = self.scan_dict[category].plot_as_contour(
                     self.ax,
@@ -766,22 +825,40 @@ class TwoDScansPerModel(Figure):
         # Miscellanea business that has to be done after
         try:
             self.ax.set_xlabel(
-                bsm_parameters_labels[scan_dict[combination_name].pois[0]]
+                bsm_parameters_labels[scan_dict[combination_name].pois[0]], fontsize=30
             )
             self.ax.set_ylabel(
-                bsm_parameters_labels[scan_dict[combination_name].pois[1]]
+                bsm_parameters_labels[scan_dict[combination_name].pois[1]], fontsize=30
             )
         except KeyError:
             try:
-                self.ax.set_xlabel(bsm_parameters_labels[combination_asimov_scan.pois[0]])
-                self.ax.set_ylabel(bsm_parameters_labels[combination_asimov_scan.pois[1]])
+                self.ax.set_xlabel(bsm_parameters_labels[combination_asimov_scan.pois[0]], fontsize=30)
+                self.ax.set_ylabel(bsm_parameters_labels[combination_asimov_scan.pois[1]], fontsize=30)
             except AttributeError:
-                self.ax.set_xlabel(poi1)
-                self.ax.set_ylabel(poi2)
+                self.ax.set_xlabel(poi1, fontsize=30)
+                self.ax.set_ylabel(poi2, fontsize=30)
         # self.colormap.ax.set_ylabel("-2$\Delta$lnL")
-        self.ax.legend(**legend_conf)
+        if heatmap_style:
+            self.legend = plt.legend(fancybox=True, framealpha=1, facecolor='white', edgecolor='black', **legend_conf)
+        else:
+            handles, existing_labels = self.ax.get_legend_handles_labels()
+            # add them after the first spot in the lists
+            handles = handles[:1] + rectangles + handles[1:]
+            existing_labels = existing_labels[:1] + cf_labels + existing_labels[1:]
+            self.legend = plt.legend(handles, existing_labels, fancybox=True, framealpha=1, facecolor='white', edgecolor='black', **legend_conf)
 
-        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+        # increase size of tick labels
+        self.ax.tick_params(axis='both', which='major', labelsize=24)
+        #self.legend.get_frame().set_alpha(1.0)
+        #self.legend.get_frame().set_facecolor('white')
+        #self.legend.get_frame().set_edgecolor('black')
+
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.ax)
+        #mpl.rcParams["legend.fancybox"] = True
+        #mpl.rcParams["legend.facecolor"] = "white"
+        #mpl.rcParams["legend.edgecolor"] = "black"
+        #mpl.rcParams["legend.framealpha"] = 1
+        #mpl.rcParams["legend.frameon"] = True
 
 
 class TwoDScanDebug(Figure):
@@ -821,11 +898,11 @@ class NScans(Figure):
 
         # Legend
         self.ax.legend(loc="upper center", prop={"size": 10}, ncol=4)
-        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.ax)
 
 
 class SMEFTSummaryPlot(Figure):
-    def __init__(self, wc_scans):
+    def __init__(self, wc_scans, order_by_order=False):
         """
         Plot a summary of the SMEFT results.
         wc_scans is e.g.: {"chg": {"PtFullComb": Scan1D, "PtFullComb_asimov": Scan1D}}
@@ -846,9 +923,13 @@ class SMEFTSummaryPlot(Figure):
         wc_scans_first = {wc: wc_scans[wc][categories[0]] for wc in wc_scans}
         wc_orders = {}
         for wc, scan in wc_scans_first.items():
-            rng = np.abs(scan.up95_unc)
+            rng = np.abs(scan.up95_unc)[0]
             wc_orders[wc] = np.floor(np.log10(rng))
-        
+ 
+        # re-order the WCs by order of magnitude
+        if order_by_order:
+            wc_orders = dict(sorted(wc_orders.items(), key=lambda item: item[1]))
+       
         # length of vertical axis will be the number of WCs + 2 (in order to have some space at the top and bottom)
         y_min = 0
         y_max = len(wc_scans) + 1
@@ -865,36 +946,41 @@ class SMEFTSummaryPlot(Figure):
                 except KeyError:
                     cat_label = cat
                 cat_displace = cat_displace * 0.1
+                if len(wc_scans) > 15:
+                    cat_displace = cat_displace * 2
                 color = colors[col_index]
                 y_pos = y_max - y_pos_diff - 1 + cat_displace
                 scan = wc_scans[wc][cat]
                 denominator = 10 ** order
                 centre = scan.minimum[0] / denominator
-                extrema_95 = scan.down95[0][0] / denominator, scan.up95[0][0] / denominator
-                extrema_68 = scan.down68[0][0] / denominator, scan.up68[0][0] / denominator
+                for d, u in zip(scan.down95, scan.up95):
+                    extrema_95 = d[0] / denominator, u[0] / denominator
+                    self.ax.plot(
+                        extrema_95,
+                        [y_pos, y_pos],
+                        color=color,
+                        linestyle="--",
+                        linewidth=2,
+                        label=f"{cat_label} 95% CL" if y_pos_diff == 0 else "",
+                    )
 
-                self.ax.plot(
-                    extrema_95,
-                    [y_pos, y_pos],
-                    color=color,
-                    linestyle="--",
-                    linewidth=2,
-                    label=f"{cat_label} 95% CL" if y_pos_diff == 0 else "",
-                )
-                self.ax.plot(
-                    extrema_68,
-                    [y_pos, y_pos],
-                    color=color,
-                    linestyle="-",
-                    linewidth=3,
-                    label=f"{cat_label} 68% CL" if y_pos_diff == 0 else "",
-                )
+                for d, u in zip(scan.down68, scan.up68):
+                    extrema_68 = d[0] / denominator, u[0] / denominator
+                    self.ax.plot(
+                        extrema_68,
+                        [y_pos, y_pos],
+                        color=color,
+                        linestyle="-",
+                        linewidth=3,
+                        label=f"{cat_label} 68% CL" if y_pos_diff == 0 else "",
+                    )
+
                 self.ax.plot(
                     centre,
                     y_pos,
                     color=color,
                     marker="o",
-                    markersize=10,
+                    markersize=6,
                     linestyle="",
                     label=f"{cat_label} Best fit" if y_pos_diff == 0 else "",
                 )
@@ -925,7 +1011,273 @@ class SMEFTSummaryPlot(Figure):
         # set x label
         self.ax.set_xlabel("Parameter value", fontsize=20, horizontalalignment="center")
         
-        hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=self.ax)
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.ax)
 
         # legend
-        self.ax.legend(loc="upper left", prop={"size": 12}, ncol=1)
+        self.ax.legend(loc="upper left" if len(wc_scans) < 15 else "lower left", prop={"size": 12}, ncol=1)
+
+
+def get_lambda(wc_value, ci):
+    return np.sqrt(wc_value / ci)
+
+        
+class SMEFTSummaryPlotLambda(Figure):
+    def __init__(self, wc_scans, order_by_order=False):
+        """
+        Plot a summary of the SMEFT results.
+        wc_scans is e.g.: {"chg": {"PtFullComb": Scan1D, "PtFullComb_asimov": Scan1D}}
+        """
+        self.fig, (self.ax, self.rax) = plt.subplots(
+            nrows=2, ncols=1, figsize=(20, 10), sharex=True
+        )
+        self.fig.subplots_adjust(hspace=0.05)
+        # get first key of the dictionary
+        fk = list(wc_scans.keys())[0]
+        categories = list(wc_scans[fk].keys())
+        
+        self.output_name = "SMEFT_lambda_summary_" + "_".join(wc_scans.keys()) + "_{}".format("-".join(categories))
+
+        # horizontal line at 0
+        self.rax.axhline(0.0, color="k", linestyle="--")
+
+        # assign each WC to an order of magnitude
+        wc_scans_first = {wc: wc_scans[wc][categories[0]] for wc in wc_scans}
+        # in case of two categories, the second is asimov
+        # use this one to select the order of magnitude to fix the case of double minima
+        if len(categories) > 1:
+            wc_scans_first = {wc: wc_scans[wc][categories[1]] for wc in wc_scans}
+        wc_orders = {}
+        for wc, scan in wc_scans_first.items():
+            # keep only left in case of double minima
+            rng = np.abs(scan.up95_unc)[0]
+            wc_orders[wc] = np.floor(np.log10(rng))
+        
+        # re-order the WCs by order of magnitude
+        if order_by_order:
+            wc_orders = dict(sorted(wc_orders.items(), key=lambda item: item[1]))
+        
+        # length of vertical axis will be the number of WCs + 2 (in order to have some space at the top and bottom)
+        x_min = 0
+        x_max = len(wc_scans)
+        section_width = 1
+        real_centers = []
+        # get the real centers on x axis
+        for i, _ in enumerate(wc_scans):
+            real_centers.append(i + (section_width / 2))
+        
+        # tick labels will be the WCs
+        tick_labels = []
+        c_values = [0.01, 1, 4*np.pi**2]
+        c_values_labels = ["0.01", "1", r"$4\pi^2$"]
+
+        colors = ["black", "red"]
+        for x_pos_diff, (wc, order) in enumerate(wc_orders.items()):
+            col_index = 0
+            for cat_displace, cat in enumerate(categories):
+                try:
+                    cat_label = category_specs[cat]["plot_label"]
+                except KeyError:
+                    cat_label = cat
+                cat_displace = cat_displace * 0.1
+                color = colors[col_index]
+                x_pos = x_min + x_pos_diff + (section_width / 2) + cat_displace
+                scan = wc_scans[wc][cat]
+                denominator = 10 ** order
+                centre = scan.minimum[0] / denominator
+                extrema_95 = scan.down95[0][0] / denominator, scan.up95[0][0] / denominator
+                extrema_68 = scan.down68[0][0] / denominator, scan.up68[0][0] / denominator
+
+                if "asimov" in cat:
+                    bar_width = 0.4
+                    bar_colors = ["navy", "royalblue", "lightskyblue"]
+                    # get 95 CL
+                    #cl = extrema_95[1] - centre
+                    cl = scan.up95[0][0] - scan.minimum[0]
+                    lambdas = [get_lambda(c, cl) for c in c_values]
+                    # add bars on ax
+                    bottoms = [0]
+                    for i in range(1, len(lambdas)):
+                        bottoms.append(bottoms[-1] + lambdas[i-1])
+                    for i, lmbd in enumerate(lambdas):
+                        self.ax.bar(
+                            real_centers[x_pos_diff], 
+                            lmbd, 
+                            bar_width, 
+                            bottom=bottoms[i], 
+                            color=bar_colors[i],
+                            label=f"$c_i$ = {c_values_labels[i]}" if x_pos_diff == 0 else ""
+                            )
+
+                self.rax.plot(
+                    [x_pos, x_pos],
+                    extrema_95,
+                    color=color,
+                    linestyle="--",
+                    linewidth=2,
+                    label=f"{cat_label} 95% CL" if x_pos_diff == 0 else "",
+                )
+                self.rax.plot(
+                    [x_pos, x_pos],
+                    extrema_68,
+                    color=color,
+                    linestyle="-",
+                    linewidth=3,
+                    label=f"{cat_label} 68% CL" if x_pos_diff == 0 else "",
+                )
+                self.rax.plot(
+                    x_pos,
+                    centre,
+                    color=color,
+                    marker="o",
+                    markersize=6,
+                    linestyle="",
+                    label=f"{cat_label} Best fit" if x_pos_diff == 0 else "",
+                )
+
+                label = bsm_parameters_labels[wc]
+                if order not in [0, 1]:
+                    label += " " + r"$\times$" + f"$10^{{{int(order)}}}$"
+                elif order == 1:
+                    label += " " + r"$\times$" + f"$10$"
+                if cat_displace == 0:
+                    tick_labels.append(label)
+                col_index += 1
+
+        # set limits on y
+        self.rax.set_xlim(x_min, x_max)
+        # log scale on y
+        self.ax.set_yscale("log") 
+        self.rax.set_xticks(real_centers)
+        self.rax.set_xticklabels(tick_labels, fontsize=20, rotation=90)
+        # now that we put the labels, do not show the ticks
+        self.ax.tick_params(axis="x", which="both", length=0)
+        self.rax.tick_params(axis="x", which="both", length=0)
+        
+        # set limits on x
+        y_min = -10
+        y_max = 10
+        self.rax.set_ylim(y_min, y_max)
+        # set y label
+        self.ax.set_ylabel(r"$\Lambda / \sqrt{c_i} \ at \ 95\% \ CL$ (TeV)", fontsize=20)
+        self.rax.set_ylabel("Parameter value", fontsize=20, horizontalalignment="center")
+        
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.ax)
+
+        # legend
+        _, l = self.ax.get_legend_handles_labels()
+        self.ax.legend(loc="upper right", prop={"size": 18}, ncol=len(l))
+        #_, l = self.rax.get_legend_handles_labels()
+        self.rax.legend(loc="upper right", prop={"size": 12}, ncol=len(categories))
+
+        
+class SMEFTSummaryPlotLambdaAlone(Figure):
+    def __init__(self, wc_scans, order_by_order=False):
+        """
+        Plot a summary of the SMEFT results.
+        wc_scans is e.g.: {"chg": {"PtFullComb": Scan1D, "PtFullComb_asimov": Scan1D}}
+        """
+        self.fig, self.ax = plt.subplots(
+            figsize=(20, 10)
+        )
+        # get first key of the dictionary
+        fk = list(wc_scans.keys())[0]
+        categories = list(wc_scans[fk].keys())
+        
+        self.output_name = "SMEFT_lambda_alone_summary_" + "_".join(wc_scans.keys()) + "_{}".format("-".join(categories))
+
+        # assign each WC to an order of magnitude
+        wc_scans_first = {wc: wc_scans[wc][categories[0]] for wc in wc_scans}
+        # in case of two categories, the second is asimov
+        # use this one to select the order of magnitude to fix the case of double minima
+        if len(categories) > 1:
+            wc_scans_first = {wc: wc_scans[wc][categories[1]] for wc in wc_scans}
+        wc_orders = {}
+        for wc, scan in wc_scans_first.items():
+            # keep only left in case of double minima
+            rng = np.abs(scan.up95_unc)[0]
+            wc_orders[wc] = np.floor(np.log10(rng))
+        
+        # re-order the WCs by order of magnitude
+        if order_by_order:
+            wc_orders = dict(sorted(wc_orders.items(), key=lambda item: item[1]))
+        
+        # length of vertical axis will be the number of WCs + 2 (in order to have some space at the top and bottom)
+        x_min = 0
+        x_max = len(wc_scans)
+        section_width = 1
+        real_centers = []
+        # get the real centers on x axis
+        for i, _ in enumerate(wc_scans):
+            real_centers.append(i + (section_width / 2))
+        
+        # tick labels will be the WCs
+        tick_labels = []
+        c_values = [0.01, 1, (4*np.pi)**2]
+        c_values_labels = ["0.01", "1", r"$(4\pi)^2$"]
+
+        colors = ["black", "red"]
+        for x_pos_diff, (wc, order) in enumerate(wc_orders.items()):
+            col_index = 0
+            for cat_displace, cat in enumerate(categories):
+                try:
+                    cat_label = category_specs[cat]["plot_label"]
+                except KeyError:
+                    cat_label = cat
+                cat_displace = cat_displace * 0.1
+                color = colors[col_index]
+                x_pos = x_min + x_pos_diff + (section_width / 2) + cat_displace
+                scan = wc_scans[wc][cat]
+                denominator = 10 ** order
+                centre = scan.minimum[0] / denominator
+                extrema_95 = scan.down95[0][0] / denominator, scan.up95[0][0] / denominator
+                extrema_68 = scan.down68[0][0] / denominator, scan.up68[0][0] / denominator
+
+                #if "asimov" in cat:
+                if cat_displace == 0:
+                    bar_width = 0.4
+                    bar_colors = ["navy", "royalblue", "lightskyblue"]
+                    # get 95 CL
+                    #cl = extrema_95[1] - centre
+                    #cl = scan.up95[0][0] - scan.minimum[0]
+                    #cl = scan.up95[0][0]
+                    cl = np.max([np.abs(scan.up95[0][0]), np.abs(scan.down95[0][0])])
+                    lambdas = [get_lambda(c, cl) for c in c_values]
+                    # add bars on ax
+                    bottoms = [0]
+                    for i in range(1, len(lambdas)):
+                        bottoms.append(bottoms[-1] + lambdas[i-1])
+                    for i, lmbd in enumerate(lambdas):
+                        self.ax.bar(
+                            real_centers[x_pos_diff], 
+                            lmbd, 
+                            bar_width, 
+                            bottom=bottoms[i], 
+                            color=bar_colors[i],
+                            label=f"$c_i$ = {c_values_labels[i]}" if x_pos_diff == 0 else ""
+                            )
+
+                label = bsm_parameters_labels[wc]
+                if order not in [0, 1]:
+                    label += " " + r"$\times$" + f"$10^{{{int(order)}}}$"
+                elif order == 1:
+                    label += " " + r"$\times$" + f"$10$"
+                if cat_displace == 0:
+                    tick_labels.append(label)
+                col_index += 1
+
+        self.ax.set_xlim(x_min, x_max)
+        # log scale on y
+        self.ax.set_yscale("log") 
+        self.ax.set_xticks(real_centers)
+        self.ax.set_xticklabels(tick_labels, fontsize=20, rotation=90)
+        # now that we put the labels, do not show the ticks
+        self.ax.tick_params(axis="x", which="both", length=0)
+        
+        # set y label
+        self.ax.set_ylabel(r"$\Lambda \ = \ \sqrt{c_i\ / \ (95\% \ CL)}$ (TeV)", fontsize=20)
+        
+        hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=self.ax)
+
+        # legend
+        _, l = self.ax.get_legend_handles_labels()
+        self.ax.legend(loc="upper right", prop={"size": 20}, ncol=len(l))

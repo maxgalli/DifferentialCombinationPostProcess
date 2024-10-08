@@ -5,8 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import mplhep as hep
 
-hep.style.use("CMS")
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -170,6 +168,7 @@ class MatricesExtractor:
         return np.array(ordered_matrix)
 
     def dump(self, ouptut_dir, suffix="", observable=None):
+        hep.style.use("CMS")
         for matrix_name, matrix in self.matrices.items():
             logger.debug("First row of matrix: {}".format(matrix[0]))
             logger.debug("First row of ordered matrix: {}".format(matrix[0]))
@@ -231,7 +230,7 @@ class MatricesExtractor:
                 ax.set_ylabel(observable_specs[observable]["x_plot_label"])
 
             # save
-            hep.cms.label(loc=0, data=True, llabel="Internal", lumi=138, ax=ax)
+            hep.cms.label(loc=0, data=True, llabel="", lumi=138, ax=ax)
             fig.tight_layout()
             fig.savefig(f"{ouptut_dir}/{matrix_name}{suffix}.png")
             fig.savefig(f"{ouptut_dir}/{matrix_name}{suffix}.pdf")

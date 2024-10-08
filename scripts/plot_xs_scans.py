@@ -20,6 +20,10 @@ from differential_combination_postprocess.utils import (
     setup_logging,
     extract_from_yaml_file,
     TK_parser,
+    mu,
+    get_coeffs,
+    refactor_predictions,
+    refactor_predictions_multichannel
 )
 from differential_combination_postprocess.scan import Scan, DifferentialSpectrum
 from differential_combination_postprocess.figures import (
@@ -153,6 +157,20 @@ def parse_arguments():
         help="Path to a TK-style kappa prediction file",
     )
 
+    parser.add_argument(
+        "--smeft-poi",
+        type=str,
+        required=False,
+        help="POI for which to plot the SMEFT prediction; <POI>=<value>",
+    )
+
+    parser.add_argument(
+        "--smeft-prediction-dir",
+        type=str,
+        required=False,
+        help="Directory where the SEMFT predictions are stored",
+    )
+
     return parser.parse_args()
 
 
@@ -217,6 +235,24 @@ def get_shapes_from_differential_spectra(differential_spectra, observable):
         logging.debug(f"Just appended shape {shapes[-1]}")
 
     return shapes
+
+def get_shape_from_simple_mus(mus, observable, category):
+    sm_rebinned_shape = deepcopy(sm_shapes[observable])
+    sm_rebinned_shape.rebin(analyses_edges[observable][category])
+    mus_up = mus
+    mus_down = mus
+    weighted_bins = np.multiply(np.array(sm_rebinned_shape.xs), mus)
+    weighted_bins_up = np.multiply(np.array(sm_rebinned_shape.xs), mus_up)
+    weighted_bins_down = np.multiply(np.array(sm_rebinned_shape.xs), mus_down)
+    return ObservableShapeFitted(
+        observable,
+        category,
+        analyses_edges[observable][category],
+        weighted_bins,
+        weighted_bins_up,
+        weighted_bins_down,
+        overflow=observable in overflows,
+    )
 
 oned_extra_selection = {
     "smH_PTH_FinalComb_statonly": {
@@ -448,6 +484,7 @@ def main(args):
 
             if not args.no_final:
                 other_sm_shapes_dicts = None
+                #if len(categories) == 1 and "Comb" in categories[0]:
                 if len(categories) == 1:
                     logger.info(
                         f"Will also plot the SM shapes for other generators"
@@ -492,6 +529,53 @@ def main(args):
                     kappa_prediction=kappa_spectrum,
                 )
                 final_plot.dump(output_dir)
+
+                if args.smeft_poi and args.smeft_prediction_dir:
+                    logger.info("Plotting SMEFT predictions")
+                    smeft_poi, smeft_value = args.smeft_poi.split("=")
+                    smeft_value = float(smeft_value)
+                    prediction_dir = args.smeft_prediction_dir
+                    all_channels = categories + singles
+                    decays_dct, production_dct, edges = refactor_predictions_multichannel(
+                        prediction_dir,
+                        {k.lower(): observable for k in all_channels}
+                    )
+                    smeft_shapes = []
+                    for channel in all_channels:
+                        channel_low = channel.lower()
+                        production_coeffs, decay_coeffs, tot_coeffs = get_coeffs(
+                            smeft_poi,
+                            production_dct[channel_low],
+                            decays_dct,
+                            channel_low
+                        )
+                        mu_stack = []
+                        for n, k in enumerate(production_coeffs):
+                            mus = mu(
+                                np.array([smeft_value]),
+                                production_coeffs[k],
+                                decay_coeffs,
+                                tot_coeffs,
+                                fit_model="linearised",
+                            )
+                            mu_stack.append(mus)
+                        # turn into a standard 1D array
+                        mus = np.array(mu_stack).flatten()
+                        shape = get_shape_from_simple_mus(mus, observable, channel)
+                        smeft_shapes.append(shape)
+                    
+                    final_plot_output_name += f"_SMEFT_{smeft_poi}"
+                    final_plot_smeft = DiffXSsPerObservable(
+                        final_plot_output_name,
+                        sm_shapes[observable],
+                        shapes,
+                        shapes_systonly,
+                        other_sm_shapes_dicts=other_sm_shapes_dicts,
+                        kappa_prediction=kappa_spectrum,
+                        smeft_shapes=smeft_shapes,
+                        smeft_extra_label=f"{smeft_poi}={smeft_value}"
+                    )
+                    final_plot_smeft.dump(output_dir)
 
 
 if __name__ == "__main__":

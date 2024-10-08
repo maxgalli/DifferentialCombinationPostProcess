@@ -172,7 +172,7 @@ def main(args):
                     file_name_tmpl=f"higgsCombine_SCAN_1D{coeff}.*.root",
                     extra_selections=extra_selection,
                 )
-                # All this should beput together smartly with the part before
+                # All this should be put together smartly with the part before
                 if args.expected_bkg:
                     logger.info("Plotting expected bkg for 1D scans")
                     category += "_asimov"
@@ -287,12 +287,17 @@ def main(args):
         combination_name += "_statonly"
     legend_conf = {
         "loc": "upper left", 
-        "prop": {"size": 18}
+        "prop": {"size": 20}
     }
     if args.model == "top_coupdep_ctcg":
         legend_conf = {
             "loc": "upper right",
-            "prop": {"size": 14},
+            "prop": {"size": 20},
+        }
+    if args.model == "top_floatingBR_ctcg":
+        legend_conf = {
+            "loc": "upper right",
+            "prop": {"size": 20},
         }
     plot = TwoDScansPerModel(
         scan_dict=scan_dict,
@@ -301,7 +306,9 @@ def main(args):
         combination_asimov_scan=expected_combination_scan,
         output_name=output_name,
         is_asimov=args.expected,
-        legend_conf=legend_conf
+        force_limit=True,
+        legend_conf=legend_conf,
+        heatmap_style=False
     )
     plot.dump(output_dir)
 

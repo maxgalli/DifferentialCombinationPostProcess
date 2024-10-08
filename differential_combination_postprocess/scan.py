@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from warnings import warn
 from copy import deepcopy
 from scipy.ndimage.filters import gaussian_filter
+from matplotlib.patches import Patch
 
 import logging
 
@@ -106,6 +107,7 @@ class Scan:
         cut_strings=None,
         allow_extrapolation=True,
         align_to=None,
+        multiply_by=None,
     ):
         if cut_strings is None:
             cut_strings = []
@@ -191,6 +193,9 @@ class Scan:
                 branches_np = np.delete(branches_np, wh[1:], axis=1)
 
         poi_values_original = branches_np[0]
+        if multiply_by is not None:
+            logger.info(f"Multiplying NLL by {multiply_by} for POI {poi}")
+            poi_values_original = multiply_by * branches_np[0]
         two_dnll_original = 2 * branches_np[1]
 
         # Apply extra selections if present
@@ -294,7 +299,7 @@ class Scan:
 
             self.check_points_and_compute_all_uncertainties()
 
-    def check_points_and_compute_all_uncertainties(self):
+    def check_points_and_compute_all_uncertainties(self, forced_minimum=None):
         # Check if there are nan values in two_dnnl
         if np.isnan(self.interpolated_points[1]).any():
             logger.warning("NaN values detected in NLLs values, removing them")
@@ -303,7 +308,10 @@ class Scan:
             ]
 
         # Find minimum and compute uncertainties
-        self.find_minimum()
+        if forced_minimum is not None:
+            self.minimum = forced_minimum
+        else:
+            self.find_minimum()
         self.original_moved_points = deepcopy(self.original_points)
         if (
             abs(self.minimum[1]) > 0.0001
@@ -314,7 +322,10 @@ class Scan:
             offset = self.minimum[1]
             self.original_moved_points[1] -= offset
             self.interpolated_points[1] -= offset
-            self.find_minimum()
+            if forced_minimum is not None:
+                self.minimum = forced_minimum
+            else:
+                self.find_minimum()
         logger.info(
             "Found minimum at ({}, {})".format(self.minimum[0], self.minimum[1])
         )
@@ -357,8 +368,8 @@ class Scan:
                 f"The NLL curve does not seem to cross the horizontal line for level {level}. Try scanning a wider range of points for {self.poi}!"
             )
             logger.info("Setting up and down to minimum and uncertainties to 0.")
-            downs = [self.minimum]
-            ups = [self.minimum]
+            downs = [deepcopy(self.minimum)]
+            ups = [deepcopy(self.minimum)]
             down_uncertainties = [0.0]
             up_uncertainties = [0.0]
         else:
@@ -523,6 +534,15 @@ class Scan:
             poi_string = get_parameter_label(self.poi)
             return f"{poi_string}: [{self.down95[0][0]:.3f}, {self.up95[0][0]:.3f}] (95% CL)"
 
+    def __mul__(self, other):
+        if isinstance(other, Scan):
+            raise NotImplementedError("Multiplication of two Scan instances is not implemented")
+        elif isinstance(other, (int, float)):
+            new_scan = deepcopy(self)
+            new_scan.interpolated_points[1] *= other
+            new_scan.check_points_and_compute_all_uncertainties()
+            return new_scan
+
 
 class ScanSingles:
     def __init__(
@@ -670,6 +690,14 @@ class Scan2D:
             x = x[mask]
             y = y[mask]
             z = z[mask]
+        if specs_name == "yukawa_floatingBR_HggHZZHtt":
+            logger.info("Applying extra selections for yukawa_floatingBR_HggHZZHtt")
+            mask = ~np.logical_and(
+                np.logical_and(x > 11, x < 15), np.logical_and(y > -0.5, y < 2.8)
+            )
+            x = x[mask]
+            y = y[mask]
+            z = z[mask]
      
         # Sanity check: min and max of x and y of the found files
         logger.debug(f"Sanity check: min x: {min(x)}, max x: {max(x)}")
@@ -741,8 +769,14 @@ class Scan2D:
             logger.info("Smoothing the z_int as requested by specs_name {}".format(specs_name))
             self.z_int = gaussian_filter(self.z_int, sigma=5.0)
 
-    def plot_as_heatmap(self, ax):
-        colormap = custom_colormap("Purples")
+    def __eq__(self, value: object) -> bool:
+        """Two scans are equal if they have same pois and file_name_template"""
+        if not isinstance(value, Scan2D):
+            return False
+        return self.pois == value.pois and self.file_name_tmpl == value.file_name_tmpl
+
+    def plot_as_heatmap(self, ax, color="navy", label=None):
+        colormap = custom_colormap("Blues")
         pc = ax.pcolormesh(
             self.x_int,
             self.y_int,
@@ -751,6 +785,16 @@ class Scan2D:
             vmax=10,
             cmap=colormap,
             shading="gouraud",
+        )
+
+        # Best value as point
+        ax.plot(
+            [self.minimum[0]],
+            [self.minimum[1]],
+            color=color,
+            linestyle="",
+            marker="o",
+            label=f"{label} best fit",
         )
 
         return ax, colormap, pc
@@ -783,7 +827,6 @@ class Scan2D:
             #colors=[color, color, color, color],
             #linewidths=[2.2, 2.2, 2.2, 2.2],
             #linestyles=["solid", "dashed", "dashed", "dashed"],
-
         )
         # add labels
         try:
@@ -811,14 +854,28 @@ class Scan2D:
 
         return ax
 
-    def plot_as_contourf(self, ax):
+    def plot_as_contourf(self, ax, color="navy", label=None):
+        colors = ["cornflowerblue", "lightsteelblue"]
         cs = ax.contourf(
             self.x_int,
             self.y_int,
             self.z_int,
-            levels=[0.0, 2.295748928898636, 6.180074306244173],
-            # colors=["darkorange", "yellow"],
-            colors=["navy", "cornflowerblue"],
+            levels=[-10.0, 2.295748928898636, 6.180074306244173],
+            colors=colors,
         )
 
-        return ax
+        # add labels
+        levels = ["68%", "95%"]
+        rectangles = [Patch(facecolor=color, label=label) for color, label in zip(colors, levels)]
+
+        # Best value as point
+        ax.plot(
+            [self.minimum[0]],
+            [self.minimum[1]],
+            color=color,
+            linestyle="",
+            marker="o",
+            label=f"{label} best fit",
+        )
+
+        return ax, rectangles, [f"{label} {l}" for l in levels]

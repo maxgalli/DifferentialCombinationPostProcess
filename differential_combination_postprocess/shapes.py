@@ -452,6 +452,34 @@ class ObservableShapeFitted(ObservableShape):
 
         return ax, rax
 
+    def plot_as_histo_no_bands(self, ax, rax, prediction_shape, extra_label=None):
+        """ Used only for SMEFT predictions
+        """
+        color = category_specs[self.category]["color"]
+        label = category_specs[self.category]["plot_label"] + " " + extra_label
+        fake_widths = np.diff(self.fake_edges)
+        band_widths = fake_widths
+
+        ax.stairs(
+            edges=self.fake_edges,
+            values=self.xs_over_bin_width,
+            color=color,
+            linewidth=1,
+            label=label,
+        )
+
+        # in rax plot the ratio as hlines
+        ratio_xs_over_bin_width, ratio_xs_up_over_bin_width, ratio_xs_down_over_bin_width = self.get_ratio_shapes(prediction_shape)
+        rax.hlines(
+            ratio_xs_over_bin_width,
+            self.fake_edges[:-1],
+            self.fake_edges[1:],
+            color=color,
+            linewidth=1,
+        )
+
+        return ax, rax
+
     def __sub__(self, other):
         if self.observable != other.observable or self.edges != other.edges:
             raise ValueError("Shapes are not compatible")
